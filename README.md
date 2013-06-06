@@ -11,17 +11,18 @@ Google Places API
 
 Full support for Place Search, Details, Photos, Autocomplete, and Query Autocomplete requests, including all parameters and returned fields.  Getting a list of places can be as easy as:
 
-        List<Place> places = Places.textSearch(new Params()
-                .query("pizza near willis tower")).getResult();
+```java
+List<Place> places = Places.textSearch(new Params().query("pizza near willis tower")).getResult();
+```
 
 More detailed searches can include lat/long with radius, specific types of places, keywords, price range, places that are open now, etc.  For each returned place, you can also retrieve its full details, reviews, photos, and events.
 
 The Google Places API can return a lot of information about each place and most of the time you probably won't need every detail.  For maximum performance and minimum memory usage, you can specify which fields you want and limit the number of results.
 
-        List<Place> places = Places.nearbySearch(new Params()
-                .location(47.60567, -122.3315).radius(5000)
-                .keyword("swimming").openNow().maxResults(5),
-                NAME, VICINITY, RATING, PHOTOS).getResult();
+```java
+List<Place> places = Places.nearbySearch(new Params().location(47.60567, -122.3315).radius(5000)
+        .keyword("swimming").openNow().maxResults(5), NAME, VICINITY, RATING, PHOTOS).getResult();
+```
 
 See the [Sprockets Javadoc][1] to learn more.
 
@@ -32,11 +33,13 @@ Start using Sprockets
 
 Sprockets is available in Maven Central.
 
-        <dependency>
-            <groupId>net.sf.sprockets</groupId>
-            <artifactId>sprockets</artifactId>
-            <version>0.0.0</version>
-        </dependency>
+```xml
+<dependency>
+    <groupId>net.sf.sprockets</groupId>
+    <artifactId>sprockets</artifactId>
+    <version>0.0.0</version>
+</dependency>
+```
 
 If you're not using Maven, you can download the library jar and its dependencies below.
 
