@@ -44,6 +44,13 @@ import static net.sf.sprockets.google.Places.Field.UTC_OFFSET;
 import static net.sf.sprockets.google.Places.Field.VICINITY;
 import static net.sf.sprockets.google.Places.Field.WEBSITE;
 import static net.sf.sprockets.google.Places.Params.RankBy.DISTANCE;
+import static net.sf.sprockets.google.Places.Request.AUTOCOMPLETE;
+import static net.sf.sprockets.google.Places.Request.DETAILS;
+import static net.sf.sprockets.google.Places.Request.NEARBY_SEARCH;
+import static net.sf.sprockets.google.Places.Request.PHOTO;
+import static net.sf.sprockets.google.Places.Request.QUERY_AUTOCOMPLETE;
+import static net.sf.sprockets.google.Places.Request.RADAR_SEARCH;
+import static net.sf.sprockets.google.Places.Request.TEXT_SEARCH;
 import static net.sf.sprockets.google.Places.Response.Status.INVALID_REQUEST;
 import static net.sf.sprockets.google.Places.Response.Status.NOT_MODIFIED;
 import static net.sf.sprockets.google.Places.Response.Status.OK;
@@ -53,11 +60,13 @@ import static net.sf.sprockets.google.Places.Response.Status.UNKNOWN_ERROR;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.logging.Logger;
@@ -76,6 +85,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ObjectArrays;
 import com.google.common.io.Closeables;
 import com.google.gson.stream.JsonReader;
+import com.squareup.okhttp.OkHttpClient;
 
 /**
  * Call <a href="https://developers.google.com/places/" target="_blank">Google Places API</a>
@@ -111,17 +121,29 @@ import com.google.gson.stream.JsonReader;
  */
 public class Places {
 	private static final Logger sLog = Logger.getLogger(Places.class.getPackage().getName());
-	private static final String BASE = "https://maps.googleapis.com/maps/api/place/";
-	private static final String OUTPUT = "/json?";
-	private static final String NEARBY = BASE + "nearbysearch" + OUTPUT;
-	private static final String TEXT = BASE + "textsearch" + OUTPUT;
-	private static final String RADAR = BASE + "radarsearch" + OUTPUT;
-	private static final String AUTO = BASE + "autocomplete" + OUTPUT;
-	private static final String QUERY = BASE + "queryautocomplete" + OUTPUT;
-	private static final String DETAILS = BASE + "details" + OUTPUT;
-	private static final String PHOTO = BASE + "photo?";
+	private static final OkHttpClient sClient = new OkHttpClient();
 
 	private Places() {
+	}
+
+	/**
+	 * Types of requests that can be sent to the Google Places API service.
+	 * 
+	 * @since 1.0.0
+	 */
+	public enum Request {
+		NEARBY_SEARCH("nearbysearch", true), TEXT_SEARCH("textsearch", true), RADAR_SEARCH(
+				"radarsearch", false), AUTOCOMPLETE("autocomplete", true), QUERY_AUTOCOMPLETE(
+				"queryautocomplete", true), DETAILS("details", true), PHOTO("photo", false);
+
+		private final String mUrl;
+		private final boolean mHasLang;
+
+		Request(String path, boolean hasLanguage) {
+			mUrl = "https://maps.googleapis.com/maps/api/place/" + path
+					+ (!path.equals("photo") ? "/json?" : "?");
+			mHasLang = hasLanguage;
+		}
 	}
 
 	/**
@@ -169,7 +191,7 @@ public class Places {
 	 */
 	public static Response<List<Place>> nearbySearch(Params params, Field... fields)
 			throws IOException {
-		return places(NEARBY, params, fields);
+		return places(NEARBY_SEARCH, params, fields);
 	}
 
 	/**
@@ -215,7 +237,7 @@ public class Places {
 	 */
 	public static Response<List<Place>> textSearch(Params params, Field... fields)
 			throws IOException {
-		return places(TEXT, params, fields);
+		return places(TEXT_SEARCH, params, fields);
 	}
 
 	/**
@@ -255,7 +277,7 @@ public class Places {
 	 */
 	public static Response<List<Place>> radarSearch(Params params, Field... fields)
 			throws IOException {
-		return places(RADAR, params, fields);
+		return places(RADAR_SEARCH, params, fields);
 	}
 
 	/**
@@ -275,7 +297,7 @@ public class Places {
 	 * <li>{@link Params#offset(int) offset}</li>
 	 * <li>{@link Params#types(String...) types}
 	 * <ul>
-	 * <li>One or more of:</li>
+	 * <li>One of:</li>
 	 * <li>"geocode"</li>
 	 * <li>"establishment"</li>
 	 * <li>"(regions)"</li>
@@ -301,7 +323,7 @@ public class Places {
 	 */
 	public static Response<List<Prediction>> autocomplete(Params params, Field... fields)
 			throws IOException {
-		return predictions(AUTO, params, fields);
+		return predictions(AUTOCOMPLETE, params, fields);
 	}
 
 	/**
@@ -337,7 +359,7 @@ public class Places {
 	 */
 	public static Response<List<Prediction>> queryAutocomplete(Params params, Field... fields)
 			throws IOException {
-		return predictions(QUERY, params, fields);
+		return predictions(QUERY_AUTOCOMPLETE, params, fields);
 	}
 
 	/**
@@ -375,7 +397,7 @@ public class Places {
 	 *             if there is a problem communicating with the Google Places API service
 	 */
 	public static Response<Place> details(Params params, Field... fields) throws IOException {
-		JsonReader in = reader(params.appendTo(DETAILS));
+		JsonReader in = reader(params.format(DETAILS));
 		try {
 			return new PlaceResponse(in, Field.bits(fields), params.mMaxResults);
 		} finally {
@@ -410,8 +432,7 @@ public class Places {
 	 *             if there is a problem communicating with the Google Places API service
 	 */
 	public static Response<InputStream> photo(Params params) throws IOException {
-		URL url = new URL(params.appendTo(PHOTO, true));
-		HttpURLConnection con = (HttpURLConnection) url.openConnection();
+		HttpURLConnection con = sClient.open(new URL(params.format(PHOTO)));
 		if (!Strings.isNullOrEmpty(params.mEtag)) {
 			con.setRequestProperty("If-None-Match", params.mEtag);
 		}
@@ -421,9 +442,9 @@ public class Places {
 	/**
 	 * Get places for the request.
 	 */
-	private static PlacesResponse places(String url, Params params, Field[] fields)
+	private static PlacesResponse places(Request type, Params params, Field[] fields)
 			throws IOException {
-		JsonReader in = reader(params.appendTo(url));
+		JsonReader in = reader(params.format(type));
 		try {
 			return new PlacesResponse(in, Field.bits(fields), params.mMaxResults);
 		} finally {
@@ -434,9 +455,9 @@ public class Places {
 	/**
 	 * Get predictions for the request.
 	 */
-	private static PredictionsResponse predictions(String url, Params params, Field[] fields)
+	private static PredictionsResponse predictions(Request type, Params params, Field[] fields)
 			throws IOException {
-		JsonReader in = reader(params.appendTo(url, true));
+		JsonReader in = reader(params.format(type));
 		try {
 			return new PredictionsResponse(in, Field.bits(fields), params.mMaxResults);
 		} finally {
@@ -448,7 +469,7 @@ public class Places {
 	 * Get a reader for the URL.
 	 */
 	private static JsonReader reader(String url) throws IOException {
-		URLConnection con = new URL(url).openConnection();
+		URLConnection con = sClient.open(new URL(url));
 		return new JsonReader(new InputStreamReader(con.getInputStream(), "UTF-8"));
 	}
 
@@ -548,16 +569,20 @@ public class Places {
 
 		/**
 		 * Search for places that are at least one of these types. Calling this method multiple
-		 * times will append to the list of types to match.
+		 * times will append to the list of types to match. Provide null to reset the list.
 		 * 
 		 * @see <a href="https://developers.google.com/places/documentation/supported_types"
 		 *      target="_blank">Supported Place Types</a>
 		 */
 		public Params types(String... types) {
-			if (mTypes == null) {
-				mTypes = types;
+			if (types != null) {
+				if (mTypes == null) {
+					mTypes = types;
+				} else {
+					mTypes = ObjectArrays.concat(mTypes, types, String.class);
+				}
 			} else {
-				mTypes = ObjectArrays.concat(mTypes, types, String.class);
+				mTypes = null;
 			}
 			return this;
 		}
@@ -595,10 +620,14 @@ public class Places {
 		 * will become a varargs param.
 		 */
 		public Params countries(String countries) {
-			if (mCountries == null) {
-				mCountries = new String[1];
+			if (countries != null) {
+				if (mCountries == null) {
+					mCountries = new String[1];
+				}
+				mCountries[0] = countries;
+			} else {
+				mCountries = null;
 			}
-			mCountries[0] = countries;
 			return this;
 		}
 
@@ -682,11 +711,125 @@ public class Places {
 			return this;
 		}
 
+		/** Append the types param with pipe symbols between the values. */
+		private static Joiner sPipes;
+
+		/**
+		 * Get a URL formatted for the type of request.
+		 * 
+		 * @since 1.0.0
+		 */
+		public String format(Request type) {
+			/* use alternate param names? */
+			boolean alt = type == AUTOCOMPLETE || type == QUERY_AUTOCOMPLETE || type == PHOTO;
+			StringBuilder s = new StringBuilder(type.mUrl.length() + 256);
+			Configuration config = Sprockets.getConfig();
+			String key = config.getString("google.api-key");
+			checkState(!Strings.isNullOrEmpty(key), "google.api-key not set");
+			boolean sensor = config.getBoolean("hardware.location");
+			s.append(type.mUrl).append("key=").append(key).append("&sensor=").append(sensor);
+
+			if (!Strings.isNullOrEmpty(mPageToken)) {
+				return s.append("&pagetoken=").append(mPageToken).toString();
+			}
+			if (!Strings.isNullOrEmpty(mReference)) {
+				s.append(alt ? "&photoreference=" : "&reference=").append(mReference);
+			}
+			if (mLat > Double.NEGATIVE_INFINITY && mLong > Double.NEGATIVE_INFINITY) {
+				s.append("&location=").append(mLat).append(',').append(mLong);
+				if (mRankBy != DISTANCE) {
+					if (mRadius <= 0) {
+						mRadius = 50000;
+					}
+					s.append("&radius=").append(mRadius);
+				}
+			}
+			try {
+				if (!Strings.isNullOrEmpty(mName)) {
+					s.append("&name=").append(URLEncoder.encode(mName, "UTF-8"));
+				}
+				if (!Strings.isNullOrEmpty(mKeyword)) {
+					s.append("&keyword=").append(URLEncoder.encode(mKeyword, "UTF-8"));
+				}
+				if (!Strings.isNullOrEmpty(mQuery)) {
+					s.append(alt ? "&input=" : "&query=")
+							.append(URLEncoder.encode(mQuery, "UTF-8"));
+				}
+			} catch (UnsupportedEncodingException e) {
+				throw new RuntimeException("UTF-8 encoding isn't supported?!", e);
+			}
+			if (mOffset > 0) {
+				s.append("&offset=").append(mOffset);
+			}
+			if (mTypes != null) {
+				if (sPipes == null) {
+					sPipes = Joiner.on("%7C").skipNulls(); // URL encoded
+				}
+				sPipes.appendTo(s.append("&types="), mTypes);
+			}
+			if (mMinPrice >= 0) {
+				s.append("&minprice=").append(mMinPrice);
+			}
+			if (mMaxPrice >= 0) {
+				s.append("&maxprice=").append(mMaxPrice);
+			}
+			if (mOpen) {
+				s.append("&opennow");
+			}
+			if (mCountries != null && mCountries.length > 0) {
+				s.append("&components=country:").append(mCountries[0]);
+			}
+			if (type.mHasLang) {
+				s.append("&language=").append(
+						!Strings.isNullOrEmpty(mLanguage) ? mLanguage : Locale.getDefault());
+			}
+			if (mRankBy != null) {
+				s.append("&rankby=").append(mRankBy.name().toLowerCase(Locale.ENGLISH));
+			}
+			if (mMaxWidth > 0) {
+				s.append("&maxwidth=").append(mMaxWidth);
+			}
+			if (mMaxHeight > 0) {
+				s.append("&maxheight=").append(mMaxHeight);
+			}
+			return s.toString();
+		}
+
+		/**
+		 * Clear any set parameters so that this instance can be re-used for a new request.
+		 * 
+		 * @since 1.0.0
+		 */
+		public Params clear() {
+			mReference = null;
+			mLat = Double.NEGATIVE_INFINITY;
+			mLong = Double.NEGATIVE_INFINITY;
+			mRadius = 0;
+			mName = null;
+			mKeyword = null;
+			mQuery = null;
+			mOffset = 0;
+			mTypes = null;
+			mMinPrice = -1;
+			mMaxPrice = -1;
+			mOpen = false;
+			mCountries = null;
+			mLanguage = null;
+			mRankBy = null;
+			mPageToken = null;
+			mMaxResults = 0;
+			mMaxWidth = 0;
+			mMaxHeight = 0;
+			mEtag = null;
+			return this;
+		}
+
 		@Override
 		public int hashCode() {
 			return Objects.hashCode(mReference, mLat, mLong, mRadius, mName, mKeyword, mQuery,
-					mOffset, mTypes, mMinPrice, mMaxPrice, mOpen, mCountries, mLanguage, mRankBy,
-					mPageToken, mMaxResults, mMaxWidth, mMaxHeight, mEtag);
+					mOffset, Arrays.hashCode(mTypes), mMinPrice, mMaxPrice, mOpen,
+					Arrays.hashCode(mCountries), mLanguage, mRankBy, mPageToken, mMaxResults,
+					mMaxWidth, mMaxHeight, mEtag);
 		}
 
 		@Override
@@ -719,99 +862,17 @@ public class Places {
 					.add("location", loc ? mLat + "," + mLong : null)
 					.add("radius", mRadius != 0 ? mRadius : null).add("name", mName)
 					.add("keyword", mKeyword).add("query", mQuery)
-					.add("offset", mOffset != 0 ? mOffset : null).add("types", mTypes)
+					.add("offset", mOffset != 0 ? mOffset : null)
+					.add("types", mTypes != null ? Arrays.toString(mTypes) : null)
 					.add("minPrice", mMinPrice != -1 ? mMinPrice : null)
 					.add("maxPrice", mMaxPrice != -1 ? mMaxPrice : null)
-					.add("openNow", mOpen ? mOpen : null).add("countries", mCountries)
+					.add("openNow", mOpen ? mOpen : null)
+					.add("countries", mCountries != null ? Arrays.toString(mCountries) : null)
 					.add("language", mLanguage).add("rankBy", mRankBy).add("pageToken", mPageToken)
 					.add("maxResults", mMaxResults != 0 ? mMaxResults : null)
 					.add("maxWidth", mMaxWidth != 0 ? mMaxWidth : null)
 					.add("maxHeight", mMaxHeight != 0 ? mMaxHeight : null).add("etag", mEtag)
 					.omitNullValues().toString();
-		}
-
-		/**
-		 * Append each (applicable) param to the URL query string.
-		 */
-		private String appendTo(String url) throws IOException {
-			return appendTo(url, false);
-		}
-
-		/** Append the types param with pipe symbols between the values. */
-		private static Joiner sPipes;
-
-		/**
-		 * Append each (applicable) param to the URL query string.
-		 * 
-		 * @param alt
-		 *            true to use alternative parameter names ([photo]reference and query/input)
-		 */
-		private String appendTo(String url, boolean alt) throws IOException {
-			Configuration config = Sprockets.getConfig();
-			String key = config.getString("google.api-key");
-			checkState(!Strings.isNullOrEmpty(key), "google.api-key not set");
-			boolean sensor = config.getBoolean("hardware.location");
-
-			StringBuilder s = new StringBuilder(url.length() + 256);
-			s.append(url).append("key=").append(key).append("&sensor=").append(sensor);
-			if (!Strings.isNullOrEmpty(mPageToken)) {
-				return s.append("&pagetoken=").append(mPageToken).toString();
-			}
-			if (!Strings.isNullOrEmpty(mReference)) {
-				s.append(alt ? "&photoreference=" : "&reference=").append(mReference);
-			}
-			if (mLat > Double.NEGATIVE_INFINITY && mLong > Double.NEGATIVE_INFINITY) {
-				s.append("&location=").append(mLat).append(',').append(mLong);
-				if (mRankBy != DISTANCE) {
-					if (mRadius <= 0) {
-						mRadius = 50000;
-					}
-					s.append("&radius=").append(mRadius);
-				}
-			}
-			if (!Strings.isNullOrEmpty(mName)) {
-				s.append("&name=").append(URLEncoder.encode(mName, "UTF-8"));
-			}
-			if (!Strings.isNullOrEmpty(mKeyword)) {
-				s.append("&keyword=").append(URLEncoder.encode(mKeyword, "UTF-8"));
-			}
-			if (!Strings.isNullOrEmpty(mQuery)) {
-				s.append(alt ? "&input=" : "&query=").append(URLEncoder.encode(mQuery, "UTF-8"));
-			}
-			if (mOffset > 0) {
-				s.append("&offset=").append(mOffset);
-			}
-			if (mTypes != null) {
-				if (sPipes == null) {
-					sPipes = Joiner.on('|').skipNulls();
-				}
-				sPipes.appendTo(s.append("&types="), mTypes);
-			}
-			if (mMinPrice >= 0) {
-				s.append("&minprice=").append(mMinPrice);
-			}
-			if (mMaxPrice >= 0) {
-				s.append("&maxprice=").append(mMaxPrice);
-			}
-			if (mOpen) {
-				s.append("&opennow");
-			}
-			if (mCountries != null && mCountries.length > 0) {
-				s.append("&components=country:").append(mCountries[0]);
-			}
-			if (!Strings.isNullOrEmpty(mLanguage)) {
-				s.append("&language=").append(mLanguage);
-			}
-			if (mRankBy != null) {
-				s.append("&rankby=").append(mRankBy.name().toLowerCase(Locale.ENGLISH));
-			}
-			if (mMaxWidth > 0) {
-				s.append("&maxwidth=").append(mMaxWidth);
-			}
-			if (mMaxHeight > 0) {
-				s.append("&maxheight=").append(mMaxHeight);
-			}
-			return s.toString();
 		}
 	}
 
@@ -898,6 +959,9 @@ public class Places {
 
 	/**
 	 * Result from one of the {@link Places} methods.
+	 * 
+	 * @param <T>
+	 *            type of result returned in the response
 	 */
 	public static class Response<T> {
 		/** Maximum number of HTML attributions that are expected to be returned. */
@@ -913,15 +977,14 @@ public class Places {
 			UNKNOWN;
 
 			/**
-			 * Get the matching Status or {@link #UNKNOWN} if one can't be
-			 * {@link Enum#valueOf(Class, String) found}.
+			 * Get the matching Status or {@link #UNKNOWN} if one can't be found.
 			 */
 			private static Status get(String status) {
 				try {
 					return Status.valueOf(status);
 				} catch (IllegalArgumentException e) {
 					String msg = "Unknown status code: {0}.  "
-							+ "If this hasn't already been reported, please create a new issue at "
+							+ "If this hasn''t already been reported, please create a new issue at "
 							+ "https://github.com/pushbit/sprockets/issues";
 					sLog.log(INFO, msg, status);
 					return UNKNOWN;
@@ -1053,11 +1116,11 @@ public class Places {
 					PRICE_LEVEL), rating(RATING), reviews(REVIEWS), author_name, author_url, time,
 			aspects, type, text, opening_hours(OPENING_HOURS), open_now(OPEN_NOW), periods, open,
 			close, day, events(EVENTS), event_id, start_time, summary, utc_offset(UTC_OFFSET),
-			photos(PHOTOS), photo_reference, width, height,
+			photos(PHOTOS), photo_reference, width, height, debug_info,
 			/** New key that hasn't been added here yet. */
 			UNKNOWN;
 
-			/** Related field. */
+			/** Related Field. */
 			final Field mField;
 
 			/**
@@ -1075,15 +1138,14 @@ public class Places {
 			}
 
 			/**
-			 * Get the matching Key or {@link #UNKNOWN} if one can't be
-			 * {@link Enum#valueOf(Class, String) found}.
+			 * Get the matching Key or {@link #UNKNOWN} if one can't be found.
 			 */
 			static Key get(String key) {
 				try {
 					return Key.valueOf(key);
 				} catch (IllegalArgumentException e) {
 					String msg = "Unknown response key: {0}.  "
-							+ "If this hasn't already been reported, please create a new issue at "
+							+ "If this hasn''t already been reported, please create a new issue at "
 							+ "https://github.com/pushbit/sprockets/issues";
 					sLog.log(INFO, msg, key);
 					return UNKNOWN;
