@@ -5,13 +5,14 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>net.sf.sprockets</groupId>
 	<artifactId>sprockets</artifactId>
-	<version>0.0.0</version>
+	<version>1.0.0</version>
 	<packaging>jar</packaging>
 	<name>Sprockets</name>
 	<description>
-		Java development library providing a Java interface for the Google Places API.
+		Java development library providing a Java interface for the Google Places and Street View
+		Image APIs.
 	</description>
-	<url>http://pushbit.github.io/sprockets</url>
+	<url>http://pushbit.github.io/sprockets/java</url>
 	<licenses>
 		<license>
 			<name>GNU Lesser General Public License, Version 3</name>
@@ -38,12 +39,17 @@
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
-			<version>14.0.1</version>
+			<version>15.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.code.gson</groupId>
 			<artifactId>gson</artifactId>
 			<version>2.2.4</version>
+		</dependency>
+		<dependency>
+			<groupId>com.squareup.okhttp</groupId>
+			<artifactId>okhttp</artifactId>
+			<version>1.2.1</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-configuration</groupId>
@@ -71,7 +77,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>2.9</version>
+				<version>2.9.1</version>
 				<configuration>
 					<detectLinks>true</detectLinks>
 				</configuration>

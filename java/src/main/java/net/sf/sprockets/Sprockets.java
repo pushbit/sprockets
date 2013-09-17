@@ -42,22 +42,22 @@ import org.apache.commons.configuration.XMLConfiguration;
  * <ol>
  * <li>Update the {@link Configuration} programmatically.
  * <ul>
- * <li>e.g. {@code Sprockets.getConfig().setProperty("google.api-key", "<your_api_key>");}</li>
+ * <li>{@code Sprockets.getConfig().setProperty("google.api-key", "<your_api_key>");}</li>
  * </ul>
  * </li>
  * <li>Specify settings on the command line as system properties.
  * <ul>
- * <li>e.g. {@code java ... -Dgoogle.api-key=<your_api_key> ...}</li>
+ * <li>{@code java ... -Dgoogle.api-key=<your_api_key> ...}</li>
  * </ul>
  * </li>
  * <li>Specify the file system path to your {@code sprockets.xml} file on the command line.
  * <ul>
- * <li>e.g. {@code java ... -Dsprockets.config.file=/path/to/sprockets.xml ...}</li>
+ * <li>{@code java ... -Dsprockets.config.file=/path/to/sprockets.xml ...}</li>
  * </ul>
  * </li>
  * <li>Specify the classpath location of your {@code sprockets.xml} file on the command line.
  * <ul>
- * <li>e.g. {@code java ... -Dsprockets.config.resource=com/example/sprockets.xml ...}</li>
+ * <li>{@code java ... -Dsprockets.config.resource=com/example/sprockets.xml ...}</li>
  * </ul>
  * </li>
  * <li>Update {@code net/sf/sprockets/sprockets.xml} in the library jar. This is not recommended

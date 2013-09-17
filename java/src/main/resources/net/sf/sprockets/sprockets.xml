@@ -2,11 +2,19 @@
 <!-- Configure library settings. -->
 <sprockets>
 	<google>
-		<!-- available from the Google APIs Console https://code.google.com/apis/console/ -->
+		<!-- Available from the Google APIs Console: https://code.google.com/apis/console/
+			Instructions: https://developers.google.com/places/documentation/#Authentication -->
 		<api-key></api-key>
+		<street-view>
+			<!-- Street View Image API can be called without an API key and usage is limited by IP
+				address. If the app clients are making the calls (from various IP addresses), then
+				this is probably fine. If a single server is making all of the calls, then you will
+				probably want to use your API key and (presumably) get a higher usage limit. -->
+			<use-api-key>false</use-api-key>
+		</street-view>
 	</google>
 	<hardware>
-		<!-- does the device this will run on have a location sensor? -->
+		<!-- Does the device this will run on have a location sensor? -->
 		<location>false</location>
 	</hardware>
 </sprockets>

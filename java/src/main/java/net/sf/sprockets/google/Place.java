@@ -599,8 +599,7 @@ public class Place {
 			sublocality, postal_code, postal_town, route, street_number;
 
 			/**
-			 * Get the matching Type or null if one can't be {@link Enum#valueOf(Class, String)
-			 * found}.
+			 * Get the matching Type or null if one can't be found.
 			 */
 			private static Type get(String type) {
 				try {

@@ -1,3 +1,14 @@
+2013-09-17  1.0.0
+
+	* added google.Places.Params.format (get the request URL)
+	* added google.Places.Params.clear (re-use instance for new request)
+	* language parameter is now sent with applicable requests, using the default locale if not set
+	* added google.StreetView (Google Street View Image API)
+	* added sql.Connections (utility method for rolling back if not committed before closing)
+	* added util.concurrent.ResultCallback
+	* updated HTTP calls to use OkHttpClient (new dependency)
+	* fixed hash code generation involving array fields (now hashing contents instead of identity)
+
 2013-06-05  0.0.0
 
 	* first release provides a Java interface for the Google Places API
