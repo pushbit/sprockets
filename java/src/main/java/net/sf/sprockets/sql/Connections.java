@@ -23,13 +23,15 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.logging.Logger;
 
+import net.sf.sprockets.util.logging.Loggers;
+
 /**
  * Utility methods for working with Connections.
  * 
  * @since 1.0.0
  */
 public class Connections {
-	private static final Logger sLog = Logger.getLogger(Connections.class.getPackage().getName());
+	private static final Logger sLog = Loggers.get(Connections.class);
 
 	private Connections() {
 	}

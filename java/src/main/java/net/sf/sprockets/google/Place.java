@@ -43,7 +43,7 @@ import com.google.gson.stream.JsonReader;
  * documentation.
  */
 public class Place {
-	// private static final Logger sLog = Logger.getLogger(Place.class.getPackage().getName());
+	// private static final Logger sLog = Loggers.get(Place.class);
 	/** Maximum number of reviews that will be returned. */
 	private static final int MAX_REVIEWS = 5;
 	/** Maximum number of events that will be returned. */

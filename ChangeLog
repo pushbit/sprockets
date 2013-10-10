@@ -1,3 +1,12 @@
+2013-10-10  1.1.0
+
+	* added library setting network.http-client (choose between OkHttp and standard library)
+	* added google.StreetView.Params.clear (re-use instance for new request)
+	* added net.HttpClient
+	* added sql.Statements
+	* added util.Elements
+	* added util.logging.Loggers
+
 2013-09-17  1.0.0
 
 	* added google.Places.Params.format (get the request URL)
