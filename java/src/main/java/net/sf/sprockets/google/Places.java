@@ -75,6 +75,8 @@ import net.sf.sprockets.Sprockets;
 import net.sf.sprockets.google.Place.Photo;
 import net.sf.sprockets.google.Place.Prediction;
 import net.sf.sprockets.google.Places.Params.RankBy;
+import net.sf.sprockets.net.HttpClient;
+import net.sf.sprockets.util.logging.Loggers;
 
 import org.apache.commons.configuration.Configuration;
 
@@ -85,17 +87,15 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ObjectArrays;
 import com.google.common.io.Closeables;
 import com.google.gson.stream.JsonReader;
-import com.squareup.okhttp.OkHttpClient;
 
 /**
- * Call <a href="https://developers.google.com/places/" target="_blank">Google Places API</a>
- * services and get results. All methods require a {@link Params Params} instance that defines the
- * places to search for. Most methods also allow you to specify any number of {@link Field Field}s
- * that should be populated in the results, which can reduce execution time and memory allocation
- * when you are not using all of the available fields. When no Fields are specified, all available
- * are populated in the {@link Response Response} results. {@link Params#maxResults(int)
- * Params.maxResults(int)} can be used to similar effect when you will only use a limited number of
- * results.
+ * Methods for calling <a href="https://developers.google.com/places/" target="_blank">Google Places
+ * API</a> services. All methods require a {@link Params Params} instance that defines the places to
+ * search for. Most methods also allow you to specify any number of {@link Field Field}s that should
+ * be populated in the results, which can reduce execution time and memory allocation when you are
+ * not using all of the available fields. When no Fields are specified, all available are populated
+ * in the {@link Response Response} results. {@link Params#maxResults(int) Params.maxResults(int)}
+ * can be used to similar effect when you will only use a limited number of results.
  * <p>
  * Below is a simple example that prints the names and addresses of fish & chips shops that are
  * within 1 km of Big Ben in London and are currently open.
@@ -120,8 +120,7 @@ import com.squareup.okhttp.OkHttpClient;
  * }</pre>
  */
 public class Places {
-	private static final Logger sLog = Logger.getLogger(Places.class.getPackage().getName());
-	private static final OkHttpClient sClient = new OkHttpClient();
+	private static final Logger sLog = Loggers.get(Places.class);
 
 	private Places() {
 	}
@@ -432,7 +431,7 @@ public class Places {
 	 *             if there is a problem communicating with the Google Places API service
 	 */
 	public static Response<InputStream> photo(Params params) throws IOException {
-		HttpURLConnection con = sClient.open(new URL(params.format(PHOTO)));
+		HttpURLConnection con = HttpClient.openConnection(new URL(params.format(PHOTO)));
 		if (!Strings.isNullOrEmpty(params.mEtag)) {
 			con.setRequestProperty("If-None-Match", params.mEtag);
 		}
@@ -469,7 +468,7 @@ public class Places {
 	 * Get a reader for the URL.
 	 */
 	private static JsonReader reader(String url) throws IOException {
-		URLConnection con = sClient.open(new URL(url));
+		URLConnection con = HttpClient.openConnection(new URL(url));
 		return new JsonReader(new InputStreamReader(con.getInputStream(), "UTF-8"));
 	}
 
