@@ -1,6 +1,9 @@
 net.sf.sprockets
 net.sf.sprockets.google
 net.sf.sprockets.lang
+net.sf.sprockets.net
 net.sf.sprockets.sql
 net.sf.sprockets.time
+net.sf.sprockets.util
 net.sf.sprockets.util.concurrent
+net.sf.sprockets.util.logging
