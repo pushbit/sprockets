@@ -36,16 +36,17 @@ import java.net.URLEncoder;
 import java.util.logging.Logger;
 
 import net.sf.sprockets.Sprockets;
+import net.sf.sprockets.net.HttpClient;
+import net.sf.sprockets.util.logging.Loggers;
 
 import org.apache.commons.configuration.Configuration;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
-import com.squareup.okhttp.OkHttpClient;
 
 /**
  * <p>
- * Download a <a href="https://developers.google.com/maps/documentation/streetview/"
+ * Method for downloading a <a href="https://developers.google.com/maps/documentation/streetview/"
  * target="_blank">Google Street View Image</a> by supplying a lat/long or location name. For
  * example:
  * </p>
@@ -70,9 +71,8 @@ import com.squareup.okhttp.OkHttpClient;
  * @since 1.0.0
  */
 public class StreetView {
-	private static final Logger sLog = Logger.getLogger(StreetView.class.getPackage().getName());
+	private static final Logger sLog = Loggers.get(StreetView.class);
 	private static final String URL = "https://maps.googleapis.com/maps/api/streetview?";
-	private static final OkHttpClient sClient = new OkHttpClient();
 
 	private StreetView() {
 	}
@@ -105,7 +105,7 @@ public class StreetView {
 	 *             if there is a problem communicating with the Google Street View Image API service
 	 */
 	public static Response<InputStream> image(Params params) throws IOException {
-		return new ImageResponse(sClient.open(new URL(params.format())));
+		return new ImageResponse(HttpClient.openConnection(new URL(params.format())));
 	}
 
 	/**
@@ -216,6 +216,23 @@ public class StreetView {
 				s.append("&fov=").append(mFov);
 			}
 			return s.append("&size=").append(mWidth).append('x').append(mHeight).toString();
+		}
+
+		/**
+		 * Clear any set parameters so that this instance can be re-used for a new request.
+		 * 
+		 * @since 1.1.0
+		 */
+		public Params clear() {
+			mLat = Double.NEGATIVE_INFINITY;
+			mLong = Double.NEGATIVE_INFINITY;
+			mLocation = null;
+			mHeading = Integer.MIN_VALUE;
+			mPitch = Integer.MIN_VALUE;
+			mFov = 0;
+			mWidth = 320;
+			mHeight = 320;
+			return this;
 		}
 
 		@Override
