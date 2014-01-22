@@ -37,8 +37,9 @@ import org.apache.commons.configuration.XMLConfiguration;
  * API key</a>, the recommended method is to download <a href=
  * "https://raw.github.com/pushbit/sprockets/master/java/src/main/resources/net/sf/sprockets/sprockets.xml"
  * target="_blank">net/sf/sprockets/sprockets.xml</a> (or copy it from the library jar) and place it
- * in the root of your application classpath (e.g. {@code src/}). You can then update the values in
- * this file and they will automatically be loaded at run-time.
+ * in the root of your application classpath (e.g. {@code src/} in a standard project or
+ * {@code src/main/resources/} in a Maven project). You can then update the values in this file and
+ * they will automatically be loaded at run-time.
  * <p>
  * If you would like to override the default settings in another way, you can choose any of the
  * following options, listed from highest to lowest precedence.
