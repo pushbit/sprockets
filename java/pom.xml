@@ -5,12 +5,10 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>net.sf.sprockets</groupId>
 	<artifactId>sprockets</artifactId>
-	<version>1.1.0</version>
+	<version>1.2.0</version>
 	<packaging>jar</packaging>
 	<name>Sprockets</name>
-	<description>
-		Java library providing a Java interface for the Google Places and Street View Image APIs.
-	</description>
+	<description>Google Places API and Google Street View Image API in Java</description>
 	<url>http://pushbit.github.io/sprockets/java</url>
 	<licenses>
 		<license>
@@ -34,11 +32,14 @@
 		<system>GitHub</system>
 		<url>https://github.com/pushbit/sprockets/issues</url>
 	</issueManagement>
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
 	<dependencies>
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
-			<version>15.0</version>
+			<version>16.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.code.gson</groupId>
@@ -48,12 +49,17 @@
 		<dependency>
 			<groupId>com.squareup.okhttp</groupId>
 			<artifactId>okhttp</artifactId>
-			<version>1.2.1</version>
+			<version>1.3.0</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-configuration</groupId>
 			<artifactId>commons-configuration</artifactId>
-			<version>1.9</version>
+			<version>1.10</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-collections</groupId>
+			<artifactId>commons-collections</artifactId>
+			<version>3.2.1</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
