@@ -1,18 +1,18 @@
 /*
- * Copyright 2013 pushbit <pushbit@gmail.com>
- *
+ * Copyright 2013-2014 pushbit <pushbit@gmail.com>
+ * 
  * This file is part of Sprockets.
- *
+ * 
  * Sprockets is free software: you can redistribute it and/or modify it under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- *
+ * 
  * Sprockets is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
- * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License along with Sprockets.
- * If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License along with Sprockets. If
+ * not, see <http://www.gnu.org/licenses/>.
  */
 
 package net.sf.sprockets.google;
@@ -25,6 +25,7 @@ import java.util.List;
 
 import net.sf.sprockets.google.Places.Params;
 import net.sf.sprockets.google.Places.Response.Key;
+import net.sf.sprockets.lang.Maths;
 import net.sf.sprockets.lang.Substring;
 import net.sf.sprockets.time.DayOfWeek;
 
@@ -170,7 +171,7 @@ public class Place {
 				in.beginArray();
 				while (in.hasNext()) {
 					if (mReviews == null) {
-						int cap = Math.min(Math.max(0, maxResults), MAX_REVIEWS);
+						int cap = Maths.clamp(maxResults, 0, MAX_REVIEWS);
 						mReviews = new ArrayList<Review>(cap > 0 ? cap : MAX_REVIEWS);
 					}
 					if (maxResults <= 0 || mReviews.size() < maxResults) {
@@ -208,7 +209,7 @@ public class Place {
 				in.beginArray();
 				while (in.hasNext()) {
 					if (mEvents == null) {
-						int cap = Math.min(Math.max(0, maxResults), MAX_EVENTS);
+						int cap = Maths.clamp(maxResults, 0, MAX_EVENTS);
 						mEvents = new ArrayList<Event>(cap > 0 ? cap : MAX_EVENTS);
 					}
 					if (maxResults <= 0 || mEvents.size() < maxResults) {
@@ -226,7 +227,7 @@ public class Place {
 				in.beginArray();
 				while (in.hasNext()) {
 					if (mPhotos == null) {
-						int cap = Math.min(Math.max(0, maxResults), MAX_PHOTOS);
+						int cap = Maths.clamp(maxResults, 0, MAX_PHOTOS);
 						mPhotos = new ArrayList<Photo>(cap > 0 ? cap : MAX_PHOTOS);
 					}
 					if (maxResults <= 0 || mPhotos.size() < maxResults) {
@@ -764,6 +765,8 @@ public class Place {
 		private String mAuthorUrl;
 		private long mTime;
 		private List<Aspect> mAspects;
+		private int mRating;
+		private String mLanguage;
 		private String mText;
 		private int mHash;
 
@@ -792,6 +795,12 @@ public class Place {
 						mAspects.add(new Aspect(in));
 					}
 					in.endArray();
+					break;
+				case rating:
+					mRating = in.nextInt();
+					break;
+				case language:
+					mLanguage = in.nextString();
 					break;
 				case text:
 					mText = in.nextString();
@@ -832,6 +841,25 @@ public class Place {
 		}
 
 		/**
+		 * From 1 to 5, the user's overall rating. Default value: 0.
+		 * 
+		 * @since 1.2.0
+		 */
+		public int getRating() {
+			return mRating;
+		}
+
+		/**
+		 * IETF language code (without country code) for the language of the {@link #getText() text}
+		 * .
+		 * 
+		 * @since 1.2.0
+		 */
+		public String getLanguage() {
+			return mLanguage;
+		}
+
+		/**
 		 * Review comments, which can contain HTML character and entity references.
 		 */
 		public String getText() {
@@ -841,7 +869,8 @@ public class Place {
 		@Override
 		public int hashCode() {
 			if (mHash == 0) {
-				mHash = Objects.hashCode(mAuthorName, mAuthorUrl, mTime, mAspects, mText);
+				mHash = Objects.hashCode(mAuthorName, mAuthorUrl, mTime, mAspects, mRating,
+						mLanguage, mText);
 			}
 			return mHash;
 		}
@@ -855,7 +884,9 @@ public class Place {
 					Review o = (Review) obj;
 					return Objects.equal(mAuthorName, o.mAuthorName)
 							&& Objects.equal(mAuthorUrl, o.mAuthorUrl) && mTime == o.mTime
-							&& Objects.equal(mAspects, o.mAspects) && Objects.equal(mText, o.mText);
+							&& Objects.equal(mAspects, o.mAspects) && mRating == o.mRating
+							&& Objects.equal(mLanguage, o.mLanguage)
+							&& Objects.equal(mText, o.mText);
 				}
 			}
 			return false;
@@ -865,8 +896,9 @@ public class Place {
 		public String toString() {
 			return Objects.toStringHelper(this).add("authorName", mAuthorName)
 					.add("authorUrl", mAuthorUrl).add("time", mTime)
-					.add("aspects", mAspects != null ? mAspects.size() : null).add("text", mText)
-					.omitNullValues().toString();
+					.add("aspects", mAspects != null ? mAspects.size() : null)
+					.add("rating", mRating != 0 ? mRating : null).add("language", mLanguage)
+					.add("text", mText).omitNullValues().toString();
 		}
 
 		/**
@@ -1006,7 +1038,7 @@ public class Place {
 		 * Get the DayOfWeek for the day number, where 0 == Sunday.
 		 */
 		private DayOfWeek day(int day) {
-			day = Math.min(Math.max(0, day), 6) - 1; // DayOfWeek starts on Monday
+			day = Maths.clamp(day, 0, 6) - 1; // DayOfWeek starts on Monday
 			return DayOfWeek.values()[day >= 0 ? day : 6];
 		}
 
