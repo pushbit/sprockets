@@ -1,3 +1,9 @@
+2014-01-22  1.2.0
+
+	* added google.Place.Review.getRating
+	* added google.Place.Review.getLanguage
+	* added lang.Maths
+
 2013-10-10  1.1.0
 
 	* added library setting network.http-client (choose between OkHttp and standard library)
@@ -13,7 +19,7 @@
 	* added google.Places.Params.clear (re-use instance for new request)
 	* language parameter is now sent with applicable requests, using the default locale if not set
 	* added google.StreetView (Google Street View Image API)
-	* added sql.Connections (utility method for rolling back if not committed before closing)
+	* added sql.Connections
 	* added util.concurrent.ResultCallback
 	* updated HTTP calls to use OkHttpClient (new dependency)
 	* fixed hash code generation involving array fields (now hashing contents instead of identity)
