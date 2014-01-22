@@ -1,18 +1,18 @@
 /*
- * Copyright 2013 pushbit <pushbit@gmail.com>
- *
+ * Copyright 2013-2014 pushbit <pushbit@gmail.com>
+ * 
  * This file is part of Sprockets.
- *
+ * 
  * Sprockets is free software: you can redistribute it and/or modify it under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- *
+ * 
  * Sprockets is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
- * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License along with Sprockets.
- * If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License along with Sprockets. If
+ * not, see <http://www.gnu.org/licenses/>.
  */
 
 package net.sf.sprockets.google;
@@ -75,6 +75,7 @@ import net.sf.sprockets.Sprockets;
 import net.sf.sprockets.google.Place.Photo;
 import net.sf.sprockets.google.Place.Prediction;
 import net.sf.sprockets.google.Places.Params.RankBy;
+import net.sf.sprockets.lang.Maths;
 import net.sf.sprockets.net.HttpClient;
 import net.sf.sprockets.util.logging.Loggers;
 
@@ -135,13 +136,15 @@ public class Places {
 				"radarsearch", false), AUTOCOMPLETE("autocomplete", true), QUERY_AUTOCOMPLETE(
 				"queryautocomplete", true), DETAILS("details", true), PHOTO("photo", false);
 
+		/** Full path to make the request, just add the query parameters. */
 		private final String mUrl;
+		/** True if the request supports the language parameter. */
 		private final boolean mHasLang;
 
-		Request(String path, boolean hasLanguage) {
+		Request(String path, boolean hasLang) {
 			mUrl = "https://maps.googleapis.com/maps/api/place/" + path
 					+ (!path.equals("photo") ? "/json?" : "?");
-			mHasLang = hasLanguage;
+			mHasLang = hasLang;
 		}
 	}
 
@@ -632,7 +635,8 @@ public class Places {
 
 		/**
 		 * Return results in this language, if possible. The value must be one of the supported
-		 * language codes.
+		 * language codes. If you do not call this method to specify a language, the default locale
+		 * will be used.
 		 * 
 		 * @see <a href="https://spreadsheets.google.com/pub?key=p9pdwsai2hDMsLkXsoM05KQ&gid=1"
 		 *      target="_blank">Supported Languages</a>
@@ -1113,9 +1117,9 @@ public class Places {
 			international_phone_number(INTL_PHONE_NUMBER), formatted_phone_number(
 					FORMATTED_PHONE_NUMBER), website(WEBSITE), types(TYPES), price_level(
 					PRICE_LEVEL), rating(RATING), reviews(REVIEWS), author_name, author_url, time,
-			aspects, type, text, opening_hours(OPENING_HOURS), open_now(OPEN_NOW), periods, open,
-			close, day, events(EVENTS), event_id, start_time, summary, utc_offset(UTC_OFFSET),
-			photos(PHOTOS), photo_reference, width, height, debug_info,
+			aspects, type, language, text, opening_hours(OPENING_HOURS), open_now(OPEN_NOW),
+			periods, open, close, day, events(EVENTS), event_id, start_time, summary, utc_offset(
+					UTC_OFFSET), photos(PHOTOS), photo_reference, width, height, debug_info,
 			/** New key that hasn't been added here yet. */
 			UNKNOWN;
 
@@ -1179,7 +1183,7 @@ public class Places {
 					in.beginArray();
 					while (in.hasNext()) {
 						if (mResult == null) {
-							int cap = Math.min(Math.max(0, maxResults), MAX_RESULTS);
+							int cap = Maths.clamp(maxResults, 0, MAX_RESULTS);
 							mResult = new ArrayList<Place>(cap > 0 ? cap : MAX_RESULTS);
 						}
 						if (maxResults <= 0 || mResult.size() < maxResults) {
@@ -1228,7 +1232,7 @@ public class Places {
 					in.beginArray();
 					while (in.hasNext()) {
 						if (mResult == null) {
-							int cap = Math.min(Math.max(0, maxResults), MAX_RESULTS);
+							int cap = Maths.clamp(maxResults, 0, MAX_RESULTS);
 							mResult = new ArrayList<Prediction>(cap > 0 ? cap : MAX_RESULTS);
 						}
 						if (maxResults <= 0 || mResult.size() < maxResults) {
