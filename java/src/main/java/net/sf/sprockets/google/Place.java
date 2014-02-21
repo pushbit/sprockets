@@ -68,6 +68,7 @@ public class Place {
 	List<String> mTypes;
 	int mPrice = -1;
 	float mRating = -1.0f;
+	int mRatingCount = -1;
 	List<Review> mReviews;
 	Boolean mOpen;
 	List<OpeningHours> mOpenHours;
@@ -166,6 +167,9 @@ public class Place {
 				break;
 			case rating:
 				mRating = (float) in.nextDouble();
+				break;
+			case user_ratings_total:
+				mRatingCount = in.nextInt();
 				break;
 			case reviews:
 				in.beginArray();
@@ -380,6 +384,15 @@ public class Place {
 	}
 
 	/**
+	 * Number of ratings that have been submitted. Default value: -1.
+	 * 
+	 * @since 1.3.0
+	 */
+	public int getRatingCount() {
+		return mRatingCount;
+	}
+
+	/**
 	 * Comments and ratings from Google users.
 	 */
 	public List<Review> getReviews() {
@@ -477,6 +490,7 @@ public class Place {
 				.add("website", mWebsite).add("types", mTypes)
 				.add("priceLevel", mPrice != -1 ? mPrice : null)
 				.add("rating", mRating != -1.0f ? mRating : null)
+				.add("ratingCount", mRatingCount != -1 ? mRatingCount : null)
 				.add("reviews", mReviews != null ? mReviews.size() : null).add("openNow", mOpen)
 				.add("openingHours", mOpenHours != null ? mOpenHours.size() : null)
 				.add("events", mEvents != null ? mEvents.size() : null)
