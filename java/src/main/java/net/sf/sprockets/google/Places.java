@@ -40,6 +40,7 @@ import static net.sf.sprockets.google.Places.Field.RATING;
 import static net.sf.sprockets.google.Places.Field.REVIEWS;
 import static net.sf.sprockets.google.Places.Field.TERMS;
 import static net.sf.sprockets.google.Places.Field.TYPES;
+import static net.sf.sprockets.google.Places.Field.USER_RATINGS_TOTAL;
 import static net.sf.sprockets.google.Places.Field.UTC_OFFSET;
 import static net.sf.sprockets.google.Places.Field.VICINITY;
 import static net.sf.sprockets.google.Places.Field.WEBSITE;
@@ -914,6 +915,12 @@ public class Places {
 		PRICE_LEVEL,
 		/** Based on user reviews. */
 		RATING,
+		/**
+		 * Number of ratings that have been submitted.
+		 * 
+		 * @since 1.3.0
+		 */
+		USER_RATINGS_TOTAL,
 		/** Comments and ratings from Google users. */
 		REVIEWS,
 		/** Indicates if the place is currently open. */
@@ -1116,10 +1123,11 @@ public class Places {
 			short_name, adr_address, formatted_address(FORMATTED_ADDRESS), vicinity(VICINITY),
 			international_phone_number(INTL_PHONE_NUMBER), formatted_phone_number(
 					FORMATTED_PHONE_NUMBER), website(WEBSITE), types(TYPES), price_level(
-					PRICE_LEVEL), rating(RATING), reviews(REVIEWS), author_name, author_url, time,
-			aspects, type, language, text, opening_hours(OPENING_HOURS), open_now(OPEN_NOW),
-			periods, open, close, day, events(EVENTS), event_id, start_time, summary, utc_offset(
-					UTC_OFFSET), photos(PHOTOS), photo_reference, width, height, debug_info,
+					PRICE_LEVEL), rating(RATING), user_ratings_total(USER_RATINGS_TOTAL), reviews(
+					REVIEWS), author_name, author_url, time, aspects, type, language, text,
+			opening_hours(OPENING_HOURS), open_now(OPEN_NOW), periods, open, close, day, events(
+					EVENTS), event_id, start_time, summary, utc_offset(UTC_OFFSET), photos(PHOTOS),
+			photo_reference, width, height, debug_info,
 			/** New key that hasn't been added here yet. */
 			UNKNOWN;
 
