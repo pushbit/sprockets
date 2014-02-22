@@ -1,7 +1,7 @@
 Sprockets
 =========
 
-[Google Places API][1] and [Google Street View Image API][2] in Java
+Query the [Google Places API][1] and [Google Street View Image API][2] in Java.
 
 * Features
     * [Google Places API](#google-places-api)
@@ -57,7 +57,7 @@ Sprockets is available in [Maven Central][4].
 <dependency>
     <groupId>net.sf.sprockets</groupId>
     <artifactId>sprockets</artifactId>
-    <version>1.2.0</version>
+    <version>1.3.0</version>
 </dependency>
 ```
 
@@ -66,7 +66,7 @@ Before calling any of the Google Places API methods, you must first add your [Go
 [1]: https://developers.google.com/places/
 [2]: https://developers.google.com/maps/documentation/streetview/
 [3]: http://pushbit.github.io/sprockets/java/apidocs/
-[4]: https://search.maven.org/#artifactdetails|net.sf.sprockets|sprockets|1.2.0|jar
+[4]: https://search.maven.org/#artifactdetails|net.sf.sprockets|sprockets|1.3.0|jar
 [5]: https://code.google.com/apis/console/
 [6]: http://pushbit.github.io/sprockets/java/apidocs/index.html?net/sf/sprockets/Sprockets.html
 [7]: http://pushbit.github.io/sprockets/java/apidocs/index.html?net/sf/sprockets/google/Places.html

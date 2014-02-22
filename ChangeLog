@@ -1,3 +1,9 @@
+2014-02-21  1.3.0
+
+	* added google.Place.getRatingCount
+	* added google.Places.Field.USER_RATINGS_TOTAL
+	* added util.Geos
+
 2014-01-22  1.2.0
 
 	* added google.Place.Review.getRating
