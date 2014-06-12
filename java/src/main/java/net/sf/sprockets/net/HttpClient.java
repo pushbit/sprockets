@@ -1,18 +1,18 @@
 /*
- * Copyright 2013 pushbit <pushbit@gmail.com>
- *
+ * Copyright 2013-2014 pushbit <pushbit@gmail.com>
+ * 
  * This file is part of Sprockets.
- *
+ * 
  * Sprockets is free software: you can redistribute it and/or modify it under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- *
+ * 
  * Sprockets is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
- * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License along with Sprockets.
- * If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License along with Sprockets. If
+ * not, see <http://www.gnu.org/licenses/>.
  */
 
 package net.sf.sprockets.net;
@@ -28,6 +28,7 @@ import net.sf.sprockets.Sprockets;
 import net.sf.sprockets.util.logging.Loggers;
 
 import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.OkUrlFactory;
 
 /**
  * Provides HTTP connections using the client specified in the {@link Sprockets library settings}.
@@ -36,8 +37,8 @@ import com.squareup.okhttp.OkHttpClient;
  */
 public class HttpClient {
 	private static final Logger sLog = Loggers.get(HttpClient.class);
-	/** Null if using the standard library client */
-	private static final OkHttpClient sClient;
+	/** Null if using the standard library client. */
+	private static final OkUrlFactory sClient;
 	static {
 		String client = Sprockets.getConfig().getString("network.http-client");
 		if ("java.net".equals(client)) {
@@ -46,11 +47,20 @@ public class HttpClient {
 			if (!"okhttp".equals(client)) {
 				sLog.log(WARNING, "Unknown http-client: {0}, using default okhttp", client);
 			}
-			sClient = new OkHttpClient();
+			sClient = new OkUrlFactory(new OkHttpClient());
 		}
 	}
 
 	private HttpClient() {
+	}
+
+	/**
+	 * Get a connection to the URL.
+	 * 
+	 * @since 1.4.0
+	 */
+	public static HttpURLConnection openConnection(String url) throws IOException {
+		return openConnection(new URL(url));
 	}
 
 	/**
