@@ -21,6 +21,8 @@ import static net.sf.sprockets.google.Places.Response.Key.UNKNOWN;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 import net.sf.sprockets.google.Places.Params;
@@ -31,6 +33,7 @@ import net.sf.sprockets.time.DayOfWeek;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Objects.ToStringHelper;
+import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.stream.JsonReader;
@@ -1482,6 +1485,81 @@ public class Place {
 		public String toString() {
 			return helper().add("terms", mTerms != null ? mTerms.size() : null)
 					.add("matchedSubstrings", mMatches != null ? mMatches.size() : null).toString();
+		}
+	}
+
+	/**
+	 * Search or autocomplete {@link Params#filter(Predicate) filter} on place IDs. After
+	 * constructing an instance, call {@link #include(String...) include} or
+	 * {@link #exclude(String...) exclude} to provide the IDs to filter.
+	 * 
+	 * @since 1.4.0
+	 */
+	public static class IdPredicate implements Predicate<Place> {
+		/** Include or exclude the IDs. */
+		private boolean mInclude;
+		private final HashSet<String> mIds = new HashSet<String>();
+		private int mHash;
+
+		/**
+		 * Add the IDs to those that the place must match to be returned.
+		 */
+		public IdPredicate include(String... ids) {
+			if (!mInclude) {
+				reset().mInclude = true;
+			}
+			Collections.addAll(mIds, ids);
+			return this;
+		}
+
+		/**
+		 * Add the IDs to those that the place must not match to be returned.
+		 */
+		public IdPredicate exclude(String... ids) {
+			if (mInclude) {
+				reset().mInclude = false;
+			}
+			Collections.addAll(mIds, ids);
+			return this;
+		}
+
+		/**
+		 * Reset the list of IDs to match.
+		 */
+		public IdPredicate reset() {
+			mIds.clear();
+			return this;
+		}
+
+		public boolean apply(Place place) {
+			return mInclude ? mIds.contains(place.getId()) : !mIds.contains(place.getId());
+		}
+
+		@Override
+		public int hashCode() {
+			if (mHash == 0) {
+				mHash = Objects.hashCode(mInclude, mIds);
+			}
+			return mHash;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj != null) {
+				if (this == obj) {
+					return true;
+				} else if (obj instanceof IdPredicate) {
+					IdPredicate o = (IdPredicate) obj;
+					return mInclude == o.mInclude && Objects.equal(mIds, o.mIds);
+				}
+			}
+			return false;
+		}
+
+		@Override
+		public String toString() {
+			return Objects.toStringHelper(this).add("filter", mInclude ? "include" : "exclude")
+					.add("ids", mIds).omitNullValues().toString();
 		}
 	}
 }
