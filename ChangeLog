@@ -1,3 +1,14 @@
+2014-06-12  1.4.0
+
+	* added google.Places.Params.filter
+	* added google.Place.IdPredicate
+	* added google.Places.Response.getErrorMessage
+	* Places requests with a pageToken that isn't valid yet are now retried after a two second delay
+	* added net.HttpClient.openConnection(String)
+	* added sql.Statements.{firstLongRow,allLongs,update,batch}
+	* added util.Elements.slice
+	* added util.concurrent.Interruptibles
+
 2014-02-21  1.3.0
 
 	* added google.Place.getRatingCount
@@ -6,14 +17,13 @@
 
 2014-01-22  1.2.0
 
-	* added google.Place.Review.getRating
-	* added google.Place.Review.getLanguage
+	* added google.Place.Review.{getRating,getLanguage}
 	* added lang.Maths
 
 2013-10-10  1.1.0
 
-	* added library setting network.http-client (choose between OkHttp and standard library)
-	* added google.StreetView.Params.clear (re-use instance for new request)
+	* added library setting network.http-client
+	* added google.StreetView.Params.clear
 	* added net.HttpClient
 	* added sql.Statements
 	* added util.Elements
@@ -21,13 +31,12 @@
 
 2013-09-17  1.0.0
 
-	* added google.Places.Params.format (get the request URL)
-	* added google.Places.Params.clear (re-use instance for new request)
+	* added google.Places.Params.{format,clear}
 	* language parameter is now sent with applicable requests, using the default locale if not set
-	* added google.StreetView (Google Street View Image API)
+	* added google.StreetView
 	* added sql.Connections
 	* added util.concurrent.ResultCallback
-	* updated HTTP calls to use OkHttpClient (new dependency)
+	* updated HTTP calls to use OkHttpClient
 	* fixed hash code generation involving array fields (now hashing contents instead of identity)
 
 2013-06-05  0.0.0
