@@ -28,9 +28,9 @@ public class Geos {
 
 	/**
 	 * Get the cosine of the latitude after converting it to radians. The result can be used to
-	 * improve the accuracy of geo point distance calculations. See <a
-	 * href="http://www.meridianworlddata.com/Distance-calculation.asp" target="_blank">Distance
-	 * Calculation</a> for more information.
+	 * improve the accuracy of geo point distance calculations. See <a href=
+	 * "https://web.archive.org/web/20130316112756/http://www.meridianworlddata.com/Distance-calculation.asp"
+	 * target="_blank">Distance Calculation</a> for more information.
 	 * 
 	 * @param latitude
 	 *            in degrees
