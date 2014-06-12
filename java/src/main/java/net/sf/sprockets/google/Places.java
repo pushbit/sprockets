@@ -22,6 +22,8 @@ import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
 import static java.net.HttpURLConnection.HTTP_FORBIDDEN;
 import static java.net.HttpURLConnection.HTTP_NOT_MODIFIED;
 import static java.net.HttpURLConnection.HTTP_OK;
+import static java.util.Locale.ENGLISH;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.logging.Level.INFO;
 import static net.sf.sprockets.google.Places.Field.ADDRESS;
 import static net.sf.sprockets.google.Places.Field.EVENTS;
@@ -63,7 +65,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
-import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -78,12 +79,14 @@ import net.sf.sprockets.google.Place.Prediction;
 import net.sf.sprockets.google.Places.Params.RankBy;
 import net.sf.sprockets.lang.Maths;
 import net.sf.sprockets.net.HttpClient;
+import net.sf.sprockets.util.concurrent.Interruptibles;
 import net.sf.sprockets.util.logging.Loggers;
 
 import org.apache.commons.configuration.Configuration;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
+import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ObjectArrays;
@@ -171,6 +174,7 @@ public class Places {
 	 * <li>{@link Params#language(String) language}</li>
 	 * <li>{@link Params#rankBy(RankBy) rankBy}</li>
 	 * <li>{@link Params#pageToken(String) pageToken}</li>
+	 * <li>{@link Params#filter(Predicate) filter}</li>
 	 * <li>{@link Params#maxResults(int) maxResults}</li>
 	 * </ul>
 	 * <p>
@@ -217,6 +221,7 @@ public class Places {
 	 * <li>{@link Params#openNow() openNow}</li>
 	 * <li>{@link Params#language(String) language}</li>
 	 * <li>{@link Params#pageToken(String) pageToken}</li>
+	 * <li>{@link Params#filter(Predicate) filter}</li>
 	 * <li>{@link Params#maxResults(int) maxResults}</li>
 	 * </ul>
 	 * <p>
@@ -266,6 +271,7 @@ public class Places {
 	 * <li>{@link Params#minPrice(int) minPrice}</li>
 	 * <li>{@link Params#maxPrice(int) maxPrice}</li>
 	 * <li>{@link Params#openNow() openNow}</li>
+	 * <li>{@link Params#filter(Predicate) filter}</li>
 	 * <li>{@link Params#maxResults(int) maxResults}</li>
 	 * </ul>
 	 * <p>
@@ -309,6 +315,7 @@ public class Places {
 	 * </li>
 	 * <li>{@link Params#countries(String) countries}</li>
 	 * <li>{@link Params#language(String) language}</li>
+	 * <li>{@link Params#filter(Predicate) filter}</li>
 	 * <li>{@link Params#maxResults(int) maxResults}</li>
 	 * </ul>
 	 * <p>
@@ -345,6 +352,7 @@ public class Places {
 	 * <li>{@link Params#radius(int) radius}</li>
 	 * <li>{@link Params#offset(int) offset}</li>
 	 * <li>{@link Params#language(String) language}</li>
+	 * <li>{@link Params#filter(Predicate) filter}</li>
 	 * <li>{@link Params#maxResults(int) maxResults}</li>
 	 * </ul>
 	 * <p>
@@ -402,7 +410,7 @@ public class Places {
 	public static Response<Place> details(Params params, Field... fields) throws IOException {
 		JsonReader in = reader(params.format(DETAILS));
 		try {
-			return new PlaceResponse(in, Field.bits(fields), params.mMaxResults);
+			return new PlaceResponse(in, Field.bits(fields), params);
 		} finally {
 			Closeables.close(in, true);
 		}
@@ -435,7 +443,7 @@ public class Places {
 	 *             if there is a problem communicating with the Google Places API service
 	 */
 	public static Response<InputStream> photo(Params params) throws IOException {
-		HttpURLConnection con = HttpClient.openConnection(new URL(params.format(PHOTO)));
+		HttpURLConnection con = HttpClient.openConnection(params.format(PHOTO));
 		if (!Strings.isNullOrEmpty(params.mEtag)) {
 			con.setRequestProperty("If-None-Match", params.mEtag);
 		}
@@ -447,9 +455,21 @@ public class Places {
 	 */
 	private static PlacesResponse places(Request type, Params params, Field[] fields)
 			throws IOException {
-		JsonReader in = reader(params.format(type));
+		String url = params.format(type);
+		JsonReader in = reader(url);
 		try {
-			return new PlacesResponse(in, Field.bits(fields), params.mMaxResults);
+			int bits = Field.bits(fields);
+			PlacesResponse resp = new PlacesResponse(in, bits, params);
+			/* try request again if next page wasn't available yet */
+			if (resp.getStatus() == INVALID_REQUEST
+					&& (type == NEARBY_SEARCH || type == TEXT_SEARCH)
+					&& !Strings.isNullOrEmpty(params.mPageToken)) {
+				in.close();
+				Interruptibles.sleep(2, SECONDS);
+				in = reader(url);
+				resp = new PlacesResponse(in, bits, params);
+			}
+			return resp;
 		} finally {
 			Closeables.close(in, true);
 		}
@@ -462,7 +482,7 @@ public class Places {
 			throws IOException {
 		JsonReader in = reader(params.format(type));
 		try {
-			return new PredictionsResponse(in, Field.bits(fields), params.mMaxResults);
+			return new PredictionsResponse(in, Field.bits(fields), params);
 		} finally {
 			Closeables.close(in, true);
 		}
@@ -472,7 +492,7 @@ public class Places {
 	 * Get a reader for the URL.
 	 */
 	private static JsonReader reader(String url) throws IOException {
-		URLConnection con = HttpClient.openConnection(new URL(url));
+		URLConnection con = HttpClient.openConnection(url);
 		return new JsonReader(new InputStreamReader(con.getInputStream(), "UTF-8"));
 	}
 
@@ -504,6 +524,7 @@ public class Places {
 		private String mLanguage;
 		private RankBy mRankBy;
 		private String mPageToken;
+		private Predicate<Place> mFilter;
 		private int mMaxResults;
 		private int mMaxWidth;
 		private int mMaxHeight;
@@ -673,11 +694,21 @@ public class Places {
 
 		/**
 		 * Get the next 20 results from a previous search. When this value is set, all other
-		 * parameters are ignored. Note that there is a short delay between when a token is issued
-		 * and when it can be used.
+		 * parameters are ignored.
 		 */
 		public Params pageToken(String pageToken) {
 			mPageToken = pageToken;
+			return this;
+		}
+
+		/**
+		 * Only return places for which the filter returns true. Used only in search and
+		 * autocomplete methods.
+		 * 
+		 * @since 1.4.0
+		 */
+		public Params filter(Predicate<Place> filter) {
+			mFilter = filter;
 			return this;
 		}
 
@@ -788,7 +819,7 @@ public class Places {
 						!Strings.isNullOrEmpty(mLanguage) ? mLanguage : Locale.getDefault());
 			}
 			if (mRankBy != null) {
-				s.append("&rankby=").append(mRankBy.name().toLowerCase(Locale.ENGLISH));
+				s.append("&rankby=").append(mRankBy.name().toLowerCase(ENGLISH));
 			}
 			if (mMaxWidth > 0) {
 				s.append("&maxwidth=").append(mMaxWidth);
@@ -821,6 +852,7 @@ public class Places {
 			mLanguage = null;
 			mRankBy = null;
 			mPageToken = null;
+			mFilter = null;
 			mMaxResults = 0;
 			mMaxWidth = 0;
 			mMaxHeight = 0;
@@ -832,8 +864,8 @@ public class Places {
 		public int hashCode() {
 			return Objects.hashCode(mReference, mLat, mLong, mRadius, mName, mKeyword, mQuery,
 					mOffset, Arrays.hashCode(mTypes), mMinPrice, mMaxPrice, mOpen,
-					Arrays.hashCode(mCountries), mLanguage, mRankBy, mPageToken, mMaxResults,
-					mMaxWidth, mMaxHeight, mEtag);
+					Arrays.hashCode(mCountries), mLanguage, mRankBy, mPageToken, mFilter,
+					mMaxResults, mMaxWidth, mMaxHeight, mEtag);
 		}
 
 		@Override
@@ -852,8 +884,9 @@ public class Places {
 							&& Objects.equal(mCountries, o.mCountries)
 							&& Objects.equal(mLanguage, o.mLanguage) && mRankBy == o.mRankBy
 							&& Objects.equal(mPageToken, o.mPageToken)
-							&& mMaxResults == o.mMaxResults && mMaxWidth == o.mMaxWidth
-							&& mMaxHeight == o.mMaxHeight && Objects.equal(mEtag, o.mEtag);
+							&& Objects.equal(mFilter, o.mFilter) && mMaxResults == o.mMaxResults
+							&& mMaxWidth == o.mMaxWidth && mMaxHeight == o.mMaxHeight
+							&& Objects.equal(mEtag, o.mEtag);
 				}
 			}
 			return false;
@@ -873,6 +906,7 @@ public class Places {
 					.add("openNow", mOpen ? mOpen : null)
 					.add("countries", mCountries != null ? Arrays.toString(mCountries) : null)
 					.add("language", mLanguage).add("rankBy", mRankBy).add("pageToken", mPageToken)
+					.add("filter", mFilter != null ? true : null)
 					.add("maxResults", mMaxResults != 0 ? mMaxResults : null)
 					.add("maxWidth", mMaxWidth != 0 ? mMaxWidth : null)
 					.add("maxHeight", mMaxHeight != 0 ? mMaxHeight : null).add("etag", mEtag)
@@ -1003,6 +1037,7 @@ public class Places {
 		}
 
 		Status mStatus;
+		String mMessage;
 		T mResult;
 		List<String> mAttribs;
 		String mToken;
@@ -1024,6 +1059,17 @@ public class Places {
 		 */
 		public Status getStatus() {
 			return mStatus;
+		}
+
+		/**
+		 * Detailed information about why the {@link #getStatus() status} is not {@link Status#OK
+		 * OK}.
+		 * 
+		 * @return null if an error message was not provided
+		 * @since 1.4.0
+		 */
+		public String getErrorMessage() {
+			return mMessage;
 		}
 
 		/**
@@ -1085,7 +1131,7 @@ public class Places {
 		@Override
 		public int hashCode() {
 			if (mHash == 0) {
-				mHash = Objects.hashCode(mStatus, mResult, mAttribs, mToken, mEtag);
+				mHash = Objects.hashCode(mStatus, mMessage, mResult, mAttribs, mToken, mEtag);
 			}
 			return mHash;
 		}
@@ -1097,7 +1143,8 @@ public class Places {
 					return true;
 				} else if (obj instanceof Response) {
 					Response<?> o = (Response<?>) obj;
-					return mStatus == o.mStatus && Objects.equal(mResult, o.mResult)
+					return mStatus == o.mStatus && Objects.equal(mMessage, o.mMessage)
+							&& Objects.equal(mResult, o.mResult)
 							&& Objects.equal(mAttribs, o.mAttribs)
 							&& Objects.equal(mToken, o.mToken) && Objects.equal(mEtag, o.mEtag);
 				}
@@ -1107,7 +1154,8 @@ public class Places {
 
 		@Override
 		public String toString() {
-			return Objects.toStringHelper(this).add("status", mStatus).add("result", mResult)
+			return Objects.toStringHelper(this).add("status", mStatus)
+					.add("errorMessage", mMessage).add("result", mResult)
 					.add("htmlAttributions", mAttribs != null ? mAttribs.size() : null)
 					.add("nextPageToken", mToken).add("etag", mEtag).omitNullValues().toString();
 		}
@@ -1116,9 +1164,9 @@ public class Places {
 		 * All known response field keys and {@link #UNKNOWN} for new keys not included here yet.
 		 */
 		enum Key {
-			status, results, html_attributions, next_page_token, predictions, result, id,
-			reference, icon(ICON), url(Field.URL), geometry(GEOMETRY), location, lat, lng,
-			viewport, name(NAME), description(NAME), terms(TERMS), offset, value,
+			status, error_message, results, html_attributions, next_page_token, predictions,
+			result, id, reference, icon(ICON), url(Field.URL), geometry(GEOMETRY), location, lat,
+			lng, viewport, name(NAME), description(NAME), terms(TERMS), offset, value,
 			matched_substrings(MATCHED_SUBSTRINGS), length, address_components(ADDRESS), long_name,
 			short_name, adr_address, formatted_address(FORMATTED_ADDRESS), vicinity(VICINITY),
 			international_phone_number(INTL_PHONE_NUMBER), formatted_phone_number(
@@ -1180,22 +1228,28 @@ public class Places {
 		 * @param fields
 		 *            to read or 0 if all fields should be read
 		 */
-		private PlacesResponse(JsonReader in, int fields, int maxResults) throws IOException {
+		private PlacesResponse(JsonReader in, int fields, Params params) throws IOException {
 			in.beginObject();
 			while (in.hasNext()) {
 				switch (Key.get(in.nextName())) {
 				case status:
 					status(in.nextString());
 					break;
+				case error_message:
+					mMessage = in.nextString();
+					break;
 				case results:
 					in.beginArray();
 					while (in.hasNext()) {
 						if (mResult == null) {
-							int cap = Maths.clamp(maxResults, 0, MAX_RESULTS);
+							int cap = Maths.clamp(params.mMaxResults, 0, MAX_RESULTS);
 							mResult = new ArrayList<Place>(cap > 0 ? cap : MAX_RESULTS);
 						}
-						if (maxResults <= 0 || mResult.size() < maxResults) {
-							mResult.add(new Place(in, fields, MAX_OBJECTS));
+						if (params.mMaxResults <= 0 || mResult.size() < params.mMaxResults) {
+							Place place = new Place(in, fields, MAX_OBJECTS);
+							if (params.mFilter == null || params.mFilter.apply(place)) {
+								mResult.add(place);
+							}
 						} else {
 							in.skipValue();
 						}
@@ -1229,22 +1283,28 @@ public class Places {
 		 * @param fields
 		 *            to read or 0 if all fields should be read
 		 */
-		private PredictionsResponse(JsonReader in, int fields, int maxResults) throws IOException {
+		private PredictionsResponse(JsonReader in, int fields, Params params) throws IOException {
 			in.beginObject();
 			while (in.hasNext()) {
 				switch (Key.get(in.nextName())) {
 				case status:
 					status(in.nextString());
 					break;
+				case error_message:
+					mMessage = in.nextString();
+					break;
 				case predictions:
 					in.beginArray();
 					while (in.hasNext()) {
 						if (mResult == null) {
-							int cap = Maths.clamp(maxResults, 0, MAX_RESULTS);
+							int cap = Maths.clamp(params.mMaxResults, 0, MAX_RESULTS);
 							mResult = new ArrayList<Prediction>(cap > 0 ? cap : MAX_RESULTS);
 						}
-						if (maxResults <= 0 || mResult.size() < maxResults) {
-							mResult.add(new Prediction(in, fields));
+						if (params.mMaxResults <= 0 || mResult.size() < params.mMaxResults) {
+							Prediction pred = new Prediction(in, fields);
+							if (params.mFilter == null || params.mFilter.apply(pred)) {
+								mResult.add(pred);
+							}
 						} else {
 							in.skipValue();
 						}
@@ -1269,15 +1329,18 @@ public class Places {
 		 * @param fields
 		 *            to read or 0 if all fields should be read
 		 */
-		private PlaceResponse(JsonReader in, int fields, int maxResults) throws IOException {
+		private PlaceResponse(JsonReader in, int fields, Params params) throws IOException {
 			in.beginObject();
 			while (in.hasNext()) {
 				switch (Key.get(in.nextName())) {
 				case status:
 					status(in.nextString());
 					break;
+				case error_message:
+					mMessage = in.nextString();
+					break;
 				case result:
-					mResult = new Place(in, fields, maxResults);
+					mResult = new Place(in, fields, params.mMaxResults);
 					break;
 				case html_attributions:
 					attrib(in);
