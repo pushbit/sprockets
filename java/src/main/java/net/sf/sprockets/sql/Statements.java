@@ -21,6 +21,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.collections.primitives.ArrayLongList;
 import org.apache.commons.collections.primitives.LongList;
@@ -107,6 +109,28 @@ public class Statements {
 		}
 		stmt.close();
 		return l;
+	}
+
+	/**
+	 * Execute the query, get the String values in the first column of the result set, and close the
+	 * statement.
+	 * 
+	 * @param stmt
+	 *            must already have parameters set
+	 * @return null if the result set is empty
+	 * @since 1.5.0
+	 */
+	public static List<String> allStrings(PreparedStatement stmt) throws SQLException {
+		List<String> s = null;
+		ResultSet rs = stmt.executeQuery();
+		if (rs.next()) {
+			s = new ArrayList<String>();
+			do {
+				s.add(rs.getString(1));
+			} while (rs.next());
+		}
+		stmt.close();
+		return s;
 	}
 
 	/**
