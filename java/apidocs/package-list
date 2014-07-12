@@ -1,6 +1,7 @@
 net.sf.sprockets
 net.sf.sprockets.google
 net.sf.sprockets.lang
+net.sf.sprockets.naming
 net.sf.sprockets.net
 net.sf.sprockets.sql
 net.sf.sprockets.time
