@@ -41,13 +41,15 @@ import com.google.gson.stream.JsonReader;
 /**
  * A Google Place returned from a {@link Places} method. The properties which are populated will
  * vary according to the Places method called and the {@link Places.Field Field}s provided. Check
- * the Places method documentation for the available fields. {@link #getId()} and
- * {@link #getReference()} will always be populated when available. Properties that have not been
- * populated will return null, when possible, or the default value will be specified in the method
- * documentation.
+ * the Places method documentation for the available fields. {@link #getPlaceId()}, {@link #getId()}
+ * , and {@link #getReference()} will always be populated when available. Properties that have not
+ * been populated will return null, when possible, or the default value will be specified in the
+ * method documentation.
  */
 public class Place {
 	// private static final Logger sLog = Loggers.get(Place.class);
+	/** Expected number of alt_ids that will be returned, if any. */
+	private static final int MAX_ALT_IDS = 1;
 	/** Maximum number of reviews that will be returned. */
 	private static final int MAX_REVIEWS = 5;
 	/** Maximum number of events that will be returned. */
@@ -55,6 +57,8 @@ public class Place {
 	/** Maximum number of photos that will be returned. */
 	private static final int MAX_PHOTOS = 10;
 
+	Id mPlaceId;
+	List<Id> mAltIds;
 	String mId;
 	String mReference;
 	String mIcon;
@@ -99,12 +103,27 @@ public class Place {
 		while (in.hasNext()) {
 			Key key = Key.get(in.nextName());
 			if (key == UNKNOWN || fields != 0 && key.mField != null && !key.mField.in(fields)) {
-				/* unknown field or caller doesn't want it */
-				in.skipValue();
+				in.skipValue(); // unknown field or caller doesn't want it
 				continue;
 			}
 
 			switch (key) {
+			case place_id:
+				mPlaceId = Id.id(mPlaceId, in.nextString());
+				break;
+			case scope:
+				mPlaceId = Id.scope(mPlaceId, in.nextString());
+				break;
+			case alt_ids:
+				in.beginArray();
+				while (in.hasNext()) {
+					if (mAltIds == null) {
+						mAltIds = new ArrayList<Id>(MAX_ALT_IDS);
+					}
+					mAltIds.add(new Id(in));
+				}
+				in.endArray();
+				break;
 			case id:
 				mId = in.nextString();
 				break;
@@ -264,6 +283,27 @@ public class Place {
 			mTypes.add(in.nextString());
 		}
 		in.endArray();
+	}
+
+	/**
+	 * Unique identifier that can be used to retrieve details about this place.
+	 * 
+	 * @since 1.5.0
+	 */
+	public Id getPlaceId() {
+		return mPlaceId;
+	}
+
+	/**
+	 * Alternative identifiers that have been mapped to {@link #getPlaceId() the main one}.
+	 * 
+	 * @since 1.5.0
+	 */
+	public List<Id> getAltIds() {
+		if (mAltIds != null && !(mAltIds instanceof ImmutableList)) {
+			mAltIds = ImmutableList.copyOf(mAltIds);
+		}
+		return mAltIds;
 	}
 
 	/**
@@ -454,21 +494,21 @@ public class Place {
 	@Override
 	public int hashCode() {
 		if (mHash == 0) {
-			mHash = !Strings.isNullOrEmpty(mId) ? mId.hashCode() : super.hashCode();
+			mHash = mPlaceId != null ? mPlaceId.hashCode() : super.hashCode();
 		}
 		return mHash;
 	}
 
 	/**
-	 * True if they have the same {@link #getId() ID}.
+	 * True if they have the same {@link #getPlaceId() place ID}.
 	 */
 	@Override
 	public boolean equals(Object obj) {
 		if (obj != null) {
 			if (this == obj) {
 				return true;
-			} else if (obj instanceof Place && !Strings.isNullOrEmpty(mId)) {
-				return mId.equals(((Place) obj).mId);
+			} else if (obj instanceof Place && mPlaceId != null) {
+				return mPlaceId.equals(((Place) obj).mPlaceId);
 			}
 		}
 		return false;
@@ -483,8 +523,9 @@ public class Place {
 	 * Shared ToStringHelper for subclasses.
 	 */
 	ToStringHelper helper() {
-		return Objects.toStringHelper(this).add("id", mId).add("reference", mReference)
-				.add("icon", mIcon).add("url", mUrl)
+		return Objects.toStringHelper(this).add("placeId", mPlaceId)
+				.add("altIds", mAltIds != null ? mAltIds.size() : null).add("id", mId)
+				.add("reference", mReference).add("icon", mIcon).add("url", mUrl)
 				.add("latitude", mLat != Double.NEGATIVE_INFINITY ? mLat : null)
 				.add("longitude", mLong != Double.NEGATIVE_INFINITY ? mLong : null)
 				.add("name", mName).add("address", mAddress != null ? true : null)
@@ -499,6 +540,126 @@ public class Place {
 				.add("events", mEvents != null ? mEvents.size() : null)
 				.add("utcOffset", mUtcOffset != Integer.MIN_VALUE ? mUtcOffset : null)
 				.add("photos", mPhotos != null ? mPhotos.size() : null).omitNullValues();
+	}
+
+	/**
+	 * Unique identifier that can be used to retrieve details about a place.
+	 * 
+	 * @since 1.5.0
+	 */
+	public static class Id {
+		private String mId;
+		private Scope mScope;
+		private int mHash;
+
+		private Id() {
+		}
+
+		/**
+		 * Read fields from an alt_id object.
+		 */
+		private Id(JsonReader in) throws IOException {
+			in.beginObject();
+			while (in.hasNext()) {
+				switch (Key.get(in.nextName())) {
+				case place_id:
+					mId = in.nextString();
+					break;
+				case scope:
+					mScope = Scope.get(in.nextString());
+					break;
+				default:
+					in.skipValue();
+				}
+			}
+			in.endObject();
+		}
+
+		/**
+		 * Set the place ID of the Id, creating it if necessary.
+		 */
+		private static Id id(Id id, String placeId) {
+			if (id == null) {
+				id = new Id();
+			}
+			id.mId = placeId;
+			return id;
+		}
+
+		/**
+		 * Unique identifier that can be used to retrieve details about the place.
+		 */
+		public String getId() {
+			return mId;
+		}
+
+		/**
+		 * Set the scope of the Id, creating it if necessary.
+		 */
+		private static Id scope(Id id, String scope) {
+			if (id == null) {
+				id = new Id();
+			}
+			id.mScope = Scope.get(scope);
+			return id;
+		}
+
+		/**
+		 * Availability of this place ID.
+		 */
+		public Scope getScope() {
+			return mScope;
+		}
+
+		@Override
+		public int hashCode() {
+			if (mHash == 0) {
+				mHash = mId != null ? mId.hashCode() : super.hashCode();
+			}
+			return mHash;
+		}
+
+		/**
+		 * True if they have the same {@link #getId() ID}.
+		 */
+		@Override
+		public boolean equals(Object obj) {
+			if (obj != null) {
+				if (this == obj) {
+					return true;
+				} else if (obj instanceof Id && mId != null) {
+					return mId.equals(((Id) obj).mId);
+				}
+			}
+			return false;
+		}
+
+		@Override
+		public String toString() {
+			return Objects.toStringHelper(this).add("id", mId).add("scope", mScope)
+					.omitNullValues().toString();
+		}
+
+		/**
+		 * Availability of a place ID.
+		 */
+		public enum Scope {
+			/** Local to an application. */
+			APP,
+			/** Publicly available. */
+			GOOGLE;
+
+			/**
+			 * Get the matching Scope or null if one can't be found.
+			 */
+			private static Scope get(String scope) {
+				try {
+					return Scope.valueOf(scope);
+				} catch (IllegalArgumentException e) {
+					return null;
+				}
+			}
+		}
 	}
 
 	/**
@@ -1355,12 +1516,14 @@ public class Place {
 			while (in.hasNext()) {
 				Key key = Key.get(in.nextName());
 				if (key == UNKNOWN || fields != 0 && key.mField != null && !key.mField.in(fields)) {
-					/* unknown field or caller doesn't want it */
-					in.skipValue();
+					in.skipValue(); // unknown field or caller doesn't want it
 					continue;
 				}
 
 				switch (key) {
+				case place_id:
+					mPlaceId = Id.id(mPlaceId, in.nextString());
+					break;
 				case id:
 					mId = in.nextString();
 					break;
