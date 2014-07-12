@@ -57,7 +57,7 @@ Sprockets is available in [Maven Central][4].
 <dependency>
     <groupId>net.sf.sprockets</groupId>
     <artifactId>sprockets</artifactId>
-    <version>1.4.0</version>
+    <version>1.5.0</version>
 </dependency>
 ```
 
@@ -66,7 +66,7 @@ Before calling any of the Google Places API methods, you must first add your [Go
 [1]: https://developers.google.com/places/
 [2]: https://developers.google.com/maps/documentation/streetview/
 [3]: https://pushbit.github.io/sprockets/java/apidocs/
-[4]: https://search.maven.org/#artifactdetails|net.sf.sprockets|sprockets|1.4.0|jar
+[4]: https://search.maven.org/#artifactdetails|net.sf.sprockets|sprockets|1.5.0|jar
 [5]: https://code.google.com/apis/console/
 [6]: https://pushbit.github.io/sprockets/java/apidocs/index.html?net/sf/sprockets/Sprockets.html
 [7]: https://pushbit.github.io/sprockets/java/apidocs/index.html?net/sf/sprockets/google/Places.html

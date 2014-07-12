@@ -1,3 +1,12 @@
+2014-07-12  1.5.0
+
+	* added google.Places.Params.placeId
+	* added google.Place.Id
+	* added google.Place.{getPlaceId,getAltIds}
+	* added util.StringArrays
+	* added naming.Contexts
+	* added sql.Statements.allStrings
+
 2014-06-12  1.4.0
 
 	* added google.Places.Params.filter
