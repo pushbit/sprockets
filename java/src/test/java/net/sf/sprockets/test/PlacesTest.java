@@ -69,7 +69,7 @@ public class PlacesTest {
 		assertNotNull(places);
 		assertTrue(places.size() > 0);
 		Place place = places.get(0);
-		assertTrue(place.getReference().length() > 0);
+		assertTrue(place.getPlaceId().getId().length() > 0);
 	}
 
 	@Test
@@ -106,9 +106,9 @@ public class PlacesTest {
 		assertNotNull(places);
 		assertTrue(places.size() > 0);
 		Place place = places.get(0);
-		assertTrue(place.getReference().length() > 0);
+		assertTrue(place.getPlaceId().getId().length() > 0);
 		/* details */
-		Response<Place> details = Places.details(new Params().reference(place.getReference()));
+		Response<Place> details = Places.details(new Params().placeId(place.getPlaceId().getId()));
 		assertEquals(OK, details.getStatus());
 		place = details.getResult();
 		assertNotNull(place);
