@@ -375,15 +375,15 @@ public class Places {
 
 	/**
 	 * Get all data for a place. Normally this will be called after getting a
-	 * {@link Place#getReference() Place reference} from the results of a search or autocomplete
-	 * method. The {@link Params#maxResults(int) maxResults} parameter can be used to limit the
-	 * number of reviews, events, and photos. For example, if maxResults == 1, then at most 1
-	 * review, 1 event, and 1 photo will be returned.
+	 * {@link Place#getPlaceId() Place ID} from the results of a search or autocomplete method. The
+	 * {@link Params#maxResults(int) maxResults} parameter can be used to limit the number of
+	 * reviews, events, and photos. For example, if maxResults == 1, then at most 1 review, 1 event,
+	 * and 1 photo will be returned.
 	 * <p>
 	 * Required params:
 	 * </p>
 	 * <ul>
-	 * <li>{@link Params#reference(String) reference}</li>
+	 * <li>{@link Params#placeId(String) placeId}</li>
 	 * </ul>
 	 * <p>
 	 * Optional params:
@@ -508,6 +508,7 @@ public class Places {
 	 * }</pre>
 	 */
 	public static class Params {
+		private String mPlaceId;
 		private String mReference;
 		private double mLat = Double.NEGATIVE_INFINITY;
 		private double mLong = Double.NEGATIVE_INFINITY;
@@ -531,8 +532,19 @@ public class Places {
 		private String mEtag;
 
 		/**
-		 * Get the place or photo identified by this token, as returned from a {@link Places}
-		 * search, autocomplete, or details method.
+		 * Get the place with the ID, as returned from a {@link Places} search, autocomplete, or
+		 * details method.
+		 * 
+		 * @since 1.5.0
+		 */
+		public Params placeId(String placeId) {
+			mPlaceId = placeId;
+			return this;
+		}
+
+		/**
+		 * Get the place or photo identified by the token, as returned from a {@link Places} search,
+		 * autocomplete, or details method.
 		 */
 		public Params reference(String reference) {
 			mReference = reference;
@@ -767,7 +779,9 @@ public class Places {
 			if (!Strings.isNullOrEmpty(mPageToken)) {
 				return s.append("&pagetoken=").append(mPageToken).toString();
 			}
-			if (!Strings.isNullOrEmpty(mReference)) {
+			if (!Strings.isNullOrEmpty(mPlaceId)) {
+				s.append("&placeid=").append(mPlaceId);
+			} else if (!Strings.isNullOrEmpty(mReference)) {
 				s.append(alt ? "&photoreference=" : "&reference=").append(mReference);
 			}
 			if (mLat > Double.NEGATIVE_INFINITY && mLong > Double.NEGATIVE_INFINITY) {
@@ -836,6 +850,7 @@ public class Places {
 		 * @since 1.0.0
 		 */
 		public Params clear() {
+			mPlaceId = null;
 			mReference = null;
 			mLat = Double.NEGATIVE_INFINITY;
 			mLong = Double.NEGATIVE_INFINITY;
@@ -862,8 +877,8 @@ public class Places {
 
 		@Override
 		public int hashCode() {
-			return Objects.hashCode(mReference, mLat, mLong, mRadius, mName, mKeyword, mQuery,
-					mOffset, Arrays.hashCode(mTypes), mMinPrice, mMaxPrice, mOpen,
+			return Objects.hashCode(mPlaceId, mReference, mLat, mLong, mRadius, mName, mKeyword,
+					mQuery, mOffset, Arrays.hashCode(mTypes), mMinPrice, mMaxPrice, mOpen,
 					Arrays.hashCode(mCountries), mLanguage, mRankBy, mPageToken, mFilter,
 					mMaxResults, mMaxWidth, mMaxHeight, mEtag);
 		}
@@ -875,7 +890,8 @@ public class Places {
 					return true;
 				} else if (obj instanceof Params) {
 					Params o = (Params) obj;
-					return Objects.equal(mReference, o.mReference) && mLat == o.mLat
+					return Objects.equal(mPlaceId, o.mPlaceId)
+							&& Objects.equal(mReference, o.mReference) && mLat == o.mLat
 							&& mLong == o.mLong && mRadius == o.mRadius
 							&& Objects.equal(mName, o.mName) && Objects.equal(mKeyword, o.mKeyword)
 							&& Objects.equal(mQuery, o.mQuery) && mOffset == o.mOffset
@@ -895,8 +911,8 @@ public class Places {
 		@Override
 		public String toString() {
 			boolean loc = mLat != Double.NEGATIVE_INFINITY && mLong != Double.NEGATIVE_INFINITY;
-			return Objects.toStringHelper(this).add("reference", mReference)
-					.add("location", loc ? mLat + "," + mLong : null)
+			return Objects.toStringHelper(this).add("placeId", mPlaceId)
+					.add("reference", mReference).add("location", loc ? mLat + "," + mLong : null)
 					.add("radius", mRadius != 0 ? mRadius : null).add("name", mName)
 					.add("keyword", mKeyword).add("query", mQuery)
 					.add("offset", mOffset != 0 ? mOffset : null)
@@ -1165,17 +1181,17 @@ public class Places {
 		 */
 		enum Key {
 			status, error_message, results, html_attributions, next_page_token, predictions,
-			result, id, reference, icon(ICON), url(Field.URL), geometry(GEOMETRY), location, lat,
-			lng, viewport, name(NAME), description(NAME), terms(TERMS), offset, value,
-			matched_substrings(MATCHED_SUBSTRINGS), length, address_components(ADDRESS), long_name,
-			short_name, adr_address, formatted_address(FORMATTED_ADDRESS), vicinity(VICINITY),
-			international_phone_number(INTL_PHONE_NUMBER), formatted_phone_number(
-					FORMATTED_PHONE_NUMBER), website(WEBSITE), types(TYPES), price_level(
-					PRICE_LEVEL), rating(RATING), user_ratings_total(USER_RATINGS_TOTAL), reviews(
-					REVIEWS), author_name, author_url, time, aspects, type, language, text,
-			opening_hours(OPENING_HOURS), open_now(OPEN_NOW), periods, open, close, day, events(
-					EVENTS), event_id, start_time, summary, utc_offset(UTC_OFFSET), photos(PHOTOS),
-			photo_reference, width, height, debug_info,
+			result, place_id, scope, alt_ids, id, reference, icon(ICON), url(Field.URL), geometry(
+					GEOMETRY), location, lat, lng, viewport, name(NAME), description(NAME), terms(
+					TERMS), offset, value, matched_substrings(MATCHED_SUBSTRINGS), length,
+			address_components(ADDRESS), long_name, short_name, adr_address, formatted_address(
+					FORMATTED_ADDRESS), vicinity(VICINITY), international_phone_number(
+					INTL_PHONE_NUMBER), formatted_phone_number(FORMATTED_PHONE_NUMBER), website(
+					WEBSITE), types(TYPES), price_level(PRICE_LEVEL), rating(RATING),
+			user_ratings_total(USER_RATINGS_TOTAL), reviews(REVIEWS), author_name, author_url,
+			time, aspects, type, language, text, opening_hours(OPENING_HOURS), open_now(OPEN_NOW),
+			periods, open, close, day, events(EVENTS), event_id, start_time, summary, utc_offset(
+					UTC_OFFSET), photos(PHOTOS), photo_reference, width, height, debug_info,
 			/** New key that hasn't been added here yet. */
 			UNKNOWN;
 
