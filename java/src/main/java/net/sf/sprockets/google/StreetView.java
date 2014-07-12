@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 pushbit <pushbit@gmail.com>
+ * Copyright 2013-2014 pushbit <pushbit@gmail.com>
  * 
  * This file is part of Sprockets.
  * 
