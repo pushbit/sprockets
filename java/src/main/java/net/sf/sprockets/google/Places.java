@@ -136,9 +136,10 @@ public class Places {
 	 * @since 1.0.0
 	 */
 	public enum Request {
-		NEARBY_SEARCH("nearbysearch", true), TEXT_SEARCH("textsearch", true), RADAR_SEARCH(
-				"radarsearch", false), AUTOCOMPLETE("autocomplete", true), QUERY_AUTOCOMPLETE(
-				"queryautocomplete", true), DETAILS("details", true), PHOTO("photo", false);
+		NEARBY_SEARCH("nearbysearch", true), TEXT_SEARCH("textsearch", true),
+		RADAR_SEARCH("radarsearch", false), AUTOCOMPLETE("autocomplete", true),
+		QUERY_AUTOCOMPLETE("queryautocomplete", true), DETAILS("details", true),
+		PHOTO("photo", false);
 
 		/** Full path to make the request, just add the query parameters. */
 		private final String mUrl;
@@ -532,9 +533,11 @@ public class Places {
 		private String mEtag;
 
 		/**
-		 * Get the place with the ID, as returned from a {@link Places} search, autocomplete, or
-		 * details method.
+		 * Get the place identified by the {@link Place.Id#getId() place ID}, as returned from a
+		 * {@link Places} search, autocomplete, or details method.
 		 * 
+		 * @param placeId
+		 *            from {@code Place.getPlaceId().getId()}
 		 * @since 1.5.0
 		 */
 		public Params placeId(String placeId) {
@@ -543,8 +546,8 @@ public class Places {
 		}
 
 		/**
-		 * Get the place or photo identified by the token, as returned from a {@link Places} search,
-		 * autocomplete, or details method.
+		 * Get the photo identified by the token, as returned from a {@link Places} search or
+		 * details method.
 		 */
 		public Params reference(String reference) {
 			mReference = reference;
@@ -717,6 +720,7 @@ public class Places {
 		 * Only return places for which the filter returns true. Used only in search and
 		 * autocomplete methods.
 		 * 
+		 * @see Place.Id.Filter
 		 * @since 1.4.0
 		 */
 		public Params filter(Predicate<Place> filter) {
@@ -1181,17 +1185,18 @@ public class Places {
 		 */
 		enum Key {
 			status, error_message, results, html_attributions, next_page_token, predictions,
-			result, place_id, scope, alt_ids, id, reference, icon(ICON), url(Field.URL), geometry(
-					GEOMETRY), location, lat, lng, viewport, name(NAME), description(NAME), terms(
-					TERMS), offset, value, matched_substrings(MATCHED_SUBSTRINGS), length,
-			address_components(ADDRESS), long_name, short_name, adr_address, formatted_address(
-					FORMATTED_ADDRESS), vicinity(VICINITY), international_phone_number(
-					INTL_PHONE_NUMBER), formatted_phone_number(FORMATTED_PHONE_NUMBER), website(
-					WEBSITE), types(TYPES), price_level(PRICE_LEVEL), rating(RATING),
-			user_ratings_total(USER_RATINGS_TOTAL), reviews(REVIEWS), author_name, author_url,
-			time, aspects, type, language, text, opening_hours(OPENING_HOURS), open_now(OPEN_NOW),
-			periods, open, close, day, events(EVENTS), event_id, start_time, summary, utc_offset(
-					UTC_OFFSET), photos(PHOTOS), photo_reference, width, height, debug_info,
+			result, place_id, scope, alt_ids, id, reference, icon(ICON), url(Field.URL),
+			geometry(GEOMETRY), location, lat, lng, viewport, name(NAME), description(NAME),
+			terms(TERMS), offset, value, matched_substrings(MATCHED_SUBSTRINGS), length,
+			address_components(ADDRESS), long_name, short_name, adr_address,
+			formatted_address(FORMATTED_ADDRESS), vicinity(VICINITY),
+			international_phone_number(INTL_PHONE_NUMBER),
+			formatted_phone_number(FORMATTED_PHONE_NUMBER), website(WEBSITE), types(TYPES),
+			price_level(PRICE_LEVEL), rating(RATING), user_ratings_total(USER_RATINGS_TOTAL),
+			reviews(REVIEWS), author_name, author_url, time, aspects, type, language, text,
+			opening_hours(OPENING_HOURS), open_now(OPEN_NOW), weekday_text, periods, open, close,
+			day, events(EVENTS), event_id, start_time, summary, utc_offset(UTC_OFFSET),
+			photos(PHOTOS), photo_reference, width, height, debug_info,
 			/** New key that hasn't been added here yet. */
 			UNKNOWN;
 
