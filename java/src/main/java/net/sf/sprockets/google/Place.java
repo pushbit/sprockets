@@ -308,7 +308,10 @@ public class Place {
 
 	/**
 	 * Unique identifier that can be used to consolidate information about this place.
+	 * 
+	 * @deprecated use {@link Place.Id#getId() getPlaceId().getId()} instead
 	 */
+	@Deprecated
 	public String getId() {
 		return mId;
 	}
@@ -316,7 +319,10 @@ public class Place {
 	/**
 	 * Token that can be used to retrieve details about this place. This may be one of multiple
 	 * references that can be used to access this place.
+	 * 
+	 * @deprecated use {@link Place.Id#getId() getPlaceId().getId()} instead
 	 */
+	@Deprecated
 	public String getReference() {
 		return mReference;
 	}
@@ -658,6 +664,79 @@ public class Place {
 				} catch (IllegalArgumentException e) {
 					return null;
 				}
+			}
+		}
+
+		/**
+		 * Search or autocomplete {@link Params#filter(Predicate) filter} on place IDs. After
+		 * constructing an instance, call {@link #include(String...) include} or
+		 * {@link #exclude(String...) exclude} to provide the IDs to filter.
+		 * 
+		 * @since 1.6.0
+		 */
+		public static class Filter implements Predicate<Place> {
+			/** Include or exclude the IDs. */
+			private boolean mInclude;
+			private final HashSet<String> mIds = new HashSet<String>();
+
+			/**
+			 * Add the IDs to those that the place must match to be returned.
+			 */
+			public Filter include(String... ids) {
+				if (!mInclude) {
+					reset().mInclude = true;
+				}
+				Collections.addAll(mIds, ids);
+				return this;
+			}
+
+			/**
+			 * Add the IDs to those that the place must not match to be returned.
+			 */
+			public Filter exclude(String... ids) {
+				if (mInclude) {
+					reset().mInclude = false;
+				}
+				Collections.addAll(mIds, ids);
+				return this;
+			}
+
+			/**
+			 * Reset the list of IDs to match.
+			 */
+			public Filter reset() {
+				mIds.clear();
+				return this;
+			}
+
+			@Override
+			public boolean apply(Place place) {
+				boolean contains = mIds.contains(place.getPlaceId().getId());
+				return mInclude ? contains : !contains;
+			}
+
+			@Override
+			public int hashCode() {
+				return Objects.hashCode(mInclude, mIds);
+			}
+
+			@Override
+			public boolean equals(Object obj) {
+				if (obj != null) {
+					if (this == obj) {
+						return true;
+					} else if (obj instanceof Filter) {
+						Filter o = (Filter) obj;
+						return mInclude == o.mInclude && Objects.equal(mIds, o.mIds);
+					}
+				}
+				return false;
+			}
+
+			@Override
+			public String toString() {
+				return Objects.toStringHelper(this).add("filter", mInclude ? "include" : "exclude")
+						.add("ids", mIds).omitNullValues().toString();
 			}
 		}
 	}
@@ -1657,7 +1736,9 @@ public class Place {
 	 * {@link #exclude(String...) exclude} to provide the IDs to filter.
 	 * 
 	 * @since 1.4.0
+	 * @deprecated use {@link Place.Id.Filter} instead
 	 */
+	@Deprecated
 	public static class IdPredicate implements Predicate<Place> {
 		/** Include or exclude the IDs. */
 		private boolean mInclude;
@@ -1694,6 +1775,7 @@ public class Place {
 			return this;
 		}
 
+		@Override
 		public boolean apply(Place place) {
 			return mInclude ? mIds.contains(place.getId()) : !mIds.contains(place.getId());
 		}
