@@ -6,7 +6,7 @@ Query the [Google Places API][1] and [Google Street View Image API][2] in Java.
 * Features
     * [Google Places API](#google-places-api)
     * [Google Street View Image API](#google-street-view-image-api)
-* [Download and Configure](#download-and-configure)
+* [Install](#install)
 * [Javadoc][3]
 
 Google Places API
@@ -18,7 +18,7 @@ Full support for Place Search, Details, Photos, Autocomplete, and Query Autocomp
 Places.textSearch(new Params().query("pizza near willis tower")).getResult();
 ```
 
-More detailed searches can include lat/long with radius, specific types of places, keywords, price range, places that are open now, etc.  For each returned place, you can also retrieve its full details, reviews, photos, and events.
+More detailed searches can include lat/long with radius, specific types of places, keywords, price range, places that are open now, etc.  For each returned place, you can also retrieve its full details, reviews, and photos.
 
 The Google Places API can return a lot of information about each place and most of the time you probably won't need every detail.  For maximum performance and minimum memory usage, you can specify which fields you want and limit the number of results.
 
@@ -48,26 +48,27 @@ StreetView.image(new Params().location(40.748769, -73.985332)
 
 [StreetView Javadoc][8]
 
-Download and Configure
-----------------------
+Install
+-------
 
-Sprockets is available in [Maven Central][4].
+* Add the dependency.
 
 ```xml
-<dependency>
-    <groupId>net.sf.sprockets</groupId>
-    <artifactId>sprockets</artifactId>
-    <version>1.6.0</version>
-</dependency>
+        <dependency>
+            <groupId>net.sf.sprockets</groupId>
+            <artifactId>sprockets</artifactId>
+            <version>1.6.0</version>
+        </dependency>
 ```
 
-Before calling any of the Google Places API methods, you must first add your [Google API key][5] to the library configuration.  See the [Sprockets][6] class description for instructions on configuring the library settings.
+* Add your [Google API key][5] to [sprockets.xml][4] and place it in the root of your application classpath.
+    * See the [Sprockets][6] class description for more information about configuring the library settings.
 
 [1]: https://developers.google.com/places/
 [2]: https://developers.google.com/maps/documentation/streetview/
 [3]: https://pushbit.github.io/sprockets/java/apidocs/
-[4]: https://search.maven.org/#artifactdetails|net.sf.sprockets|sprockets|1.6.0|jar
-[5]: https://code.google.com/apis/console/
+[4]: https://raw.githubusercontent.com/pushbit/sprockets/master/java/src/main/resources/net/sf/sprockets/sprockets.xml
+[5]: https://console.developers.google.com/
 [6]: https://pushbit.github.io/sprockets/java/apidocs/index.html?net/sf/sprockets/Sprockets.html
 [7]: https://pushbit.github.io/sprockets/java/apidocs/index.html?net/sf/sprockets/google/Places.html
 [8]: https://pushbit.github.io/sprockets/java/apidocs/index.html?net/sf/sprockets/google/StreetView.html
