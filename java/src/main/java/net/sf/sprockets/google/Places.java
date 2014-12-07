@@ -85,6 +85,7 @@ import net.sf.sprockets.util.logging.Loggers;
 import org.apache.commons.configuration.Configuration;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
@@ -190,7 +191,6 @@ public class Places {
 	 * <li>{@link Field#PRICE_LEVEL PRICE_LEVEL}</li>
 	 * <li>{@link Field#RATING RATING}</li>
 	 * <li>{@link Field#OPEN_NOW OPEN_NOW}</li>
-	 * <li>{@link Field#EVENTS EVENTS}</li>
 	 * <li>{@link Field#PHOTOS PHOTOS}</li>
 	 * </ul>
 	 * 
@@ -237,7 +237,6 @@ public class Places {
 	 * <li>{@link Field#PRICE_LEVEL PRICE_LEVEL}</li>
 	 * <li>{@link Field#RATING RATING}</li>
 	 * <li>{@link Field#OPEN_NOW OPEN_NOW}</li>
-	 * <li>{@link Field#EVENTS EVENTS}</li>
 	 * <li>{@link Field#PHOTOS PHOTOS}</li>
 	 * </ul>
 	 * 
@@ -378,8 +377,8 @@ public class Places {
 	 * Get all data for a place. Normally this will be called after getting a
 	 * {@link Place#getPlaceId() Place ID} from the results of a search or autocomplete method. The
 	 * {@link Params#maxResults(int) maxResults} parameter can be used to limit the number of
-	 * reviews, events, and photos. For example, if maxResults == 1, then at most 1 review, 1 event,
-	 * and 1 photo will be returned.
+	 * reviews and photos. For example, if maxResults == 1, then at most 1 review and 1 photo will
+	 * be returned.
 	 * <p>
 	 * Required params:
 	 * </p>
@@ -915,7 +914,7 @@ public class Places {
 		@Override
 		public String toString() {
 			boolean loc = mLat != Double.NEGATIVE_INFINITY && mLong != Double.NEGATIVE_INFINITY;
-			return Objects.toStringHelper(this).add("placeId", mPlaceId)
+			return MoreObjects.toStringHelper(this).add("placeId", mPlaceId)
 					.add("reference", mReference).add("location", loc ? mLat + "," + mLong : null)
 					.add("radius", mRadius != 0 ? mRadius : null).add("name", mName)
 					.add("keyword", mKeyword).add("query", mQuery)
@@ -981,7 +980,12 @@ public class Places {
 		OPEN_NOW,
 		/** Opening and closing times for each day that the place is open. */
 		OPENING_HOURS,
-		/** Current events happening at the place. */
+		/**
+		 * Current events happening at the place.
+		 * 
+		 * @deprecated the Places API no longer returns events
+		 */
+		@Deprecated
 		EVENTS,
 		/** Number of minutes the place's time zone is offset from UTC. */
 		UTC_OFFSET,
@@ -1174,7 +1178,7 @@ public class Places {
 
 		@Override
 		public String toString() {
-			return Objects.toStringHelper(this).add("status", mStatus)
+			return MoreObjects.toStringHelper(this).add("status", mStatus)
 					.add("errorMessage", mMessage).add("result", mResult)
 					.add("htmlAttributions", mAttribs != null ? mAttribs.size() : null)
 					.add("nextPageToken", mToken).add("etag", mEtag).omitNullValues().toString();
