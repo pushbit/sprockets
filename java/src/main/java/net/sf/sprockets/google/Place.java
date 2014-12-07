@@ -31,8 +31,9 @@ import net.sf.sprockets.lang.Maths;
 import net.sf.sprockets.lang.Substring;
 import net.sf.sprockets.time.DayOfWeek;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.base.MoreObjects.ToStringHelper;
 import com.google.common.base.Objects;
-import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -470,7 +471,10 @@ public class Place {
 
 	/**
 	 * Current events happening at this place.
+	 * 
+	 * @deprecated the Places API no longer returns events
 	 */
+	@Deprecated
 	public List<Event> getEvents() {
 		if (mEvents != null && !(mEvents instanceof ImmutableList)) {
 			mEvents = ImmutableList.copyOf(mEvents);
@@ -529,7 +533,7 @@ public class Place {
 	 * Shared ToStringHelper for subclasses.
 	 */
 	ToStringHelper helper() {
-		return Objects.toStringHelper(this).add("placeId", mPlaceId)
+		return MoreObjects.toStringHelper(this).add("placeId", mPlaceId)
 				.add("altIds", mAltIds != null ? mAltIds.size() : null).add("id", mId)
 				.add("reference", mReference).add("icon", mIcon).add("url", mUrl)
 				.add("latitude", mLat != Double.NEGATIVE_INFINITY ? mLat : null)
@@ -642,7 +646,7 @@ public class Place {
 
 		@Override
 		public String toString() {
-			return Objects.toStringHelper(this).add("id", mId).add("scope", mScope)
+			return MoreObjects.toStringHelper(this).add("id", mId).add("scope", mScope)
 					.omitNullValues().toString();
 		}
 
@@ -735,8 +739,9 @@ public class Place {
 
 			@Override
 			public String toString() {
-				return Objects.toStringHelper(this).add("filter", mInclude ? "include" : "exclude")
-						.add("ids", mIds).omitNullValues().toString();
+				return MoreObjects.toStringHelper(this)
+						.add("filter", mInclude ? "include" : "exclude").add("ids", mIds)
+						.omitNullValues().toString();
 			}
 		}
 	}
@@ -998,7 +1003,7 @@ public class Place {
 
 		@Override
 		public String toString() {
-			return Objects.toStringHelper(this).add("country", mCountry)
+			return MoreObjects.toStringHelper(this).add("country", mCountry)
 					.add("countryAbbr", mCountryAbbr).add("adminL1", mAdminL1)
 					.add("adminL1Abbr", mAdminL1Abbr).add("adminL2", mAdminL2)
 					.add("adminL2Abbr", mAdminL2Abbr).add("locality", mLocality)
@@ -1151,7 +1156,7 @@ public class Place {
 
 		@Override
 		public String toString() {
-			return Objects.toStringHelper(this).add("authorName", mAuthorName)
+			return MoreObjects.toStringHelper(this).add("authorName", mAuthorName)
 					.add("authorUrl", mAuthorUrl).add("time", mTime)
 					.add("aspects", mAspects != null ? mAspects.size() : null)
 					.add("rating", mRating != 0 ? mRating : null).add("language", mLanguage)
@@ -1223,7 +1228,7 @@ public class Place {
 
 			@Override
 			public String toString() {
-				return Objects.toStringHelper(this).add("type", mType).add("rating", mRating)
+				return MoreObjects.toStringHelper(this).add("type", mType).add("rating", mRating)
 						.omitNullValues().toString();
 			}
 		}
@@ -1361,16 +1366,19 @@ public class Place {
 
 		@Override
 		public String toString() {
-			return Objects.toStringHelper(this).add("openDay", mOpenDay).add("openHour", mOpenHour)
-					.add("openMinute", mOpenMinute).add("closeDay", mCloseDay)
-					.add("closeHour", mCloseHour).add("closeMinute", mCloseMinute).omitNullValues()
-					.toString();
+			return MoreObjects.toStringHelper(this).add("openDay", mOpenDay)
+					.add("openHour", mOpenHour).add("openMinute", mOpenMinute)
+					.add("closeDay", mCloseDay).add("closeHour", mCloseHour)
+					.add("closeMinute", mCloseMinute).omitNullValues().toString();
 		}
 	}
 
 	/**
 	 * Current event happening at a place.
+	 * 
+	 * @deprecated the Places API no longer returns events
 	 */
+	@Deprecated
 	public static class Event {
 		private String mId;
 		private long mTime;
@@ -1456,7 +1464,7 @@ public class Place {
 
 		@Override
 		public String toString() {
-			return Objects.toStringHelper(this).add("id", mId).add("startTime", mTime)
+			return MoreObjects.toStringHelper(this).add("id", mId).add("startTime", mTime)
 					.add("summary", mSummary).add("url", mUrl).omitNullValues().toString();
 		}
 	}
@@ -1564,8 +1572,8 @@ public class Place {
 
 		@Override
 		public String toString() {
-			return Objects.toStringHelper(this).add("reference", mReference).add("width", mWidth)
-					.add("height", mHeight)
+			return MoreObjects.toStringHelper(this).add("reference", mReference)
+					.add("width", mWidth).add("height", mHeight)
 					.add("htmlAttributions", mAttribs != null ? mAttribs.size() : null)
 					.omitNullValues().toString();
 		}
