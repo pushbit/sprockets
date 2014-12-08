@@ -96,6 +96,7 @@
 				<configuration>
 					<detectLinks>true</detectLinks>
 					<links>
+						<link>https://docs.oracle.com/javase/6/docs/api/</link>
 						<link>http://docs.guava-libraries.googlecode.com/git-history/release/javadoc/</link>
 						<link>https://commons.apache.org/proper/commons-configuration/javadocs/v1.10/apidocs/</link>
 					</links>
