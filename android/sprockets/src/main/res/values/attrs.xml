@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="Theme">
+        <!-- Highlight matched substrings with this color. -->
+        <attr name="matchedSubstringColor" format="color"/>
+    </declare-styleable>
+
+    <declare-styleable name="SprocketsPreferenceFragment">
+        <!-- XML resource with the preferences to display. -->
+        <attr name="preferences" format="reference"/>
+    </declare-styleable>
+
+    <declare-styleable name="GooglePlaceAutoComplete">
+
+        <!-- Prefer places within this many metres from the current location. Default is 50000
+             (50 km). -->
+        <attr name="radius" format="integer"/>
+
+        <!-- Autocomplete places of this type. Must be one of "geocode", "establishment",
+             "(regions)", or "(cities)". If not specified, all types are autocompleted. -->
+        <attr name="types" format="string"/>
+
+        <!-- Autocomplete places in this country. Must be a two character ISO 3166-1 Alpha-2
+             compatible country code, e.g. "GB". Currently only one country value is supported. -->
+        <attr name="countries" format="string"/>
+
+        <!-- Return results in this language, if possible. Must be one of the
+             <a href="https://spreadsheets.google.com/pub?key=p9pdwsai2hDMsLkXsoM05KQ&gid=1"
+             target="_blank">supported language codes</a>. -->
+        <attr name="language" format="string"/>
+
+        <!-- Return this many results, at most. Default and maximum is 5. -->
+        <attr name="maxResults" format="integer" max="5" min="1"/>
+
+        <!-- Layout resource with a TextView to use for each suggestion. Default layout is
+             {@code android.R.layout.simple_spinner_dropdown_item}. -->
+        <attr name="suggestionLayout" format="reference"/>
+
+        <!-- Highlight matched substrings with this color. -->
+        <attr name="matchedSubstringColor"/>
+
+    </declare-styleable>
+
+</resources>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <RingtonePreference
+        android:key="ringtone"
+        android:title="@string/ringtone"
+        android:ringtoneType="all"/>
+
+    <MultiSelectListPreference
+        android:key="multi"
+        android:title="@string/multi_select"
+        android:entries="@array/multi_entries"
+        android:entryValues="@array/multi_values"/>
+
+    <EditTextPreference
+        android:key="text"
+        android:title="@string/text_input"/>
+
+    <Preference
+        android:key="pref"
+        android:title="@string/text_display"/>
+
+</PreferenceScreen>

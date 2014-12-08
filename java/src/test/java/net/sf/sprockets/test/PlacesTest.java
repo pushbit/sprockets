@@ -38,8 +38,8 @@ import org.junit.Test;
 public class PlacesTest {
 	@Test
 	public void testNearbySearch() throws IOException {
-		Response<List<Place>> resp = Places.nearbySearch(new Params().location(40.758897,
-				-73.985126).keyword("pizza"));
+		Response<List<Place>> resp =
+				Places.nearbySearch(new Params().location(40.758897, -73.985126).keyword("pizza"));
 		assertEquals(OK, resp.getStatus());
 		List<Place> places = resp.getResult();
 		assertNotNull(places);
@@ -50,8 +50,8 @@ public class PlacesTest {
 
 	@Test
 	public void testTextSearch() throws IOException {
-		Response<List<Place>> resp = Places.textSearch(new Params()
-				.query("pizza near times square"));
+		Response<List<Place>> resp =
+				Places.textSearch(new Params().query("pizza near times square"));
 		assertEquals(OK, resp.getStatus());
 		List<Place> places = resp.getResult();
 		assertNotNull(places);
@@ -62,8 +62,8 @@ public class PlacesTest {
 
 	@Test
 	public void testRadarSearch() throws IOException {
-		Response<List<Place>> resp = Places.radarSearch(new Params()
-				.location(40.758897, -73.985126).keyword("pizza"));
+		Response<List<Place>> resp =
+				Places.radarSearch(new Params().location(40.758897, -73.985126).keyword("pizza"));
 		assertEquals(OK, resp.getStatus());
 		List<Place> places = resp.getResult();
 		assertNotNull(places);
@@ -74,8 +74,8 @@ public class PlacesTest {
 
 	@Test
 	public void testAutocomplete() throws IOException {
-		Response<List<Prediction>> resp = Places.autocomplete(new Params().location(40.758897,
-				-73.985126).query("john's piz"));
+		Response<List<Prediction>> resp = Places.autocomplete(
+				new Params().location(40.758897, -73.985126).query("john's piz"));
 		assertEquals(OK, resp.getStatus());
 		List<Prediction> predictions = resp.getResult();
 		assertNotNull(predictions);
@@ -86,8 +86,8 @@ public class PlacesTest {
 
 	@Test
 	public void testQueryAutocomplete() throws IOException {
-		Response<List<Prediction>> resp = Places.queryAutocomplete(new Params().location(40.758897,
-				-73.985126).query("pizza near tim"));
+		Response<List<Prediction>> resp = Places.queryAutocomplete(
+				new Params().location(40.758897, -73.985126).query("pizza near tim"));
 		assertEquals(OK, resp.getStatus());
 		List<Prediction> predictions = resp.getResult();
 		assertNotNull(predictions);
@@ -99,8 +99,8 @@ public class PlacesTest {
 	@Test
 	public void testDetails() throws IOException {
 		/* search */
-		Response<List<Place>> search = Places.textSearch(new Params()
-				.query("pizza near times square"));
+		Response<List<Place>> search = Places.textSearch(
+				new Params().query("pizza near times square"));
 		assertEquals(OK, search.getStatus());
 		List<Place> places = search.getResult();
 		assertNotNull(places);
@@ -117,8 +117,8 @@ public class PlacesTest {
 
 	@Test
 	public void testPhoto() throws IOException {
-		Response<List<Place>> search = Places.textSearch(new Params()
-				.query("pizza near times square"));
+		Response<List<Place>> search = Places.textSearch(
+				new Params().query("pizza near times square"));
 		assertEquals(OK, search.getStatus());
 		List<Place> places = search.getResult();
 		assertNotNull(places);
@@ -130,8 +130,8 @@ public class PlacesTest {
 				Photo photo = photos.get(0);
 				assertNotNull(photo);
 				assertTrue(photo.getReference().length() > 0);
-				Response<InputStream> resp = Places.photo(new Params()
-						.reference(photo.getReference()).maxWidth(160).maxHeight(120));
+				Response<InputStream> resp = Places.photo(
+						new Params().reference(photo.getReference()).maxWidth(160).maxHeight(120));
 				assertEquals(OK, resp.getStatus());
 				InputStream in = resp.getResult();
 				assertNotNull(in);

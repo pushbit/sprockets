@@ -33,8 +33,8 @@ import org.junit.Test;
 public class StreetViewTest {
 	@Test
 	public void testImage() throws IOException {
-		Response<InputStream> image = StreetView.image(new Params()
-				.location("18 Rue Cujas, Paris, France"));
+		Response<InputStream> image =
+				StreetView.image(new Params().location("18 Rue Cujas, Paris, France"));
 		assertEquals(OK, image.getStatus());
 		InputStream in = image.getResult();
 		assertNotNull(in);

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="match_parent">-1px</dimen>
+    <dimen name="wrap_content">-2px</dimen>
+    <dimen name="action_bar_list_subtitle_top_margin">-3dp</dimen>
+    <dimen name="icon">32dp</dimen>
+    <dimen name="navigation_drawer_item_min_height">64dp</dimen>
+    <dimen name="navigation_drawer_item_text">21sp</dimen>
+    <dimen name="navigation_drawer_sub_item_text">13sp</dimen>
+    <dimen name="divider_height">1dp</dimen>
+    <dimen name="pane_max_width">@dimen/match_parent</dimen>
+    <dimen name="cards_parent_margin">12dp</dimen>
+    <dimen name="cards_sibling_margin">10dp</dimen>
+    <dimen name="card_corner">1dp</dimen>
+    <dimen name="card_shadow">2dp</dimen>
+    <dimen name="card_padding">18dp</dimen>
+    <!-- Extra padding to accommodate for the shadow. -->
+    <dimen name="card_padding_bottom">20dp</dimen>
+    <dimen name="image_card_padding">8dp</dimen>
+    <dimen name="image_card_padding_bottom">10dp</dimen>
+    <dimen name="header_card_shadow">1dp</dimen>
+    <dimen name="header_card_padding_bottom">19dp</dimen>
+    <dimen name="text_card_max_width">@dimen/match_parent</dimen>
+    <!-- Fills two columns in small widths (320dp) -->
+    <dimen name="grid_card_width">143dp</dimen>
+    <!-- 96dp + padding -->
+    <dimen name="grid_card_height">114dp</dimen>
+    <dimen name="min_touch_size">48dp</dimen>
+    <dimen name="padding_large">16dp</dimen>
+    <dimen name="padding_medium">12dp</dimen>
+    <dimen name="padding">8dp</dimen>
+    <dimen name="padding_small">4dp</dimen>
+    <dimen name="padding_tiny">2dp</dimen>
+    <!-- Comfortable vertical spacing between title and text TextViews. -->
+    <dimen name="text_margin">4dp</dimen>
+    <dimen name="text_large">25sp</dimen>
+    <dimen name="text_medium">18sp</dimen>
+    <dimen name="text_small">14sp</dimen>
+    <dimen name="text_tiny">10sp</dimen>
+</resources>

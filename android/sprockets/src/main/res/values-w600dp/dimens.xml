@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Fills three columns in medium widths (600dp) -->
+    <dimen name="grid_card_width">185dp</dimen>
+</resources>

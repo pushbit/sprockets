@@ -1,0 +1,101 @@
+apply plugin: 'com.android.library'
+apply plugin: 'maven'
+
+android {
+    compileSdkVersion 21
+    buildToolsVersion '21.1.1'
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
+    }
+}
+
+configurations {
+    javadoc
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.android.support:support-v13:21.0.2'
+    compile 'com.google.android.gms:play-services:6.1.71'
+    compile 'net.sf.sprockets:sprockets:2.0.0'
+    compile 'com.jakewharton:butterknife:6.0.0'
+    compile 'com.github.frankiesardo:icepick:2.3.6'
+    compile 'com.github.frankiesardo:icepick-processor:2.3.6'
+    compile 'commons-io:commons-io:2.4'
+
+    /* Google repository dependencies aren't visible in configs, use external jars instead */
+    def extras = "${android.sdkDirectory}/extras"
+    javadoc fileTree(dir: "${extras}/android/support", include: ['**/*.jar'])
+    javadoc fileTree(dir: "${extras}/google/google_play_services/libproject", include: ['**/*.jar'])
+}
+
+def libName = 'Sprockets Android'
+def libVersion = '2.0.0'
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository(url: "file://${buildDir}/repo/")
+            pom.project {
+                groupId 'net.sf.sprockets'
+                artifactId 'sprockets-android'
+                version libVersion
+                packaging 'aar'
+                name libName
+                description 'Base components, widgets, utility methods, and common resources.'
+                url 'https://pushbit.github.io/sprockets/android'
+                licenses {
+                    license {
+                        name 'GNU Lesser General Public License, Version 3'
+                        url 'http://www.gnu.org/licenses/lgpl.txt'
+                        distribution 'repo'
+                    }
+                }
+                developers {
+                    developer {
+                        id 'pushbit'
+                        name 'Paul Bitson'
+                        email 'pushbit@gmail.com'
+                    }
+                }
+                scm {
+                    connection 'scm:git:git://github.com/pushbit/sprockets.git'
+                    url 'https://github.com/pushbit/sprockets'
+                }
+                issueManagement {
+                    system 'GitHub'
+                    url 'https://github.com/pushbit/sprockets/issues'
+                }
+            }
+        }
+    }
+}
+
+task androidSourcesJar(type: Jar) {
+    classifier = 'sources'
+    from android.sourceSets.main.java.srcDirs
+}
+
+task androidJavadocs(type: Javadoc, dependsOn: 'processReleaseResources') {
+    source = android.sourceSets.main.java.srcDirs.plus(
+            fileTree(dir: "${buildDir}/generated/source/r/release"))
+    classpath += files(android.bootClasspath, configurations.compile, configurations.javadoc)
+    title = "${libName} ${libVersion} API"
+    options {
+        links 'https://pushbit.github.io/sprockets/java/apidocs/',
+                'http://docs.guava-libraries.googlecode.com/git-history/release/javadoc/',
+                'https://jakewharton.github.io/butterknife/javadoc/'
+        linksOffline 'https://developer.android.com/reference/',
+                "${android.sdkDirectory}/docs/reference"
+    }
+}
+
+task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
+    classifier = 'javadoc'
+    from androidJavadocs.destinationDir
+}
+
+artifacts {
+    archives androidSourcesJar, androidJavadocsJar
+}

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="navigation_drawer_background">#f7f7f7</color>
+    <color name="navigation_drawer_item_text">#333333</color>
+    <color name="navigation_drawer_sub_item_text">#666666</color>
+    <color name="tabs_background">#ebebeb</color>
+    <color name="cards_window_background">#e5e5e5</color>
+    <color name="card_shadow">#d3d3d3</color>
+    <color name="header_card_background">#f1f1f1</color>
+    <color name="list_selector_disabled">#1f000000</color>
+    <color name="list_selector_background">#33999999</color>
+    <color name="list_focused">#4d33b5e5</color>
+    <color name="list_activated">#cc0099cc</color>
+    <color name="overlay">#70000000</color>
+    <color name="text_title">#707070</color>
+    <color name="text_title_header">#666666</color>
+    <color name="text">#8d8d8d</color>
+    <color name="text_light">#b5b5b5</color>
+    <color name="text_lighter">#cdcdcd</color>
+    <color name="text_lightest">#e5e5e5</color>
+    <color name="text_link">#4285f4</color>
+</resources>

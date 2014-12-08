@@ -40,6 +40,7 @@ import net.sf.sprockets.util.logging.Loggers;
 
 import org.apache.commons.configuration.Configuration;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 
@@ -259,7 +260,8 @@ public class StreetView {
 		@Override
 		public String toString() {
 			boolean l = mLat != Double.NEGATIVE_INFINITY && mLong != Double.NEGATIVE_INFINITY;
-			return Objects.toStringHelper(this).add("location", l ? mLat + "," + mLong : mLocation)
+			return MoreObjects.toStringHelper(this)
+					.add("location", l ? mLat + "," + mLong : mLocation)
 					.add("heading", mHeading != Integer.MIN_VALUE ? mHeading : null)
 					.add("pitch", mPitch != Integer.MIN_VALUE ? mPitch : null)
 					.add("fov", mFov != 0 ? mFov : null).add("size", mWidth + "x" + mHeight)
@@ -326,7 +328,7 @@ public class StreetView {
 
 		@Override
 		public String toString() {
-			return Objects.toStringHelper(this).add("status", mStatus).add("result", mResult)
+			return MoreObjects.toStringHelper(this).add("status", mStatus).add("result", mResult)
 					.omitNullValues().toString();
 		}
 	}

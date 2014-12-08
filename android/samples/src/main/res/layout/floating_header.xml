@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <ListView
+        android:id="@android:id/list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+    <TextView
+        style="@style/Card.Title"
+        android:id="@+id/header"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/floating_header_height"
+        android:text="@string/floating_header"
+        android:gravity="center"
+        android:background="#99CC00"
+        android:translationY="@dimen/floating_header_y"/>
+
+</merge>
