@@ -33,7 +33,7 @@ import java.util.concurrent.CountDownLatch;
 import static com.google.android.gms.common.ConnectionResult.SUCCESS;
 
 /**
- * Provides the current location to subclasses before performing the cursor query.
+ * Provides the current location to implementations before performing the cursor query.
  */
 public abstract class LocalCursorLoader extends EasyCursorLoader {
     private static final String TAG = LocalCursorLoader.class.getSimpleName();
@@ -96,7 +96,7 @@ public abstract class LocalCursorLoader extends EasyCursorLoader {
     protected abstract void onLocation(Location location);
 
     /**
-     * Provides the location to the subclass and then resumes loading the cursor.
+     * Provides the location to the implementation and then resumes loading the cursor.
      */
     private class Listener implements LocationListener {
         @Override

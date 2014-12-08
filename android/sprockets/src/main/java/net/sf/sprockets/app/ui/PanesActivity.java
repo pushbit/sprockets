@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 pushbit <pushbit@gmail.com>
+ * Copyright 2013-2014 pushbit <pushbit@gmail.com>
  * 
  * This file is part of Sprockets.
  * 
@@ -32,8 +32,9 @@ import net.sf.sprockets.util.Elements;
 import static butterknife.ButterKnife.findById;
 
 /**
- * Manages two fragment panes. When the screen configuration is large enough, both panes are
- * displayed together. Otherwise the panes are displayed in a {@link ViewPager}.
+ * Manages two fragment panes that are either displayed next to each other or in a
+ * {@link ViewPager}, depending on screen size. The fragment instance states are saved and restored
+ * when switching between configurations.
  * <p>
  * You must either provide your own layout that includes a version with the ViewPager and another
  * with two panes, by calling {@link #setContentView(int, int, int, int)}, or you may call

@@ -65,6 +65,12 @@ import static net.sf.sprockets.google.Places.Response.Status.ZERO_RESULTS;
  * {@link permission#INTERNET INTERNET} permissions.
  * </p>
  * <p>
+ * XML Attributes: {@link #setRadius(int) radius}, {@link #setTypes(String) types},
+ * {@link #setCountries(String) countries}, {@link #setLanguage(String) language},
+ * {@link #setMaxResults(int) maxResults}, {@link #setSuggestionLayout(int) suggestionLayout},
+ * {@link #setMatchedSubstringColor(int) matchedSubstringColor}
+ * </p>
+ * <p>
  * <a href="https://github.com/pushbit/sprockets/blob/master/android/samples/src/main/res/layout/google_place_auto_complete.xml" target="_blank">Sample Layout</a>
  * </p>
  * <p>
