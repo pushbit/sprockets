@@ -13,12 +13,12 @@ android {
     }
     buildTypes {
         debug {
-            runProguard true
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro',
                     'sprockets-rules.pro'
         }
         release {
-            runProguard true
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro',
                     'sprockets-rules.pro'
         }

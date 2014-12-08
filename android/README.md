@@ -73,7 +73,7 @@ Install
     compile 'net.sf.sprockets:sprockets-android:2.0.0'
 ```
 
-2\. Ensure ProGuard is enabled in the `buildTypes`, download [sprockets-rules.pro][2], and add it to the `proguardFiles` list(s).
+2\. Ensure the `buildTypes` have `minifyEnabled true`, download [sprockets-rules.pro][2], and add it to `proguardFiles`.
 
 3\. Tell ProGuard to ignore duplicate files.
 
@@ -85,7 +85,7 @@ Install
     }
 ```
 
-4\. Ensure AndroidManifest.xml is set up for Google Play Services. Within `application`:
+4\. Ensure AndroidManifest.xml is set up for Google Play Services. Within `<application>`:
 
 ```xml
     <meta-data
