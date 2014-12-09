@@ -6,6 +6,7 @@ Extend base components, use widgets, call utility methods, and reference common 
 * [Features](#features)
 * [Install](#install)
 * [Javadoc][1]
+    * See also Sprockets for Java [Javadoc][2]
 
 Features
 --------
@@ -73,7 +74,7 @@ Install
     compile 'net.sf.sprockets:sprockets-android:2.0.0'
 ```
 
-2\. Ensure the `buildTypes` have `minifyEnabled true`, download [sprockets-rules.pro][2], and add it to `proguardFiles`.
+2\. Ensure the `buildTypes` have `minifyEnabled true`, download [sprockets-rules.pro][10], and add it to `proguardFiles`.
 
 3\. Tell ProGuard to ignore duplicate files.
 
@@ -93,14 +94,16 @@ Install
         android:value="@integer/google_play_services_version"/>
 ```
 
-5\. Download [sprockets.xml][3] to `src/main/resources/`.
+5\. Download [sprockets.xml][11] to `src/main/resources/`.
 
-* If you will use Google APIs, add your [Google API key][4].
+* If you will use Google APIs, add your [Google API key][12].
 
 [1]: https://pushbit.github.io/sprockets/android/apidocs/
-[2]: https://raw.githubusercontent.com/pushbit/sprockets/master/android/sprockets/sprockets-rules.pro
-[3]: https://raw.githubusercontent.com/pushbit/sprockets/master/java/src/main/resources/net/sf/sprockets/sprockets.xml
-[4]: https://console.developers.google.com/
+[2]: https://pushbit.github.io/sprockets/java/apidocs/
+
+[10]: https://raw.githubusercontent.com/pushbit/sprockets/master/android/sprockets/sprockets-rules.pro
+[11]: https://raw.githubusercontent.com/pushbit/sprockets/master/java/src/main/resources/net/sf/sprockets/sprockets.xml
+[12]: https://console.developers.google.com/
 
 [100]: https://pushbit.github.io/sprockets/android/apidocs/index.html?net/sf/sprockets/app/VersionedApplication.html
 [101]: https://pushbit.github.io/sprockets/android/apidocs/index.html?net/sf/sprockets/app/ui/NavigationDrawerActivity.html
