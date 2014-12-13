@@ -17,7 +17,7 @@ Below is a sample of the available classes and resources. See the [Javadoc][1] f
     * [VersionedApplication][100]
         * Implement onVersionChanged to be notified when the app runs with a new version for the first time.
     * [NavigationDrawerActivity][101]
-        * Manages the ActionBar during navigation drawer events
+        * Manages the ActionBar during navigation drawer events.
     * [BaseNavigationDrawerFragment][102]
         * Set items from an array, highlight selected item, and respond to clicks.
     * [PanesActivity][103]
@@ -66,7 +66,7 @@ Install
 
 (Requires *Android Support Repository* and *Google Repository* in the SDK Manager.)
 
-[Sample](samples/build.gradle)
+[Sample build.gradle](samples/build.gradle)
 
 1\. Add the dependency.
 
@@ -94,7 +94,7 @@ Install
         android:value="@integer/google_play_services_version"/>
 ```
 
-5\. Download [sprockets.xml][11] to `src/main/resources/`.
+5\. (Optional) Download [sprockets.xml][11] to `src/main/resources/`.
 
 * If you will use Google APIs, add your [Google API key][12].
 
