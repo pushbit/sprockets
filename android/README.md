@@ -1,5 +1,5 @@
-Sprockets for Android
-=====================
+Sprockets for Android [![Android Arsenal][3]][4]
+================================================
 
 Extend base components, use widgets, call utility methods, and reference common resources.
 
@@ -100,6 +100,8 @@ Install
 
 [1]: https://pushbit.github.io/sprockets/android/apidocs/
 [2]: https://pushbit.github.io/sprockets/java/apidocs/
+[3]: https://img.shields.io/badge/Android%20Arsenal-Sprockets-brightgreen.svg?style=flat
+[4]: https://android-arsenal.com/details/1/1243
 
 [10]: https://raw.githubusercontent.com/pushbit/sprockets/master/android/sprockets/sprockets-rules.pro
 [11]: https://raw.githubusercontent.com/pushbit/sprockets/master/java/src/main/resources/net/sf/sprockets/sprockets.xml
