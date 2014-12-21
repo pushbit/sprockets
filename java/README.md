@@ -1,5 +1,5 @@
-Sprockets for Java
-==================
+Sprockets for Java [![Maven Central][9]][10]
+============================================
 
 Query the [Google Places API][1] and [Google Street View Image API][2] in Java.
 
@@ -73,3 +73,5 @@ Install
 [6]: https://pushbit.github.io/sprockets/java/apidocs/index.html?net/sf/sprockets/Sprockets.html
 [7]: https://pushbit.github.io/sprockets/java/apidocs/index.html?net/sf/sprockets/google/Places.html
 [8]: https://pushbit.github.io/sprockets/java/apidocs/index.html?net/sf/sprockets/google/StreetView.html
+[9]: https://img.shields.io/maven-central/v/net.sf.sprockets/sprockets.svg
+[10]: https://search.maven.org/#search|ga|1|g%3Anet.sf.sprockets%20a%3Asprockets

@@ -1,5 +1,5 @@
-Sprockets for Java EE
-=====================
+Sprockets for Java EE [![Maven Central][2]][3]
+==============================================
 
 Create Servlets that automatically read and write JSON objects.
 
@@ -37,3 +37,5 @@ Install
 ```
 
 [1]: https://pushbit.github.io/sprockets/java-ee/apidocs/
+[2]: https://img.shields.io/maven-central/v/net.sf.sprockets/sprockets-ee.svg
+[3]: https://search.maven.org/#search|ga|1|g%3Anet.sf.sprockets%20a%3Asprockets-ee
