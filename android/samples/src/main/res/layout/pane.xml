@@ -4,8 +4,8 @@
              android:layout_height="match_parent">
 
     <CheckBox
-        style="@style/Card.Title"
         android:id="@+id/text"
+        style="@style/Card.Title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"/>

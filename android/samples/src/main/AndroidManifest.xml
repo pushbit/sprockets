@@ -43,6 +43,9 @@
             android:name=".app.ui.ParallaxViewActivity"
             android:label="@string/parallax_view_scroll_listener"/>
         <activity
+            android:name=".app.ui.TranslateImageActivity"
+            android:label="@string/translate_image_page_change_listener"/>
+        <activity
             android:name=".app.ui.GooglePlaceAutoCompleteActivity"
             android:label="@string/google_place_auto_complete"/>
         <activity

@@ -34,12 +34,12 @@
 -keep class **$$Icicle { *; }
 -keepnames class * { @icepick.Icicle *; }
 
+# okhttp
+-dontwarn com.squareup.okhttp.internal.**
+
 # okio
 -dontwarn java.nio.file.**
 -dontwarn org.codehaus.mojo.animal_sniffer.**
-
-# okhttp
--dontwarn com.squareup.okhttp.internal.**
 
 # play-services
 -keep class * extends java.util.ListResourceBundle { protected Object[][] getContents(); }

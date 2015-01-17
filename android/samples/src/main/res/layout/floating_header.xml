@@ -7,8 +7,8 @@
         android:layout_height="match_parent"/>
 
     <TextView
-        style="@style/Card.Title"
         android:id="@+id/header"
+        style="@style/Card.Title"
         android:layout_width="match_parent"
         android:layout_height="@dimen/floating_header_height"
         android:text="@string/floating_header"

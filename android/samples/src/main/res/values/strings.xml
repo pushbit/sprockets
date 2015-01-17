@@ -25,6 +25,9 @@
     <string name="parallax_view_scroll_listener">ParallaxViewScrollListener</string>
     <string name="parallax_view">Parallax View</string>
 
+    <string name="translate_image_page_change_listener">TranslateImagePageChangeListener</string>
+    <string name="page_n">Page %d</string>
+
     <string name="google_place_auto_complete">GooglePlaceAutoComplete</string>
     <string name="place">Name: %1$s\n\nTypes: %2$s</string>
 

@@ -1,3 +1,18 @@
+2015-01-17  2.1.0
+
+	[android]
+	* added view.TranslateImagePageChangeListener
+	* added widget.ObservableImageView
+	* added gms.maps.GoogleMaps
+	* added graphics.Palettes
+	* added picasso.GradientTransformation
+	* added app.MoreActivityOptions
+	* added content.Content.NOTIFY_CHANGE and net.Uris.notifyChange
+	* added text.style.Spans
+	[java]
+	* added io.MoreFiles
+	* util.Elements.get allows a null array/list
+
 2014-12-07  2.0.0
 
 	[java]

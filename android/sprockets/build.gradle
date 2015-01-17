@@ -3,7 +3,7 @@ apply plugin: 'maven'
 
 android {
     compileSdkVersion 21
-    buildToolsVersion '21.1.1'
+    buildToolsVersion '21.1.2'
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_7
         targetCompatibility JavaVersion.VERSION_1_7
@@ -16,9 +16,11 @@ configurations {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.android.support:support-v13:21.0.2'
-    compile 'com.google.android.gms:play-services:6.1.71'
-    compile 'net.sf.sprockets:sprockets:2.0.0'
+    compile 'com.android.support:support-v13:21.0.3'
+    compile 'com.android.support:palette-v7:21.0.3'
+    compile 'com.google.android.gms:play-services:6.5.87'
+    compile 'net.sf.sprockets:sprockets:2.1.0'
+    compile 'com.squareup.picasso:picasso:2.4.0'
     compile 'com.jakewharton:butterknife:6.0.0'
     compile 'com.github.frankiesardo:icepick:2.3.6'
     compile 'com.github.frankiesardo:icepick-processor:2.3.6'
@@ -31,7 +33,7 @@ dependencies {
 }
 
 def libName = 'Sprockets Android'
-def libVersion = '2.0.0'
+def libVersion = '2.1.0'
 
 uploadArchives {
     repositories {
@@ -85,6 +87,7 @@ task androidJavadocs(type: Javadoc, dependsOn: 'processReleaseResources') {
     options {
         links 'https://pushbit.github.io/sprockets/java/apidocs/',
                 'http://docs.guava-libraries.googlecode.com/git-history/release/javadoc/',
+                'https://square.github.io/picasso/javadoc/',
                 'https://jakewharton.github.io/butterknife/javadoc/'
         linksOffline 'https://developer.android.com/reference/',
                 "${android.sdkDirectory}/docs/reference"

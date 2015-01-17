@@ -40,6 +40,9 @@ Below is a sample of the available classes and resources. See the [Javadoc][1] f
 * preference
     * [Prefs][500]
         * Get and set SharedPreferences values in one method call.
+* view
+    * [TranslateImagePageChangeListener][700]
+        * Translates a "cropped" image when a ViewPager is scrolled to reveal the whole image.
 * widget
     * [GooglePlaceAutoComplete][600]
         * AutoCompleteTextView that provides local suggestions from the Google Places API.
@@ -71,7 +74,7 @@ Install
 1\. Add the dependency.
 
 ```groovy
-    compile 'net.sf.sprockets:sprockets-android:2.0.0'
+    compile 'net.sf.sprockets:sprockets-android:2.1.0'
 ```
 
 2\. Ensure the `buildTypes` have `minifyEnabled true`, download [sprockets-rules.pro][10], and add it to `proguardFiles`.
@@ -129,3 +132,5 @@ Install
 [601]: https://pushbit.github.io/sprockets/android/apidocs/index.html?net/sf/sprockets/widget/FadingActionBarScrollListener.html
 [602]: https://pushbit.github.io/sprockets/android/apidocs/index.html?net/sf/sprockets/widget/FloatingHeaderScrollListener.html
 [603]: https://pushbit.github.io/sprockets/android/apidocs/index.html?net/sf/sprockets/widget/ParallaxViewScrollListener.html
+
+[700]: https://pushbit.github.io/sprockets/android/apidocs/index.html?net/sf/sprockets/view/TranslateImagePageChangeListener.html
