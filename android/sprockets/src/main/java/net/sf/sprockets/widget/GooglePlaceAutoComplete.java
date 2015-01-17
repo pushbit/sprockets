@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 pushbit <pushbit@gmail.com>
+ * Copyright 2013-2015 pushbit <pushbit@gmail.com>
  * 
  * This file is part of Sprockets.
  * 
@@ -22,7 +22,6 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
-import android.text.style.StyleSpan;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -51,10 +50,10 @@ import net.sf.sprockets.lang.Substring;
 import java.io.IOException;
 import java.util.List;
 
-import static android.graphics.Typeface.BOLD;
 import static android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE;
 import static net.sf.sprockets.google.Places.Response.Status.OK;
 import static net.sf.sprockets.google.Places.Response.Status.ZERO_RESULTS;
+import static net.sf.sprockets.text.style.Spans.BOLD;
 
 /**
  * AutoCompleteTextView that provides local suggestions from the
@@ -86,8 +85,6 @@ import static net.sf.sprockets.google.Places.Response.Status.ZERO_RESULTS;
  * @attr ref net.sf.sprockets.R.styleable#GooglePlaceAutoComplete_matchedSubstringColor
  */
 public class GooglePlaceAutoComplete extends AutoCompleteTextView {
-    private static final StyleSpan BOLD_SPAN = new StyleSpan(BOLD);
-
     /**
      * Used by the Filter to get results.
      */
@@ -133,6 +130,12 @@ public class GooglePlaceAutoComplete extends AutoCompleteTextView {
                 R.styleable.GooglePlaceAutoComplete_matchedSubstringColor, matchedSubstringColor));
         a.recycle();
     }
+
+    // todo Added in API level 21
+    // public GooglePlaceAutoComplete(Context context, AttributeSet attrs, int defStyleAttr,
+    //                                int defStyleRes) {
+    //     super(context, attrs, defStyleAttr, defStyleRes);
+    // }
 
     /**
      * Prefer places within this many metres from the current location.
@@ -355,15 +358,14 @@ public class GooglePlaceAutoComplete extends AutoCompleteTextView {
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             TextView view = convertView != null ? (TextView) convertView
-                    : (TextView) LayoutInflater.from(getContext())
-                    .inflate(mLayout != 0 ? mLayout
-                            : android.R.layout.simple_spinner_dropdown_item, parent, false);
+                    : (TextView) LayoutInflater.from(getContext()).inflate(mLayout != 0 ? mLayout
+                    : android.R.layout.simple_spinner_dropdown_item, parent, false);
             Prediction pred = getItem(position);
             SpannableString s = new SpannableString(pred.getName());
             for (Substring sub : pred.getMatchedSubstrings()) { // highlight matching substrings
                 int start = sub.getOffset();
                 int end = start + sub.getLength();
-                s.setSpan(BOLD_SPAN, start, end, SPAN_EXCLUSIVE_EXCLUSIVE);
+                s.setSpan(BOLD, start, end, SPAN_EXCLUSIVE_EXCLUSIVE);
                 if (mColorSpan != null) {
                     s.setSpan(mColorSpan, start, end, SPAN_EXCLUSIVE_EXCLUSIVE);
                 }
