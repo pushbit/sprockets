@@ -30,8 +30,6 @@ import com.google.android.gms.location.LocationRequest;
 
 import net.sf.sprockets.gms.common.api.Connector;
 
-import java.lang.ref.WeakReference;
-
 import static com.google.android.gms.common.ConnectionResult.SUCCESS;
 import static com.google.android.gms.location.LocationServices.API;
 import static com.google.android.gms.location.LocationServices.FusedLocationApi;
@@ -65,7 +63,7 @@ public class Locations {
     }
 
     /**
-     * Get the current location with a specific priority and send it to the listener.
+     * Get the current location with the priority and send it to the listener.
      *
      * @param priority must be one of the {@link LocationRequest} PRIORITY constants
      * @return {@link ConnectionResult#SUCCESS SUCCESS} if Google Play Services is available and an
@@ -84,7 +82,7 @@ public class Locations {
      */
     private static class Request extends Connector implements LocationListener {
         private final int mPriority;
-        private final WeakReference<LocationListener> mListener;
+        private final LocationListener mListener;
         private final GoogleApiClient mClient;
 
         /**
@@ -93,7 +91,7 @@ public class Locations {
          */
         private Request(Context context, int priority, LocationListener listener) {
             mPriority = priority;
-            mListener = new WeakReference<>(listener);
+            mListener = listener;
             mClient = new Builder(context.getApplicationContext(), this, this).addApi(API).build();
             mClient.connect();
         }
@@ -103,7 +101,7 @@ public class Locations {
             if (mPriority == -1) { // try to get last location and return
                 Location location = FusedLocationApi.getLastLocation(mClient);
                 if (location != null) {
-                    deliver(location);
+                    mListener.onLocationChanged(location);
                     mClient.disconnect();
                     return;
                 }
@@ -118,18 +116,8 @@ public class Locations {
 
         @Override
         public void onLocationChanged(Location location) {
-            deliver(location);
+            mListener.onLocationChanged(location);
             mClient.disconnect();
-        }
-
-        /**
-         * Send the location to the listener if it is still available.
-         */
-        private void deliver(Location location) {
-            LocationListener listener = mListener.get();
-            if (listener != null) {
-                listener.onLocationChanged(location);
-            }
         }
     }
 }
