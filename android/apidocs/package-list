@@ -7,11 +7,13 @@ net.sf.sprockets.database
 net.sf.sprockets.database.sqlite
 net.sf.sprockets.gms.analytics
 net.sf.sprockets.gms.common.api
+net.sf.sprockets.gms.maps
 net.sf.sprockets.google
 net.sf.sprockets.graphics
 net.sf.sprockets.graphics.drawable
 net.sf.sprockets.location
 net.sf.sprockets.net
+net.sf.sprockets.picasso
 net.sf.sprockets.preference
 net.sf.sprockets.text
 net.sf.sprockets.text.style
