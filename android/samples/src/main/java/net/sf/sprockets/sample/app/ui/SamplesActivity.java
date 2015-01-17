@@ -13,11 +13,11 @@ public class SamplesActivity extends ListActivity {
     private static final int[] sLabels = {R.string.navigation_drawer,
             R.string.panes_activity, R.string.fading_action_bar_scroll_listener,
             R.string.floating_header_scroll_listener, R.string.parallax_view_scroll_listener,
-            R.string.google_place_auto_complete, R.string.google_places_loader,
-            R.string.sprockets_preference_fragment};
+            R.string.translate_image_page_change_listener, R.string.google_place_auto_complete,
+            R.string.google_places_loader, R.string.sprockets_preference_fragment};
     private static final Class<?>[] sActivities = {NavigationDrawerSampleActivity.class,
             PanesSampleActivity.class, FadingActionBarActivity.class,
-            FloatingHeaderActivity.class, ParallaxViewActivity.class,
+            FloatingHeaderActivity.class, ParallaxViewActivity.class, TranslateImageActivity.class,
             GooglePlaceAutoCompleteActivity.class, GooglePlacesLoaderActivity.class,
             SettingsActivity.class};
 
