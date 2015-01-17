@@ -33,7 +33,6 @@ public class Intents {
      * True if the Intent can be resolved to an Activity.
      */
     public static boolean hasActivity(Context context, Intent intent) {
-        return context.getPackageManager()
-                .queryIntentActivities(intent, MATCH_DEFAULT_ONLY).size() > 0;
+        return context.getPackageManager().resolveActivity(intent, MATCH_DEFAULT_ONLY) != null;
     }
 }
