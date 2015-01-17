@@ -33,7 +33,15 @@ public class Content {
      */
     public static final String LIMIT = "limit_offset";
     /**
-     * URI query parameter that allows the caller to specify that it is a sync adapter.
+     * URI query parameter to specify if observers should be notified about the change.  Default is
+     * true.
+     *
+     * @since 2.1.0
+     */
+    public static final String NOTIFY_CHANGE = "notify_change";
+    /**
+     * URI query parameter to specify that the caller is a sync adapter and the changes it makes do
+     * not need to be synced to the network.
      */
     public static final String CALLER_IS_SYNCADAPTER = "caller_is_syncadapter";
     /**
