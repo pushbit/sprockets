@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 pushbit <pushbit@gmail.com>
+ * Copyright 2013-2015 pushbit <pushbit@gmail.com>
  * 
  * This file is part of Sprockets.
  * 
@@ -34,19 +34,19 @@ public class Elements {
 	/**
 	 * Get the element at the index in the array.
 	 * 
-	 * @return null if the index is out of bounds
+	 * @return null if the array is null or the index is out of bounds
 	 */
 	public static <T> T get(T[] array, int index) {
-		return index >= 0 && index < array.length ? array[index] : null;
+		return array != null && index >= 0 && index < array.length ? array[index] : null;
 	}
 
 	/**
 	 * Get the element at the index in the list.
 	 * 
-	 * @return null if the index is out of bounds
+	 * @return null if the list is null or the index is out of bounds
 	 */
 	public static <T> T get(List<T> list, int index) {
-		return index >= 0 && index < list.size() ? list.get(index) : null;
+		return list != null && index >= 0 && index < list.size() ? list.get(index) : null;
 	}
 
 	/**
