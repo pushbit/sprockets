@@ -32,6 +32,7 @@ import java.util.List;
 import static android.provider.BaseColumns._ID;
 import static net.sf.sprockets.content.Content.CALLER_IS_SYNCADAPTER;
 import static net.sf.sprockets.content.Content.LIMIT;
+import static net.sf.sprockets.content.Content.NOTIFY_CHANGE;
 
 /**
  * Utility methods for working with Uris.
@@ -52,6 +53,29 @@ public class Uris {
      */
     public static Uri limit(Uri uri, String limit) {
         return uri.buildUpon().appendQueryParameter(LIMIT, limit).build();
+    }
+
+    /**
+     * Append a {@link Content#NOTIFY_CHANGE notify_change} query parameter to the URI.
+     *
+     * @since 2.1.0
+     */
+    public static Uri notifyChange(Uri uri, boolean notify) {
+        return notifyChange(uri, 0L, notify);
+    }
+
+    /**
+     * Append the ID, if it is greater than zero, and a {@link Content#NOTIFY_CHANGE notify_change}
+     * query parameter to the URI.
+     *
+     * @since 2.1.0
+     */
+    public static Uri notifyChange(Uri uri, long id, boolean notify) {
+        Builder builder = uri.buildUpon();
+        if (id > 0) {
+            ContentUris.appendId(builder, id);
+        }
+        return builder.appendQueryParameter(NOTIFY_CHANGE, notify ? "1" : "0").build();
     }
 
     /**
