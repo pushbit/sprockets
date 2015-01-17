@@ -42,6 +42,7 @@ import java.util.Arrays;
 
 import static net.sf.sprockets.content.Content.CALLER_IS_SYNCADAPTER;
 import static net.sf.sprockets.content.Content.LIMIT;
+import static net.sf.sprockets.content.Content.NOTIFY_CHANGE;
 import static net.sf.sprockets.database.Operation.DELETE;
 import static net.sf.sprockets.database.Operation.INSERT;
 import static net.sf.sprockets.database.Operation.SELECT;
@@ -122,13 +123,15 @@ public abstract class DbContentProvider extends ContentProvider {
     }
 
     /**
-     * Notify observers of a change at notify URI. The
-     * {@link Content#CALLER_IS_SYNCADAPTER CALLER_IS_SYNCADAPTER} query parameter in the
-     * original URI determines if the change will be synchronised to the network.
+     * Notify observers of a change at notify URI. This will be a no-op if the original URI
+     * specifies {@link Content#NOTIFY_CHANGE NOTIFY_CHANGE} = false/0. The change will be synced to
+     * the network if the {@link Content#CALLER_IS_SYNCADAPTER caller is not a sync adapter}.
      */
     private void notifyChange(Uri notify, Uri orig) {
-        getContext().getContentResolver().notifyChange(notify, null,
-                !orig.getBooleanQueryParameter(CALLER_IS_SYNCADAPTER, false));
+        if (orig.getBooleanQueryParameter(NOTIFY_CHANGE, true)) {
+            getContext().getContentResolver().notifyChange(notify, null,
+                    !orig.getBooleanQueryParameter(CALLER_IS_SYNCADAPTER, false));
+        }
     }
 
     /**
