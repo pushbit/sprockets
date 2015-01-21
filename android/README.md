@@ -6,7 +6,7 @@ Extend base components, use widgets, call utility methods, and reference common 
 * [Features](#features)
 * [Install](#install)
 * [Javadoc][1]
-    * See also Sprockets for Java [Javadoc][2]
+    * See also: Sprockets for Java [Javadoc][2]
 
 Features
 --------
@@ -18,7 +18,7 @@ Below is a sample of the available classes and resources. See the [Javadoc][1] f
         * Implement onVersionChanged to be notified when the app runs with a new version for the first time.
     * [NavigationDrawerActivity][101]
         * Manages the ActionBar during navigation drawer events.
-    * [BaseNavigationDrawerFragment][102]
+    * [BaseNavigationDrawerFragment][102] ([screenshot][105])
         * Set items from an array, highlight selected item, and respond to clicks.
     * [PanesActivity][103]
         * Manages two fragment panes that are either displayed next to each other or in a ViewPager, depending on screen size.
@@ -41,16 +41,16 @@ Below is a sample of the available classes and resources. See the [Javadoc][1] f
     * [Prefs][500]
         * Get and set SharedPreferences values in one method call.
 * view
-    * [TranslateImagePageChangeListener][700]
+    * [TranslateImagePageChangeListener][700] ([demo][701])
         * Translates a "cropped" image when a ViewPager is scrolled to reveal the whole image.
 * widget
-    * [GooglePlaceAutoComplete][600]
+    * [GooglePlaceAutoComplete][600] ([demo][604])
         * AutoCompleteTextView that provides local suggestions from the Google Places API.
-    * [FadingActionBarScrollListener][601]
+    * [FadingActionBarScrollListener][601] ([demo][605])
         * Fades the ActionBar title and background from transparent to opaque while scrolling down the list.
-    * [FloatingHeaderScrollListener][602]
+    * [FloatingHeaderScrollListener][602] ([demo][606])
         * Slides a View that floats above your list header(s) up and down along with the scrolling of the list.
-    * [ParallaxViewScrollListener][603]
+    * [ParallaxViewScrollListener][603] ([demo][607])
         * Synchronises the scrolling of a View with a ListView, at a speed relative to the list scrolling speed.
 * res
     * drawable
@@ -117,6 +117,7 @@ Install
 [102]: https://pushbit.github.io/sprockets/android/apidocs/index.html?net/sf/sprockets/app/ui/BaseNavigationDrawerFragment.html
 [103]: https://pushbit.github.io/sprockets/android/apidocs/index.html?net/sf/sprockets/app/ui/PanesActivity.html
 [104]: https://pushbit.github.io/sprockets/android/apidocs/index.html?net/sf/sprockets/app/ui/SprocketsPreferenceFragment.html
+[105]: samples/images/BaseNavigationDrawerFragment.png
 
 [200]: https://pushbit.github.io/sprockets/android/apidocs/index.html?net/sf/sprockets/content/DbContentProvider.html
 [201]: https://pushbit.github.io/sprockets/android/apidocs/index.html?net/sf/sprockets/content/GooglePlacesLoader.html
@@ -132,5 +133,10 @@ Install
 [601]: https://pushbit.github.io/sprockets/android/apidocs/index.html?net/sf/sprockets/widget/FadingActionBarScrollListener.html
 [602]: https://pushbit.github.io/sprockets/android/apidocs/index.html?net/sf/sprockets/widget/FloatingHeaderScrollListener.html
 [603]: https://pushbit.github.io/sprockets/android/apidocs/index.html?net/sf/sprockets/widget/ParallaxViewScrollListener.html
+[604]: samples/images/GooglePlaceAutoComplete.gif
+[605]: samples/images/FadingActionBarScrollListener.gif
+[606]: samples/images/FloatingHeaderScrollListener.gif
+[607]: samples/images/ParallaxViewScrollListener.gif
 
 [700]: https://pushbit.github.io/sprockets/android/apidocs/index.html?net/sf/sprockets/view/TranslateImagePageChangeListener.html
+[701]: samples/images/TranslateImagePageChangeListener.gif
