@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 pushbit <pushbit@gmail.com>
+ * Copyright 2014-2015 pushbit <pushbit@gmail.com>
  * 
  * This file is part of Sprockets.
  * 
@@ -18,11 +18,25 @@
 package net.sf.sprockets.util;
 
 /**
- * Utility methods for working with geographical functions.
+ * Constants and utility methods for working with geographical functions.
  * 
  * @since 1.3.0
  */
 public class Geos {
+	/**
+	 * Number of kilometres in one degree of latitude at 45 degrees.
+	 * 
+	 * @since 2.2.0
+	 */
+	public static final double LATITUDE_DEGREE_KM = 111.132;
+
+	/**
+	 * Number of miles in one degree of latitude at 45 degrees.
+	 * 
+	 * @since 2.2.0
+	 */
+	public static final double LATITUDE_DEGREE_MI = 69.054;
+
 	private Geos() {
 	}
 
