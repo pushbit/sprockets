@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 pushbit <pushbit@gmail.com>
+ * Copyright 2013-2015 pushbit <pushbit@gmail.com>
  * 
  * This file is part of Sprockets.
  * 
@@ -40,21 +40,22 @@ import com.google.common.collect.ImmutableList;
 import com.google.gson.stream.JsonReader;
 
 /**
- * A Google Place returned from a {@link Places} method. The properties which are populated will
- * vary according to the Places method called and the {@link Places.Field Field}s provided. Check
- * the Places method documentation for the available fields. {@link #getPlaceId()}, {@link #getId()}
- * , and {@link #getReference()} will always be populated when available. Properties that have not
- * been populated will return null, when possible, or the default value will be specified in the
- * method documentation.
+ * Google Place returned from a {@link Places} method. The properties which are populated will vary
+ * according to the Places method called and the {@link Places.Field Field}s provided. Check the
+ * Places method documentation for the available fields. Properties that have not been populated
+ * will return null, when possible, or the default value will be specified in the method
+ * documentation.
  */
 public class Place {
-	// private static final Logger sLog = Loggers.get(Place.class);
 	/** Expected number of alt_ids that will be returned, if any. */
 	private static final int MAX_ALT_IDS = 1;
+
 	/** Maximum number of reviews that will be returned. */
 	private static final int MAX_REVIEWS = 5;
+
 	/** Maximum number of events that will be returned. */
 	private static final int MAX_EVENTS = 10;
+
 	/** Maximum number of photos that will be returned. */
 	private static final int MAX_PHOTOS = 10;
 
@@ -80,6 +81,8 @@ public class Place {
 	List<Review> mReviews;
 	Boolean mOpen;
 	List<OpeningHours> mOpenHours;
+	List<String> mFmtOpenHours;
+	boolean mPermClosed;
 	List<Event> mEvents;
 	int mUtcOffset = Integer.MIN_VALUE;
 	List<Photo> mPhotos;
@@ -226,11 +229,24 @@ public class Place {
 						}
 						in.endArray();
 						break;
+					case weekday_text:
+						in.beginArray();
+						while (in.hasNext()) {
+							if (mFmtOpenHours == null) {
+								mFmtOpenHours = new ArrayList<String>(7);
+							}
+							mFmtOpenHours.add(in.nextString());
+						}
+						in.endArray();
+						break;
 					default:
 						in.skipValue();
 					}
 				}
 				in.endObject();
+				break;
+			case permanently_closed:
+				mPermClosed = in.nextBoolean();
 				break;
 			case events:
 				in.beginArray();
@@ -470,6 +486,28 @@ public class Place {
 	}
 
 	/**
+	 * Opening hours for each day of the week. e.g. ["Monday: 10:00 am – 6:00 pm", ...,
+	 * "Sunday: Closed"]
+	 * 
+	 * @since 2.2.0
+	 */
+	public List<String> getFormattedOpeningHours() {
+		if (mFmtOpenHours != null && !(mFmtOpenHours instanceof ImmutableList)) {
+			mFmtOpenHours = ImmutableList.copyOf(mFmtOpenHours);
+		}
+		return mFmtOpenHours;
+	}
+
+	/**
+	 * True if this place has permanently shut down.
+	 * 
+	 * @since 2.2.0
+	 */
+	public boolean isPermanentlyClosed() {
+		return mPermClosed;
+	}
+
+	/**
 	 * Current events happening at this place.
 	 * 
 	 * @deprecated the Places API no longer returns events
@@ -547,6 +585,8 @@ public class Place {
 				.add("ratingCount", mRatingCount != -1 ? mRatingCount : null)
 				.add("reviews", mReviews != null ? mReviews.size() : null).add("openNow", mOpen)
 				.add("openingHours", mOpenHours != null ? mOpenHours.size() : null)
+				.add("formattedOpeningHours", mFmtOpenHours != null ? true : null)
+				.add("permanentlyClosed", mPermClosed)
 				.add("events", mEvents != null ? mEvents.size() : null)
 				.add("utcOffset", mUtcOffset != Integer.MIN_VALUE ? mUtcOffset : null)
 				.add("photos", mPhotos != null ? mPhotos.size() : null).omitNullValues();
@@ -1713,8 +1753,8 @@ public class Place {
 		}
 
 		/**
-		 * True if they have the same {@link #getId() ID} and {@link #getMatchedSubstrings() matched
-		 * substrings}.
+		 * True if they have the same {@link #getPlaceId() place ID} and
+		 * {@link #getMatchedSubstrings() matched substrings}.
 		 */
 		@Override
 		public boolean equals(Object obj) {
