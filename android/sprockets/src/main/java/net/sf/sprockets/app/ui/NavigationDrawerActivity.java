@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 pushbit <pushbit@gmail.com>
+ * Copyright 2014-2015 pushbit <pushbit@gmail.com>
  * 
  * This file is part of Sprockets.
  * 
@@ -33,7 +33,6 @@ import net.sf.sprockets.view.ActionModePresenter;
 import java.util.Set;
 
 import static android.view.Gravity.START;
-import static com.google.common.base.Preconditions.checkState;
 
 /**
  * Manages the ActionBar during navigation drawer events according to the
@@ -41,10 +40,6 @@ import static com.google.common.base.Preconditions.checkState;
  * target="_blank">Android design guidelines</a>. See {@link NavigationDrawerToggle} for details
  * on how the ActionBar is affected and your responsibilities in {@code onCreateOptionsMenu}
  * methods.
- * <p>
- * Subclasses must call {@link #setDrawerLayout(DrawerLayout) setDrawerLayout} before
- * {@link #onPostCreate(Bundle) onPostCreate} runs.
- * </p>
  * <p>
  * If your Activity includes components that may start an {@link ActionMode}, they should implement
  * {@link ActionModePresenter} and be provided in {@link #getActionModePresenters()}.
@@ -66,6 +61,8 @@ public abstract class NavigationDrawerActivity extends SprocketsActivity impleme
 
     /**
      * Get the previously set DrawerLayout.
+     *
+     * @return null if a DrawerLayout has not been set
      */
     public DrawerLayout getDrawerLayout() {
         return mLayout;
@@ -74,19 +71,23 @@ public abstract class NavigationDrawerActivity extends SprocketsActivity impleme
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
-        checkState(mToggle != null, "you must call setDrawerLayout before onPostCreate runs");
-        mToggle.syncState();
+        if (mToggle != null) {
+            mToggle.syncState();
+        }
     }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        mToggle.onConfigurationChanged(newConfig);
+        if (mToggle != null) {
+            mToggle.onConfigurationChanged(newConfig);
+        }
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        return mToggle.onOptionsItemSelected(item) || super.onOptionsItemSelected(item);
+        return mToggle != null && mToggle.onOptionsItemSelected(item)
+                || super.onOptionsItemSelected(item);
     }
 
     /**
@@ -103,7 +104,9 @@ public abstract class NavigationDrawerActivity extends SprocketsActivity impleme
      * After the next navigation drawer close, wait before restoring the ActionBar state.
      */
     public NavigationDrawerActivity setOneTimeDrawerActionDelay(long millis) {
-        mToggle.setOneTimeDrawerActionDelay(millis);
+        if (mToggle != null) {
+            mToggle.setOneTimeDrawerActionDelay(millis);
+        }
         return this;
     }
 
@@ -125,7 +128,7 @@ public abstract class NavigationDrawerActivity extends SprocketsActivity impleme
 
     @Override
     public void onBackPressed() {
-        if (mLayout.isDrawerOpen(START)) {
+        if (mLayout != null && mLayout.isDrawerOpen(START)) {
             mLayout.closeDrawer(START);
         } else {
             super.onBackPressed();
