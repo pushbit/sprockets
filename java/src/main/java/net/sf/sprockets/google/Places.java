@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 pushbit <pushbit@gmail.com>
+ * Copyright 2013-2015 pushbit <pushbit@gmail.com>
  * 
  * This file is part of Sprockets.
  * 
@@ -28,6 +28,7 @@ import static java.util.logging.Level.INFO;
 import static net.sf.sprockets.google.Places.Field.ADDRESS;
 import static net.sf.sprockets.google.Places.Field.EVENTS;
 import static net.sf.sprockets.google.Places.Field.FORMATTED_ADDRESS;
+import static net.sf.sprockets.google.Places.Field.FORMATTED_OPENING_HOURS;
 import static net.sf.sprockets.google.Places.Field.FORMATTED_PHONE_NUMBER;
 import static net.sf.sprockets.google.Places.Field.GEOMETRY;
 import static net.sf.sprockets.google.Places.Field.ICON;
@@ -36,12 +37,14 @@ import static net.sf.sprockets.google.Places.Field.MATCHED_SUBSTRINGS;
 import static net.sf.sprockets.google.Places.Field.NAME;
 import static net.sf.sprockets.google.Places.Field.OPENING_HOURS;
 import static net.sf.sprockets.google.Places.Field.OPEN_NOW;
+import static net.sf.sprockets.google.Places.Field.PERMANENTLY_CLOSED;
 import static net.sf.sprockets.google.Places.Field.PHOTOS;
 import static net.sf.sprockets.google.Places.Field.PRICE_LEVEL;
 import static net.sf.sprockets.google.Places.Field.RATING;
 import static net.sf.sprockets.google.Places.Field.REVIEWS;
 import static net.sf.sprockets.google.Places.Field.TERMS;
 import static net.sf.sprockets.google.Places.Field.TYPES;
+import static net.sf.sprockets.google.Places.Field.URL;
 import static net.sf.sprockets.google.Places.Field.USER_RATINGS_TOTAL;
 import static net.sf.sprockets.google.Places.Field.UTC_OFFSET;
 import static net.sf.sprockets.google.Places.Field.VICINITY;
@@ -144,6 +147,7 @@ public class Places {
 
 		/** Full path to make the request, just add the query parameters. */
 		private final String mUrl;
+
 		/** True if the request supports the language parameter. */
 		private final boolean mHasLang;
 
@@ -308,6 +312,7 @@ public class Places {
 	 * <ul>
 	 * <li>One of:</li>
 	 * <li>"geocode"</li>
+	 * <li>"address"</li>
 	 * <li>"establishment"</li>
 	 * <li>"(regions)"</li>
 	 * <li>"(cities)"</li>
@@ -688,6 +693,7 @@ public class Places {
 		public enum RankBy {
 			/** Sort by importance. */
 			PROMINENCE,
+
 			/**
 			 * Sort by distance from the specified {@link Params#location(double, double) location}.
 			 * When using this option, {@link Params#radius(int) radius} is ignored and one or more
@@ -776,8 +782,7 @@ public class Places {
 			Configuration config = Sprockets.getConfig();
 			String key = config.getString("google.api-key");
 			checkState(!Strings.isNullOrEmpty(key), "google.api-key not set");
-			boolean sensor = config.getBoolean("hardware.location");
-			s.append(type.mUrl).append("key=").append(key).append("&sensor=").append(sensor);
+			s.append(type.mUrl).append("key=").append(key);
 
 			if (!Strings.isNullOrEmpty(mPageToken)) {
 				return s.append("&pagetoken=").append(mPageToken).toString();
@@ -939,24 +944,43 @@ public class Places {
 	public enum Field {
 		/** URL for an icon representing the type of place. */
 		ICON,
+
 		/** Google Place page. */
 		URL,
+
 		/** Latitude and longitude. */
 		GEOMETRY,
+
 		/** Name of the place, for example a business or landmark name. */
 		NAME,
+
+		/** List of sections and their offset within the place's name. */
+		TERMS,
+
+		/**
+		 * List of substrings in the place's name that match the search text, often used for
+		 * highlighting.
+		 */
+		MATCHED_SUBSTRINGS,
+
 		/** All {@link Place.Address Address} components in separate properties. */
 		ADDRESS,
+
 		/** String containing all address components. */
 		FORMATTED_ADDRESS,
+
 		/** Simplified address string that stops after the city level. */
 		VICINITY,
+
 		/** Includes prefixed country code. */
 		INTL_PHONE_NUMBER,
+
 		/** In local format. */
 		FORMATTED_PHONE_NUMBER,
+
 		/** URL of the website for the place. */
 		WEBSITE,
+
 		/**
 		 * Features describing the place.
 		 * 
@@ -964,22 +988,44 @@ public class Places {
 		 *      target="_blank">Supported Place Types</a>
 		 */
 		TYPES,
+
 		/** Relative level of average expenses at the place. */
 		PRICE_LEVEL,
+
 		/** Based on user reviews. */
 		RATING,
+
 		/**
 		 * Number of ratings that have been submitted.
 		 * 
 		 * @since 1.3.0
 		 */
 		USER_RATINGS_TOTAL,
+
 		/** Comments and ratings from Google users. */
 		REVIEWS,
-		/** Indicates if the place is currently open. */
-		OPEN_NOW,
+
 		/** Opening and closing times for each day that the place is open. */
 		OPENING_HOURS,
+
+		/**
+		 * Opening hours for each day of the week. e.g. ["Monday: 10:00 am – 6:00 pm", ...,
+		 * "Sunday: Closed"]
+		 * 
+		 * @since 2.2.0
+		 */
+		FORMATTED_OPENING_HOURS,
+
+		/** True if the place is currently open. */
+		OPEN_NOW,
+
+		/**
+		 * True if the place has permanently shut down.
+		 * 
+		 * @since 2.2.0
+		 */
+		PERMANENTLY_CLOSED,
+
 		/**
 		 * Current events happening at the place.
 		 * 
@@ -987,23 +1033,26 @@ public class Places {
 		 */
 		@Deprecated
 		EVENTS,
+
 		/** Number of minutes the place's time zone is offset from UTC. */
 		UTC_OFFSET,
+
 		/** Photos for the place that can be downloaded. */
 		PHOTOS,
-		/** List of sections and their offset within the place's name. */
-		TERMS,
+
 		/**
-		 * List of substrings in the place's name that match the search text, often used for
-		 * highlighting.
+		 * Only populate the {@link Place#getPlaceId() placeId} and {@link Place#getAltIds() altIds}
+		 * properties.
+		 * 
+		 * @since 2.2.0
 		 */
-		MATCHED_SUBSTRINGS;
+		NONE;
 
 		/** Unique flag bit to denote this Field. */
 		private final int mMask;
 
 		Field() {
-			mMask = 1 << ordinal();
+			mMask = 1 << ordinal(); // will need to upgrade to a long when there are 33 fields
 		}
 
 		/**
@@ -1041,6 +1090,7 @@ public class Places {
 		public enum Status {
 			OK, ZERO_RESULTS, OVER_QUERY_LIMIT, REQUEST_DENIED, INVALID_REQUEST, NOT_FOUND,
 			UNKNOWN_ERROR, NOT_MODIFIED,
+
 			/** New status that hasn't been added here yet. */
 			UNKNOWN;
 
@@ -1135,8 +1185,7 @@ public class Places {
 
 		/**
 		 * If non-null, can be provided to {@link Params#pageToken(String) Params.pageToken(String)}
-		 * in another request to get the next 20 results. Note that there is a short delay between
-		 * when a token is issued and when it can be used.
+		 * in another request to get the next 20 results.
 		 */
 		public String getNextPageToken() {
 			return mToken;
@@ -1189,7 +1238,7 @@ public class Places {
 		 */
 		enum Key {
 			status, error_message, results, html_attributions, next_page_token, predictions,
-			result, place_id, scope, alt_ids, id, reference, icon(ICON), url(Field.URL),
+			result, place_id, scope, alt_ids, id, reference, icon(ICON), url(URL),
 			geometry(GEOMETRY), location, lat, lng, viewport, name(NAME), description(NAME),
 			terms(TERMS), offset, value, matched_substrings(MATCHED_SUBSTRINGS), length,
 			address_components(ADDRESS), long_name, short_name, adr_address,
@@ -1198,9 +1247,11 @@ public class Places {
 			formatted_phone_number(FORMATTED_PHONE_NUMBER), website(WEBSITE), types(TYPES),
 			price_level(PRICE_LEVEL), rating(RATING), user_ratings_total(USER_RATINGS_TOTAL),
 			reviews(REVIEWS), author_name, author_url, time, aspects, type, language, text,
-			opening_hours(OPENING_HOURS), open_now(OPEN_NOW), weekday_text, periods, open, close,
-			day, events(EVENTS), event_id, start_time, summary, utc_offset(UTC_OFFSET),
-			photos(PHOTOS), photo_reference, width, height, debug_info,
+			opening_hours(OPENING_HOURS), open_now(OPEN_NOW), periods, open, close, day,
+			weekday_text(FORMATTED_OPENING_HOURS), permanently_closed(PERMANENTLY_CLOSED),
+			events(EVENTS), event_id, start_time, summary, utc_offset(UTC_OFFSET), photos(PHOTOS),
+			photo_reference, width, height, debug_info,
+
 			/** New key that hasn't been added here yet. */
 			UNKNOWN;
 
@@ -1244,6 +1295,7 @@ public class Places {
 	private static class PlacesResponse extends Response<List<Place>> {
 		/** Maximum number of establishment results that will be returned. */
 		private static final int MAX_RESULTS = 20;
+
 		/** Maximum number of reviews, events, and photos that will be returned. */
 		private static final int MAX_OBJECTS = 3;
 
