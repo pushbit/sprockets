@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 pushbit <pushbit@gmail.com>
+ * Copyright 2014-2015 pushbit <pushbit@gmail.com>
  *
  * This file is part of Sprockets.
  *
@@ -18,6 +18,8 @@
 package net.sf.sprockets.graphics.drawable;
 
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.ShapeDrawable;
+import android.graphics.drawable.shapes.OvalShape;
 
 import net.sf.sprockets.graphics.Colors;
 
@@ -79,5 +81,81 @@ public class Drawables {
 
     private static ColorDrawable color(int color) {
         return new ColorDrawable(color);
+    }
+
+    /**
+     * Get a random color oval.
+     *
+     * @since 2.2.0
+     */
+    public static ShapeDrawable randomOval() {
+        return oval(Colors.random());
+    }
+
+    /**
+     * Get a random color oval from the lighter half.
+     *
+     * @since 2.2.0
+     */
+    public static ShapeDrawable lightOval() {
+        return oval(Colors.light());
+    }
+
+    /**
+     * Get a random color oval from the lightest quarter.
+     *
+     * @since 2.2.0
+     */
+    public static ShapeDrawable lighterOval() {
+        return oval(Colors.lighter());
+    }
+
+    /**
+     * Get a random color oval from the lightest eighth.
+     *
+     * @since 2.2.0
+     */
+    public static ShapeDrawable lightestOval() {
+        return oval(Colors.lightest());
+    }
+
+    /**
+     * Get a random color oval from the darker half.
+     *
+     * @since 2.2.0
+     */
+    public static ShapeDrawable darkOval() {
+        return oval(Colors.dark());
+    }
+
+    /**
+     * Get a random color oval from the darkest quarter.
+     *
+     * @since 2.2.0
+     */
+    public static ShapeDrawable darkerOval() {
+        return oval(Colors.darker());
+    }
+
+    /**
+     * Get a random color oval from the darkest eighth.
+     *
+     * @since 2.2.0
+     */
+    public static ShapeDrawable darkestOval() {
+        return oval(Colors.darkest());
+    }
+
+    /**
+     * Get a colored oval.
+     *
+     * @since 2.2.0
+     */
+    public static ShapeDrawable oval(int color) {
+        ShapeDrawable d = new ShapeDrawable(new OvalShape());
+        d.setIntrinsicWidth(-1);
+        d.setIntrinsicHeight(-1);
+        d.getPaint().setColor(color);
+        return d;
     }
 }
