@@ -19,9 +19,4 @@
 		     classes, then you may need to choose the standard library client, "java.net". -->
 		<http-client>okhttp</http-client>
 	</network>
-
-	<hardware>
-		<!-- Does the device this will run on have a location sensor? -->
-		<location>false</location>
-	</hardware>
 </sprockets>

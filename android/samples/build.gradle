@@ -2,26 +2,26 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 21
-    buildToolsVersion "21.1.2"
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_7
-        targetCompatibility JavaVersion.VERSION_1_7
-    }
+    buildToolsVersion '21.1.2'
     defaultConfig {
+        versionCode 1
+        versionName '0.0.0'
         minSdkVersion 16
         targetSdkVersion 21
+        proguardFiles getDefaultProguardFile('proguard-android.txt'),
+                'proguard-rules.pro', 'proguard-sprockets.pro'
     }
     buildTypes {
         debug {
             minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro',
-                    'sprockets-rules.pro'
         }
         release {
             minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro',
-                    'sprockets-rules.pro'
         }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
     }
     packagingOptions {
         exclude 'META-INF/LICENSE.txt'

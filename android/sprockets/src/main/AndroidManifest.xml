@@ -1,10 +1,1 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="net.sf.sprockets"
-          android:versionCode="2"
-          android:versionName="2.1.0">
-
-    <uses-sdk
-        android:minSdkVersion="16"
-        android:targetSdkVersion="21"/>
-
-</manifest>
+<manifest package="net.sf.sprockets"/>

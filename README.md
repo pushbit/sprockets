@@ -5,7 +5,7 @@ Sprockets is a set of libraries for:
 
 [Android](android/) [![Maven Central][4]][5]
 --------------------------------------------
-* Base components, widgets, utility methods, and common resources
+* Base components, widgets, and utility methods
 
 [Java](java/) [![Maven Central][0]][1]
 --------------------------------------

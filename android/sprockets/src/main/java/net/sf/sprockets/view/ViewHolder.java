@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 pushbit <pushbit@gmail.com>
+ * Copyright 2014-2015 pushbit <pushbit@gmail.com>
  * 
  * This file is part of Sprockets.
  * 
@@ -25,14 +25,13 @@ import com.google.common.collect.MutableClassToInstanceMap;
 import butterknife.ButterKnife;
 
 /**
- * Base class for the
- * <a href="https://developer.android.com/training/improving-layouts/smooth-scrolling.html#ViewHolder" target="_blank">View Holder</a>
- * pattern. Implementations must be public.
+ * Base class for the <a href=
+ * "https://developer.android.com/training/improving-layouts/smooth-scrolling.html#ViewHolder"
+ * target="_blank">View Holder</a> pattern. Implementations must be public.
  * <p>
  * Sample implementation:
  * </p>
- * <pre><code>
- * public class SomeHolder extends ViewHolder {
+ * <pre><code> public class SomeHolder extends ViewHolder {
  *     {@literal @}InjectView(R.id.someView)
  *     View someView;
  *
@@ -40,8 +39,7 @@ import butterknife.ButterKnife;
  *     protected SomeHolder newInstance() {
  *         return new SomeHolder();
  *     }
- * }
- * </code></pre>
+ * }</code></pre>
  * <p>
  * Sample usage:
  * </p>

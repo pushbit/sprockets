@@ -1,9 +1,19 @@
 apply plugin: 'com.android.library'
 apply plugin: 'maven'
 
+def libName = 'Sprockets Android'
+def libVersionCode = 3
+def libVersionName = '2.2.0'
+
 android {
     compileSdkVersion 21
     buildToolsVersion '21.1.2'
+    defaultConfig {
+        versionCode libVersionCode
+        versionName libVersionName
+        minSdkVersion 16
+        targetSdkVersion 21
+    }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_7
         targetCompatibility JavaVersion.VERSION_1_7
@@ -19,9 +29,10 @@ dependencies {
     compile 'com.android.support:support-v13:21.0.3'
     compile 'com.android.support:palette-v7:21.0.3'
     compile 'com.google.android.gms:play-services:6.5.87'
-    compile 'net.sf.sprockets:sprockets:2.1.0'
+    compile 'net.sf.sprockets:sprockets:2.2.0'
+    compile 'com.squareup.retrofit:retrofit:1.9.0'
     compile 'com.squareup.picasso:picasso:2.4.0'
-    compile 'com.jakewharton:butterknife:6.0.0'
+    compile 'com.jakewharton:butterknife:6.1.0'
     compile 'com.github.frankiesardo:icepick:2.3.6'
     compile 'com.github.frankiesardo:icepick-processor:2.3.6'
     compile 'commons-io:commons-io:2.4'
@@ -32,9 +43,6 @@ dependencies {
     javadoc fileTree(dir: "${extras}/google/google_play_services/libproject", include: ['**/*.jar'])
 }
 
-def libName = 'Sprockets Android'
-def libVersion = '2.1.0'
-
 uploadArchives {
     repositories {
         mavenDeployer {
@@ -42,10 +50,10 @@ uploadArchives {
             pom.project {
                 groupId 'net.sf.sprockets'
                 artifactId 'sprockets-android'
-                version libVersion
+                version libVersionName
                 packaging 'aar'
                 name libName
-                description 'Base components, widgets, utility methods, and common resources.'
+                description 'Base components, widgets, and utility methods.'
                 url 'https://pushbit.github.io/sprockets/android'
                 licenses {
                     license {
@@ -61,13 +69,13 @@ uploadArchives {
                         email 'pushbit@gmail.com'
                     }
                 }
-                scm {
-                    connection 'scm:git:git://github.com/pushbit/sprockets.git'
-                    url 'https://github.com/pushbit/sprockets'
-                }
                 issueManagement {
                     system 'GitHub'
                     url 'https://github.com/pushbit/sprockets/issues'
+                }
+                scm {
+                    connection 'scm:git:git://github.com/pushbit/sprockets.git'
+                    url 'https://github.com/pushbit/sprockets'
                 }
             }
         }
@@ -80,17 +88,20 @@ task androidSourcesJar(type: Jar) {
 }
 
 task androidJavadocs(type: Javadoc, dependsOn: 'processReleaseResources') {
-    source = android.sourceSets.main.java.srcDirs.plus(
-            fileTree(dir: "${buildDir}/generated/source/r/release"))
+    source = android.sourceSets.main.java.srcDirs
+            .plus(fileTree(dir: "${buildDir}/generated/source/r/release"))
+            .plus(fileTree(dir: "../../java/src/main/java"))
     classpath += files(android.bootClasspath, configurations.compile, configurations.javadoc)
-    title = "${libName} ${libVersion} API"
+    title = "${libName} ${libVersionName} API"
     options {
-        links 'https://pushbit.github.io/sprockets/java/apidocs/',
-                'http://docs.guava-libraries.googlecode.com/git-history/release/javadoc/',
+        links 'http://docs.guava-libraries.googlecode.com/git-history/release/javadoc/',
+                'https://commons.apache.org/proper/commons-configuration/javadocs/v1.10/apidocs/',
+                'https://square.github.io/retrofit/javadoc/',
                 'https://square.github.io/picasso/javadoc/',
                 'https://jakewharton.github.io/butterknife/javadoc/'
         linksOffline 'https://developer.android.com/reference/',
                 "${android.sdkDirectory}/docs/reference"
+        stylesheetFile file('src/main/javadoc/stylesheet.css')
     }
 }
 

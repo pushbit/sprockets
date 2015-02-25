@@ -9,6 +9,7 @@
     <dimen name="navigation_drawer_sub_item_text">13sp</dimen>
     <dimen name="divider_height">1dp</dimen>
     <dimen name="pane_max_width">@dimen/match_parent</dimen>
+    <dimen name="cards_pane_margin">20dp</dimen>
     <dimen name="cards_parent_margin">12dp</dimen>
     <dimen name="cards_sibling_margin">10dp</dimen>
     <dimen name="card_corner">1dp</dimen>

@@ -1,3 +1,16 @@
+2015-02-24  2.2.0
+
+	[java]
+	* added google.Place.{getFormattedOpeningHours,isPermanentlyClosed}
+	* added google.Places.Field.{FORMATTED_OPENING_HOURS,PERMANENTLY_CLOSED,NONE}
+	* added util.{Locales,MeasureUnit}
+	* added util.Geos.{LATITUDE_DEGREE_KM,LATITUDE_DEGREE_MI}
+	* added sql.SQLite
+	[android]
+	* added graphics.drawable.Drawables.*Oval
+	* moved database.sqlite.SQLite to [java] sql.SQLite
+	* renamed sprockets-rules.pro to proguard-sprockets.pro, added retrofit rules
+
 2015-01-17  2.1.0
 
 	[android]
@@ -21,7 +34,7 @@
 	[java-ee]
 	* first release provides a base Servlet that reads and writes JSON objects
 	[android]
-	* first release provides base components, widgets, utilities, and common resources
+	* first release provides base components, widgets, and utilities
 
 2014-10-30  1.6.0
 

@@ -1,17 +1,16 @@
 Sprockets for Android [![Maven Central][5]][6] [![Android Arsenal][3]][4]
 =========================================================================
 
-Extend base components, use widgets, call utility methods, and reference common resources.
+Extend base components, use widgets, and call utility methods.
 
 * [Features](#features)
 * [Install](#install)
 * [Javadoc][1]
-    * See also: Sprockets for Java [Javadoc][2]
 
 Features
 --------
 
-Below is a sample of the available classes and resources. See the [Javadoc][1] for the complete reference.
+Below is a sample of the available classes. See the [Javadoc][1] for the complete reference.
 
 * app
     * [VersionedApplication][100]
@@ -52,17 +51,6 @@ Below is a sample of the available classes and resources. See the [Javadoc][1] f
         * Slides a View that floats above your list header(s) up and down along with the scrolling of the list.
     * [ParallaxViewScrollListener][603] ([demo][607])
         * Synchronises the scrolling of a View with a ListView, at a speed relative to the list scrolling speed.
-* res
-    * drawable
-        * card
-            * ViewGroup background for a card with automatic content padding and background highlighting when selected.
-    * dimen
-        * cards_parent_margin, cards_sibling_margin, text_card_max_width, min_touch_size
-        * padding{,_tiny,_small,_medium,_large}
-    * string
-        * add, edit, delete, refresh, search, share, done, discard, cancel, etc.
-    * style
-        * Card.Title, Card.Title.Light, Card.Text, Card.Text.Medium, etc.
 
 Install
 -------
@@ -74,10 +62,10 @@ Install
 1\. Add the dependency.
 
 ```groovy
-    compile 'net.sf.sprockets:sprockets-android:2.1.0'
+    compile 'net.sf.sprockets:sprockets-android:2.2.0'
 ```
 
-2\. Ensure the `buildTypes` have `minifyEnabled true`, download [sprockets-rules.pro][10], and add it to `proguardFiles`.
+2\. Ensure the `buildTypes` have `minifyEnabled true`, download [proguard-sprockets.pro][10], and add it to `proguardFiles`.
 
 3\. Tell ProGuard to ignore duplicate files.
 
@@ -89,26 +77,15 @@ Install
     }
 ```
 
-4\. Ensure AndroidManifest.xml is set up for Google Play Services. Within `<application>`:
-
-```xml
-    <meta-data
-        android:name="com.google.android.gms.version"
-        android:value="@integer/google_play_services_version"/>
-```
-
-5\. (Optional) Download [sprockets.xml][11] to `src/main/resources/`.
-
-* If you will use Google APIs, add your [Google API key][12].
+4\. (Optional) Download [sprockets.xml][11] to `src/main/resources/`. If you will use Google APIs, add your [Google API key][12].
 
 [1]: https://pushbit.github.io/sprockets/android/apidocs/
-[2]: https://pushbit.github.io/sprockets/java/apidocs/
 [3]: https://img.shields.io/badge/Android%20Arsenal-Sprockets-brightgreen.svg?style=flat
 [4]: https://android-arsenal.com/details/1/1243
 [5]: https://img.shields.io/maven-central/v/net.sf.sprockets/sprockets-android.svg
 [6]: https://search.maven.org/#search|ga|1|g%3Anet.sf.sprockets%20a%3Asprockets-android
 
-[10]: https://raw.githubusercontent.com/pushbit/sprockets/master/android/sprockets/sprockets-rules.pro
+[10]: https://raw.githubusercontent.com/pushbit/sprockets/master/android/sprockets/proguard-sprockets.pro
 [11]: https://raw.githubusercontent.com/pushbit/sprockets/master/java/src/main/resources/net/sf/sprockets/sprockets.xml
 [12]: https://console.developers.google.com/
 

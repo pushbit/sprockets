@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 pushbit <pushbit@gmail.com>
+ * Copyright 2014-2015 pushbit <pushbit@gmail.com>
  * 
  * This file is part of Sprockets.
  * 
@@ -231,8 +231,8 @@ public abstract class BaseNavigationDrawerFragment extends SprocketsListFragment
      */
     public void onListItemClick(ListView list, View view, int position, long id, int resId) {
         if (resId == R.id.rate) {
-            Intent intent = new Intent(ACTION_VIEW,
-                    Uri.parse("market://details?id=" + a.getPackageName()));
+            Intent intent =
+                    new Intent(ACTION_VIEW, Uri.parse("market://details?id=" + a.getPackageName()));
             if (Intents.hasActivity(a, intent)) {
                 startActivity(intent);
             }

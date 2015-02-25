@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 pushbit <pushbit@gmail.com>
+ * Copyright 2013-2015 pushbit <pushbit@gmail.com>
  * 
  * This file is part of Sprockets.
  * 
@@ -35,7 +35,7 @@ import org.apache.commons.configuration.XMLConfiguration;
  * Allows the configuration of library settings. If you need to override the default settings, for
  * example to provide your <a href="https://console.developers.google.com/" target="_blank">Google
  * API key</a>, the recommended method is to download <a href=
- * "https://raw.github.com/pushbit/sprockets/master/java/src/main/resources/net/sf/sprockets/sprockets.xml"
+ * "https://raw.githubusercontent.com/pushbit/sprockets/master/java/src/main/resources/net/sf/sprockets/sprockets.xml"
  * target="_blank">sprockets.xml</a> (or copy it from the library jar) and place it in the root of
  * your application classpath (e.g. {@code src/} in a standard project or
  * {@code src/main/resources/} in a Maven project). You can then update the values in this file and

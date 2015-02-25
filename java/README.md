@@ -57,7 +57,7 @@ Install
     <dependency>
         <groupId>net.sf.sprockets</groupId>
         <artifactId>sprockets</artifactId>
-        <version>2.1.0</version>
+        <version>2.2.0</version>
     </dependency>
 ```
 

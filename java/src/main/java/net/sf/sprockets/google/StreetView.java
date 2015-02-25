@@ -190,8 +190,7 @@ public class StreetView {
 		public String format() {
 			StringBuilder s = new StringBuilder(URL.length() + 256);
 			Configuration config = Sprockets.getConfig();
-			boolean sensor = config.getBoolean("hardware.location");
-			s.append(URL).append("sensor=").append(sensor);
+			s.append(URL);
 			if (config.getBoolean("google.street-view.use-api-key")) {
 				String key = config.getString("google.api-key");
 				checkState(!Strings.isNullOrEmpty(key), "google.api-key not set");

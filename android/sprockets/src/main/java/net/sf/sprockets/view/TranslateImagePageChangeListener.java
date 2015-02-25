@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 pushbit <pushbit@gmail.com>
+ * Copyright 2014-2015 pushbit <pushbit@gmail.com>
  *
  * This file is part of Sprockets.
  *
@@ -54,10 +54,10 @@ import static android.widget.ImageView.ScaleType.MATRIX;
  */
 public class TranslateImagePageChangeListener extends SimpleOnPageChangeListener
         implements ImageViewObserver {
-    private ViewPager mPager;
+    private final ViewPager mPager;
     private PagerAdapter mAdapter;
     private final AdapterObserver mObserver = new AdapterObserver();
-    private ImageView mView;
+    private final ImageView mView;
     private int mViewWidth;
     private int mViewHeight;
     private Drawable mDrawable;

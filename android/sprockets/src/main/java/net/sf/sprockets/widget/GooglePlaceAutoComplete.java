@@ -158,8 +158,8 @@ public class GooglePlaceAutoComplete extends AutoCompleteTextView {
     }
 
     /**
-     * Autocomplete places of this type. Must be one of "geocode", "establishment", "(regions)", or
-     * "(cities)".
+     * Autocomplete places of this type. Must be one of "geocode", "address", "establishment",
+     * "(regions)", or "(cities)".
      *
      * @attr ref net.sf.sprockets.R.styleable#GooglePlaceAutoComplete_types
      */

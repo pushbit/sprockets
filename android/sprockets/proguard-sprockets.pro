@@ -34,12 +34,12 @@
 -keep class **$$Icicle { *; }
 -keepnames class * { @icepick.Icicle *; }
 
+# okhttp
+-dontwarn com.squareup.okhttp.internal.**
+
 # okio
 -dontwarn java.nio.file.**
 -dontwarn org.codehaus.mojo.animal_sniffer.**
-
-# okhttp
--dontwarn com.squareup.okhttp.internal.**
 
 # play-services
 -keep class * extends java.util.ListResourceBundle { protected Object[][] getContents(); }
@@ -49,3 +49,8 @@
 -keepnames @com.google.android.gms.common.annotation.KeepName class *
 -keepclassmembernames class * { @com.google.android.gms.common.annotation.KeepName *; }
 -keepnames class * implements android.os.Parcelable { public static final ** CREATOR; }
+
+# retrofit
+-dontwarn com.google.appengine.api.**
+-dontwarn rx.**
+-keep class retrofit.http.** { *; }
