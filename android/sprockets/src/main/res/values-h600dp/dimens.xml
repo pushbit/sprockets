@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <!-- 144dp + padding -->
-    <dimen name="grid_card_height">162dp</dimen>
-</resources>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Library settings. This file should be copied to the root of your application classpath. -->
+<sprockets>
+	<google>
+		<!-- Available from the Google Developers Console: https://console.developers.google.com/
+		     Instructions: https://developers.google.com/places/documentation/#Authentication -->
+		<api-key></api-key>
+
+		<street-view>
+			<!-- Street View Image API can be called without an API key and usage is limited by IP
+			     address. Use your API key to get a higher usage limit and enable reporting. -->
+			<use-api-key>true</use-api-key>
+		</street-view>
+	</google>
+
+	<network>
+		<!-- In most cases the default client, "okhttp", should be the best choice.  If you are
+		     running in an environment, such as Google App Engine, that restricts the use of some
+		     classes, then you may need to choose the standard library client, "java.net". -->
+		<http-client>okhttp</http-client>
+	</network>
+</sprockets>

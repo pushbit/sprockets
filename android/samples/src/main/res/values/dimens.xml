@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <dimen name="list_header_height">256dp</dimen>
-    <dimen name="floating_header_height">80dp</dimen>
-    <dimen name="floating_header_y">176dp</dimen>
-    <dimen name="page_number_padding">48dp</dimen>
-</resources>
