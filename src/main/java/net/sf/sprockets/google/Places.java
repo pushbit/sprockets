@@ -98,13 +98,14 @@ import com.google.common.io.Closeables;
 import com.google.gson.stream.JsonReader;
 
 /**
- * Methods for calling <a href="https://developers.google.com/places/" target="_blank">Google Places
- * API</a> services. All methods require a {@link Params Params} instance that defines the places to
- * search for. Most methods also allow you to specify any number of {@link Field Field}s that should
- * be populated in the results, which can reduce execution time and memory allocation when you are
- * not using all of the available fields. When no Fields are specified, all available are populated
- * in the {@link Response Response} results. {@link Params#maxResults(int) Params.maxResults(int)}
- * can be used to similar effect when you will only use a limited number of results.
+ * Methods for calling <a href="https://developers.google.com/places/webservice/"
+ * target="_blank">Google Places API</a> services. All methods require a {@link Params Params}
+ * instance that defines the places to search for. Most methods also allow you to specify any number
+ * of {@link Field Field}s that should be populated in the results, which can reduce execution time
+ * and memory allocation when you are not using all of the available fields. When no Fields are
+ * specified, all available are populated in the {@link Response Response} results.
+ * {@link Params#maxResults(int) Params.maxResults(int)} can be used to similar effect when you will
+ * only use a limited number of results.
  * <p>
  * Below is a simple example that prints the names and addresses of fish & chips shops that are
  * within 1 km of Big Ben in London and are currently open.

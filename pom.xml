@@ -6,7 +6,7 @@
 
 	<groupId>net.sf.sprockets</groupId>
 	<artifactId>sprockets</artifactId>
-	<version>2.3.0</version>
+	<version>2.4.0</version>
 	<packaging>jar</packaging>
 	<dependencies>
 		<dependency>
@@ -73,9 +73,9 @@
 				<configuration>
 					<detectLinks>true</detectLinks>
 					<links>
-						<link>https://docs.oracle.com/javase/6/docs/api/</link>
 						<link>http://docs.guava-libraries.googlecode.com/git-history/release/javadoc/</link>
 						<link>https://commons.apache.org/proper/commons-configuration/javadocs/v1.10/apidocs/</link>
+						<link>https://docs.oracle.com/javase/6/docs/api/</link>
 					</links>
 					<stylesheetfile>stylesheet.css</stylesheetfile>
 				</configuration>

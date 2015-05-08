@@ -3,7 +3,7 @@
 <sprockets>
 	<google>
 		<!-- Available from the Google Developers Console: https://console.developers.google.com/
-		     Instructions: https://developers.google.com/places/documentation/#Authentication -->
+		     Instructions: https://developers.google.com/places/webservice/intro#Authentication -->
 		<api-key></api-key>
 
 		<street-view>

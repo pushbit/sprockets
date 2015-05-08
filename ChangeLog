@@ -1,3 +1,7 @@
+2015-05-08  2.4.0
+
+	* added sql.SQLite.{count,min,max,avg,sum,total,groupConcat,millis}
+
 2015-04-05  2.3.0
 
 	* added google.Place.OpeningHours.get{OpenTime,OpenTimeMillis,CloseTime,CloseTimeMillis}

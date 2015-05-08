@@ -57,15 +57,13 @@ Install
 	<dependency>
 		<groupId>net.sf.sprockets</groupId>
 		<artifactId>sprockets</artifactId>
-		<version>2.3.0</version>
+		<version>2.4.0</version>
 	</dependency>
 ```
 
-2\. Add your [Google API key][5] to [sprockets.xml][4] and place it in the root of your application classpath.
+2\. Add your [Google API key][5] to [sprockets.xml][4] and place it in the root of your application classpath (e.g. `src/` in a standard project or `src/main/resources/` in a Maven project).  See the [Sprockets][6] class description for more information about configuring the library settings.
 
-* See the [Sprockets][6] class description for more information about configuring the library settings.
-
-[1]: https://developers.google.com/places/
+[1]: https://developers.google.com/places/webservice/
 [2]: https://developers.google.com/maps/documentation/streetview/
 [3]: https://pushbit.github.io/sprockets/apidocs/
 [4]: https://raw.githubusercontent.com/pushbit/sprockets/master/src/main/resources/net/sf/sprockets/sprockets.xml
