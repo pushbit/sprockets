@@ -77,7 +77,7 @@ public class SQLite {
 	}
 
 	/**
-	 * Get an {@link #aliased_(String) aliased} count(column).
+	 * Get an {@link #aliased(String) aliased} count(column).
 	 * 
 	 * @since 2.4.0
 	 */
@@ -86,7 +86,7 @@ public class SQLite {
 	}
 
 	/**
-	 * Get an {@link #aliased_(String) aliased} min(column).
+	 * Get an {@link #aliased(String) aliased} min(column).
 	 * 
 	 * @since 2.4.0
 	 */
@@ -95,7 +95,7 @@ public class SQLite {
 	}
 
 	/**
-	 * Get an {@link #aliased_(String) aliased} max(column).
+	 * Get an {@link #aliased(String) aliased} max(column).
 	 * 
 	 * @since 2.4.0
 	 */
@@ -104,7 +104,7 @@ public class SQLite {
 	}
 
 	/**
-	 * Get an {@link #aliased_(String) aliased} avg(column).
+	 * Get an {@link #aliased(String) aliased} avg(column).
 	 * 
 	 * @since 2.4.0
 	 */
@@ -113,7 +113,7 @@ public class SQLite {
 	}
 
 	/**
-	 * Get an {@link #aliased_(String) aliased} sum(column).
+	 * Get an {@link #aliased(String) aliased} sum(column).
 	 * 
 	 * @since 2.4.0
 	 */
@@ -122,7 +122,7 @@ public class SQLite {
 	}
 
 	/**
-	 * Get an {@link #aliased_(String) aliased} total(column).
+	 * Get an {@link #aliased(String) aliased} total(column).
 	 * 
 	 * @since 2.4.0
 	 */
@@ -131,7 +131,7 @@ public class SQLite {
 	}
 
 	/**
-	 * Get an {@link #aliased_(String) aliased} group_concat(column) with a comma separator.
+	 * Get an {@link #aliased(String) aliased} group_concat(column) with a comma separator.
 	 * 
 	 * @since 2.4.0
 	 */
@@ -140,19 +140,19 @@ public class SQLite {
 	}
 
 	/**
-	 * Get an {@link #aliased_(String) aliased} group_concat(column) with the separator.
+	 * Get an {@link #aliased(String) aliased} group_concat(column) with the separator.
 	 * 
 	 * @since 2.4.0
 	 */
 	public static String groupConcat(String column, String separator) {
-		return "group_concat(" + column + ", '" + separator + "') AS " + aliased_(column);
+		return "group_concat(" + column + ", '" + separator + "') AS " + aliased(column);
 	}
 
 	/**
-	 * Get an {@link #aliased_(String) aliased} func(column).
+	 * Get an {@link #aliased(String) aliased} func(column).
 	 */
 	private static String func(String func, String column) {
-		return func + '(' + column + ") AS " + aliased_(column);
+		return func + '(' + column + ") AS " + aliased(column);
 	}
 
 	/**
@@ -179,21 +179,21 @@ public class SQLite {
 	}
 
 	/**
-	 * Get an {@link #aliased_(String) aliased} result column that converts the datetime column
-	 * value to epoch milliseconds.
+	 * Get an {@link #aliased(String) aliased} result column that converts the datetime column value
+	 * to epoch milliseconds.
 	 */
 	public static String millis(String column) {
-		return "strftime('%s', " + column + ") * 1000 AS " + aliased_(column);
+		return "strftime('%s', " + column + ") * 1000 AS " + aliased(column);
 	}
 
 	/**
-	 * Get an {@link #aliased_(String) aliased} result column that applies the aggregate function to
+	 * Get an {@link #aliased(String) aliased} result column that applies the aggregate function to
 	 * the datetime column and converts the result to epoch milliseconds.
 	 * 
 	 * @since 2.4.0
 	 */
 	public static String millis(String function, String column) {
-		return "strftime('%s', " + function + '(' + column + ")) * 1000 AS " + aliased_(column);
+		return "strftime('%s', " + function + '(' + column + ")) * 1000 AS " + aliased(column);
 	}
 
 	private static Pattern sDiacritics;
