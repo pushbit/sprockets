@@ -714,7 +714,7 @@ public class Place {
 
 		/**
 		 * Search or autocomplete {@link Params#filter(Predicate) filter} on place IDs. After
-		 * constructing an instance, call {@link #include(String...) include} or
+		 * creating an instance, call {@link #include(String...) include} or
 		 * {@link #exclude(String...) exclude} to provide the IDs to filter.
 		 * 
 		 * @since 1.6.0
@@ -1813,9 +1813,9 @@ public class Place {
 	}
 
 	/**
-	 * Search or autocomplete {@link Params#filter(Predicate) filter} on place IDs. After
-	 * constructing an instance, call {@link #include(String...) include} or
-	 * {@link #exclude(String...) exclude} to provide the IDs to filter.
+	 * Search or autocomplete {@link Params#filter(Predicate) filter} on place IDs. After creating
+	 * an instance, call {@link #include(String...) include} or {@link #exclude(String...) exclude}
+	 * to provide the IDs to filter.
 	 * 
 	 * @since 1.4.0
 	 * @deprecated use {@link Place.Id.Filter} instead

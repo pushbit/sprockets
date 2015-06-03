@@ -1,3 +1,7 @@
+2015-06-03  2.5.0
+
+	* switched sql.SQLite methods to use method aliased instead of aliased_
+
 2015-05-08  2.4.0
 
 	* added sql.SQLite.{count,min,max,avg,sum,total,groupConcat,millis}
