@@ -20,15 +20,31 @@ package net.sf.sprockets.util;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.collections.primitives.LongCollection;
+
 import com.google.common.collect.ObjectArrays;
 
 /**
- * Utility methods for working with array and list elements.
+ * Utility methods for working with array and collection elements.
  * 
  * @since 1.1.0
  */
 public class Elements {
 	private Elements() {
+	}
+
+	/**
+	 * Add all elements in the array to the collection.
+	 * 
+	 * @return true if the collection was changed
+	 * @since 2.6.0
+	 */
+	public static boolean addAll(LongCollection collection, long[] elements) {
+		boolean changed = false;
+		for (long element : elements) {
+			changed |= collection.add(element);
+		}
+		return changed;
 	}
 
 	/**
@@ -55,8 +71,9 @@ public class Elements {
 	 * @since 1.4.0
 	 */
 	public static <T> T[] slice(T[] array, int... indexes) {
-		T[] slice = ObjectArrays.newArray(array, indexes.length);
-		for (int i = 0; i < indexes.length; i++) {
+		final int length = indexes.length;
+		T[] slice = ObjectArrays.newArray(array, length);
+		for (int i = 0; i < length; i++) {
 			slice[i] = array[indexes[i]];
 		}
 		return slice;
@@ -73,5 +90,51 @@ public class Elements {
 			slice.add(list.get(i));
 		}
 		return slice;
+	}
+
+	/**
+	 * Convert the Strings to an array of longs.
+	 * 
+	 * @since 2.6.0
+	 */
+	public static long[] toLongs(String... values) {
+		final int length = values.length;
+		long[] l = new long[length];
+		for (int i = 0; i < length; i++) {
+			l[i] = Long.parseLong(values[i]);
+		}
+		return l;
+	}
+
+	/**
+	 * Convert the ints to an array of Strings.
+	 * 
+	 * @since 2.6.0
+	 */
+	public static String[] toStrings(int... values) {
+		return toStrings(values, null);
+	}
+
+	/**
+	 * Convert the longs to an array of Strings.
+	 * 
+	 * @since 2.6.0
+	 */
+	public static String[] toStrings(long... values) {
+		return toStrings(null, values);
+	}
+
+	private static String[] toStrings(int[] intValues, long[] longValues) {
+		final boolean ints = intValues != null;
+		final int length = ints ? intValues.length : longValues.length;
+		String[] s = new String[length];
+		for (int i = 0; i < length; i++) {
+			if (ints) {
+				s[i] = String.valueOf(intValues[i]);
+			} else {
+				s[i] = String.valueOf(longValues[i]);
+			}
+		}
+		return s;
 	}
 }
