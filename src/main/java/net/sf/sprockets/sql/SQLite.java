@@ -48,7 +48,16 @@ public class SQLite {
 	 * @return e.g. {@code table.column AS column}
 	 */
 	public static String alias(String column) {
-		return column + " AS " + aliased(column);
+		return alias(column, aliased(column));
+	}
+
+	/**
+	 * Get an aliased result column.
+	 *
+	 * @since 2.6.0
+	 */
+	public static String alias(String column, String alias) {
+		return column + " AS " + alias;
 	}
 
 	/**
@@ -82,7 +91,16 @@ public class SQLite {
 	 * @since 2.4.0
 	 */
 	public static String count(String column) {
-		return func("count", column);
+		return count(column, null);
+	}
+
+	/**
+	 * Get an aliased count(column).
+	 * 
+	 * @since 2.6.0
+	 */
+	public static String count(String column, String alias) {
+		return func("count", column, alias);
 	}
 
 	/**
@@ -91,7 +109,16 @@ public class SQLite {
 	 * @since 2.4.0
 	 */
 	public static String min(String column) {
-		return func("min", column);
+		return min(column, null);
+	}
+
+	/**
+	 * Get an aliased min(column).
+	 * 
+	 * @since 2.6.0
+	 */
+	public static String min(String column, String alias) {
+		return func("min", column, alias);
 	}
 
 	/**
@@ -100,7 +127,16 @@ public class SQLite {
 	 * @since 2.4.0
 	 */
 	public static String max(String column) {
-		return func("max", column);
+		return max(column, null);
+	}
+
+	/**
+	 * Get an aliased max(column).
+	 * 
+	 * @since 2.6.0
+	 */
+	public static String max(String column, String alias) {
+		return func("max", column, alias);
 	}
 
 	/**
@@ -109,7 +145,16 @@ public class SQLite {
 	 * @since 2.4.0
 	 */
 	public static String avg(String column) {
-		return func("avg", column);
+		return avg(column, null);
+	}
+
+	/**
+	 * Get an aliased avg(column).
+	 * 
+	 * @since 2.6.0
+	 */
+	public static String avg(String column, String alias) {
+		return func("avg", column, alias);
 	}
 
 	/**
@@ -118,7 +163,16 @@ public class SQLite {
 	 * @since 2.4.0
 	 */
 	public static String sum(String column) {
-		return func("sum", column);
+		return sum(column, null);
+	}
+
+	/**
+	 * Get an aliased sum(column).
+	 * 
+	 * @since 2.6.0
+	 */
+	public static String sum(String column, String alias) {
+		return func("sum", column, alias);
 	}
 
 	/**
@@ -127,7 +181,16 @@ public class SQLite {
 	 * @since 2.4.0
 	 */
 	public static String total(String column) {
-		return func("total", column);
+		return total(column, null);
+	}
+
+	/**
+	 * Get an aliased total(column).
+	 * 
+	 * @since 2.6.0
+	 */
+	public static String total(String column, String alias) {
+		return func("total", column, alias);
 	}
 
 	/**
@@ -136,7 +199,7 @@ public class SQLite {
 	 * @since 2.4.0
 	 */
 	public static String groupConcat(String column) {
-		return func("group_concat", column);
+		return groupConcat(column, ",");
 	}
 
 	/**
@@ -145,14 +208,53 @@ public class SQLite {
 	 * @since 2.4.0
 	 */
 	public static String groupConcat(String column, String separator) {
-		return "group_concat(" + column + ", '" + separator + "') AS " + aliased(column);
+		return groupConcat(column, separator, aliased(column));
 	}
 
 	/**
-	 * Get an {@link #aliased(String) aliased} func(column).
+	 * Get an aliased group_concat(column) with the separator.
+	 * 
+	 * @since 2.6.0
 	 */
-	private static String func(String func, String column) {
-		return func + '(' + column + ") AS " + aliased(column);
+	public static String groupConcat(String column, String separator, String alias) {
+		return "group_concat(" + column + ", '" + separator + "') AS " + alias;
+	}
+
+	/**
+	 * Get an aliased func(column).
+	 * 
+	 * @param alias
+	 *            may be null for a default alias
+	 */
+	private static String func(String func, String column, String alias) {
+		if (alias == null) {
+			alias = aliased(column);
+		}
+		return func + '(' + column + ") AS " + alias;
+	}
+
+	/**
+	 * Get an {@link #aliased(String) aliased} result column that converts the datetime column value
+	 * to epoch milliseconds.
+	 */
+	public static String millis(String column) {
+		return millis(null, column);
+	}
+
+	/**
+	 * Get an {@link #aliased(String) aliased} result column that applies the aggregate function to
+	 * the datetime column and converts the result to epoch milliseconds.
+	 * 
+	 * @since 2.4.0
+	 */
+	public static String millis(String function, String column) {
+		StringBuilder s = new StringBuilder(96).append("strftime('%s', ");
+		if (function != null) {
+			s.append(function).append('(').append(column).append(')');
+		} else {
+			s.append(column);
+		}
+		return s.append(") * 1000 AS ").append(aliased(column)).toString();
 	}
 
 	/**
@@ -162,9 +264,6 @@ public class SQLite {
 		return datetime(System.currentTimeMillis());
 	}
 
-	/**
-	 * UTC datetime in ISO format.
-	 */
 	private static FastDateFormat sFormat;
 
 	/**
@@ -178,24 +277,6 @@ public class SQLite {
 		return sFormat.format(millis);
 	}
 
-	/**
-	 * Get an {@link #aliased(String) aliased} result column that converts the datetime column value
-	 * to epoch milliseconds.
-	 */
-	public static String millis(String column) {
-		return "strftime('%s', " + column + ") * 1000 AS " + aliased(column);
-	}
-
-	/**
-	 * Get an {@link #aliased(String) aliased} result column that applies the aggregate function to
-	 * the datetime column and converts the result to epoch milliseconds.
-	 * 
-	 * @since 2.4.0
-	 */
-	public static String millis(String function, String column) {
-		return "strftime('%s', " + function + '(' + column + ")) * 1000 AS " + aliased(column);
-	}
-
 	private static Pattern sDiacritics;
 
 	/**
@@ -207,6 +288,14 @@ public class SQLite {
 		}
 		return sDiacritics.matcher(Normalizer.normalize(s, NFD)).replaceAll("").toUpperCase(US);
 	}
+
+	/**
+	 * Adapted from <a href=
+	 * "https://web.archive.org/web/20130316112756/http://www.meridianworlddata.com/Distance-calculation.asp"
+	 * >Improved approximate distance</a>.
+	 */
+	private static final String sDistance = "(%s * (%s - %s)) * (%s * (%s - %s)) + "
+			+ "(%s * (%s - %s) * %s) * (%s * (%s - %s) * %s) AS %s";
 
 	/**
 	 * Get a result column for the squared distance from the row coordinates to the supplied
@@ -223,16 +312,98 @@ public class SQLite {
 	public static String distance(String latitudeColumn, String longitudeColumn,
 			String latitudeCosineColumn, double latitude, double longitude, MeasureUnit unit,
 			String alias) {
-		/*
-		 * adapted from the "Improved approximate distance" section at https://web.archive.org/web
-		 * /20130316112756/http://www.meridianworlddata.com/Distance-calculation.asp
-		 */
-		String lats = "(%s * (%s - %s))";
-		String lons = "(%s * (%s - %s) * %s)";
-		String sql = lats + " * " + lats + " + " + lons + " * " + lons + " AS %s";
 		double degree = unit == MILE ? LATITUDE_DEGREE_MI : LATITUDE_DEGREE_KM;
-		return String.format((Locale) null, sql, degree, latitude, latitudeColumn, degree,
+		return String.format((Locale) null, sDistance, degree, latitude, latitudeColumn, degree,
 				latitude, latitudeColumn, degree, longitude, longitudeColumn, latitudeCosineColumn,
 				degree, longitude, longitudeColumn, latitudeCosineColumn, alias);
+	}
+
+	/**
+	 * Get an {@code IN} operator for the column and values.
+	 * 
+	 * @return column IN (values[0],...,values[n])
+	 * @since 2.6.0
+	 */
+	public static StringBuilder in(String column, long[] values) {
+		return in(column, values, new StringBuilder(64));
+	}
+
+	/**
+	 * Append an {@code IN} operator for the column and values.
+	 * 
+	 * @return column IN (values[0],...,values[n])
+	 * @since 2.6.0
+	 */
+	public static StringBuilder in(String column, long[] values, StringBuilder s) {
+		return in(column, values, null, s);
+	}
+
+	/**
+	 * Get an {@code IN} operator for the column and values. The values will be escaped if
+	 * necessary.
+	 * 
+	 * @return column IN (values[0],...,values[n])
+	 * @since 2.6.0
+	 */
+	public static StringBuilder in(String column, String[] values) {
+		return in(column, values, new StringBuilder(64));
+	}
+
+	/**
+	 * Append an {@code IN} operator for the column and values. The values will be escaped if
+	 * necessary.
+	 * 
+	 * @return column IN (values[0],...,values[n])
+	 * @since 2.6.0
+	 */
+	public static StringBuilder in(String column, String[] values, StringBuilder s) {
+		return in(column, null, values, s);
+	}
+
+	private static StringBuilder in(String column, long[] longValues, String[] stringValues,
+			StringBuilder s) {
+		s.append(column).append(" IN (");
+		final boolean longs = longValues != null;
+		final int length = longs ? longValues.length : stringValues.length;
+		for (int i = 0; i < length; i++) {
+			if (i > 0) {
+				s.append(',');
+			}
+			if (longs) {
+				s.append(longValues[i]);
+			} else {
+				appendEscapedSQLString(s, stringValues[i]);
+			}
+		}
+		return s.append(')');
+	}
+
+	/**
+	 * Appends an SQL string to the given StringBuilder, including the opening and closing single
+	 * quotes. Any single quotes internal to sqlString will be escaped.
+	 * <p>
+	 * Copied from android.database.DatabaseUtils.
+	 * </p>
+	 *
+	 * @param sb
+	 *            the StringBuilder that the SQL string will be appended to
+	 * @param sqlString
+	 *            the raw string to be appended, which may contain single quotes
+	 */
+	private static StringBuilder appendEscapedSQLString(StringBuilder sb, String sqlString) {
+		sb.append('\'');
+		if (sqlString.indexOf('\'') != -1) {
+			int length = sqlString.length();
+			for (int i = 0; i < length; i++) {
+				char c = sqlString.charAt(i);
+				if (c == '\'') {
+					sb.append('\'');
+				}
+				sb.append(c);
+			}
+		} else
+			sb.append(sqlString);
+		sb.append('\'');
+		return sb;
 	}
 }
