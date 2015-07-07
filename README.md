@@ -54,11 +54,11 @@ Install
 1\. Add the dependency.
 
 ```xml
-    <dependency>
-        <groupId>net.sf.sprockets</groupId>
-        <artifactId>sprockets</artifactId>
-        <version>2.5.0</version>
-    </dependency>
+<dependency>
+	<groupId>net.sf.sprockets</groupId>
+	<artifactId>sprockets</artifactId>
+	<version>2.6.0</version>
+</dependency>
 ```
 
 2\. Add your [Google API key][5] to [sprockets.xml][4] and place it in the root of your application classpath (e.g. `src/main/resources/` in a Maven project).  See the [Sprockets][6] class description for more information about configuring the library settings.

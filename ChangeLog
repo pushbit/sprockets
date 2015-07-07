@@ -1,3 +1,10 @@
+2015-07-07  2.6.0
+
+	* overloaded sql.SQLite methods to accept an alias
+	* added sql.SQLite.in
+	* added util.Elements.{addAll,toLongs,toStrings}
+	* moved util.StringArrays methods to util.Elements
+
 2015-06-03  2.5.0
 
 	* switched sql.SQLite methods to use method aliased instead of aliased_
