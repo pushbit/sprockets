@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 pushbit <pushbit@gmail.com>
+ * Copyright 2013-2015 pushbit <pushbit@gmail.com>
  * 
  * This file is part of Sprockets.
  * 
@@ -17,6 +17,10 @@
 
 package net.sf.sprockets.sql;
 
+import static java.util.Collections.EMPTY_LIST;
+import static org.apache.commons.lang.ArrayUtils.EMPTY_INT_ARRAY;
+import static org.apache.commons.lang.ArrayUtils.EMPTY_LONG_ARRAY;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -24,8 +28,8 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.collections.primitives.ArrayIntList;
 import org.apache.commons.collections.primitives.ArrayLongList;
-import org.apache.commons.collections.primitives.LongList;
 
 /**
  * Utility methods for working with Statements.
@@ -34,6 +38,81 @@ import org.apache.commons.collections.primitives.LongList;
  */
 public class Statements {
 	private Statements() {
+	}
+
+	/**
+	 * Set the statement parameters, starting at 1, in the order of the params.
+	 * 
+	 * @since 3.0.0
+	 */
+	public static PreparedStatement setInts(PreparedStatement stmt, int... params)
+			throws SQLException {
+		return setInts(1, stmt, params);
+	}
+
+	/**
+	 * Set the statement parameters, starting at the index, in the order of the params.
+	 * 
+	 * @since 3.0.0
+	 */
+	public static PreparedStatement setInts(int index, PreparedStatement stmt, int... params)
+			throws SQLException {
+		return set(index, stmt, params, null, null);
+	}
+
+	/**
+	 * Set the statement parameters, starting at 1, in the order of the params.
+	 * 
+	 * @since 3.0.0
+	 */
+	public static PreparedStatement setLongs(PreparedStatement stmt, long... params)
+			throws SQLException {
+		return setLongs(1, stmt, params);
+	}
+
+	/**
+	 * Set the statement parameters, starting at the index, in the order of the params.
+	 * 
+	 * @since 3.0.0
+	 */
+	public static PreparedStatement setLongs(int index, PreparedStatement stmt, long... params)
+			throws SQLException {
+		return set(index, stmt, null, params, null);
+	}
+
+	/**
+	 * Set the statement parameters, starting at 1, in the order of the params.
+	 * 
+	 * @since 3.0.0
+	 */
+	public static PreparedStatement setStrings(PreparedStatement stmt, String... params)
+			throws SQLException {
+		return setStrings(1, stmt, params);
+	}
+
+	/**
+	 * Set the statement parameters, starting at the index, in the order of the params.
+	 * 
+	 * @since 3.0.0
+	 */
+	public static PreparedStatement setStrings(int index, PreparedStatement stmt, String... params)
+			throws SQLException {
+		return set(index, stmt, null, null, params);
+	}
+
+	private static PreparedStatement set(int index, PreparedStatement stmt,
+			int[] ints, long[] longs, String[] strings) throws SQLException {
+		int length = ints != null ? ints.length : longs != null ? longs.length : strings.length;
+		for (int i = 0; i < length; i++) {
+			if (ints != null) {
+				stmt.setInt(index + i, ints[i]);
+			} else if (longs != null) {
+				stmt.setLong(index + i, longs[i]);
+			} else {
+				stmt.setString(index + i, strings[i]);
+			}
+		}
+		return stmt;
 	}
 
 	/**
@@ -67,25 +146,94 @@ public class Statements {
 	}
 
 	/**
+	 * Execute the query, get the String value in the first row and column of the result set, and
+	 * close the statement.
+	 * 
+	 * @param stmt
+	 *            must already have parameters set
+	 * @return null if the result set is empty
+	 * @since 3.0.0
+	 */
+	public static String firstString(PreparedStatement stmt) throws SQLException {
+		ResultSet rs = stmt.executeQuery();
+		String s = rs.next() ? rs.getString(1) : null;
+		stmt.close();
+		return s;
+	}
+
+	/**
+	 * Execute the query, get the int values in the first row of the result set, and close the
+	 * statement.
+	 * 
+	 * @param stmt
+	 *            must already have parameters set
+	 * @since 3.0.0
+	 */
+	public static int[] firstIntRow(PreparedStatement stmt) throws SQLException {
+		return (int[]) firstRow(stmt, Integer.class);
+	}
+
+	/**
 	 * Execute the query, get the long values in the first row of the result set, and close the
 	 * statement.
 	 * 
 	 * @param stmt
 	 *            must already have parameters set
-	 * @return null if the result set is empty
 	 * @since 1.4.0
 	 */
 	public static long[] firstLongRow(PreparedStatement stmt) throws SQLException {
-		long[] l = null;
+		return (long[]) firstRow(stmt, Long.class);
+	}
+
+	/**
+	 * Execute the query, get the String values in the first row of the result set, and close the
+	 * statement.
+	 * 
+	 * @param stmt
+	 *            must already have parameters set
+	 * @since 3.0.0
+	 */
+	@SuppressWarnings("unchecked")
+	public static List<String> firstStringRow(PreparedStatement stmt) throws SQLException {
+		return (List<String>) firstRow(stmt, String.class);
+	}
+
+	private static Object firstRow(PreparedStatement stmt, Class<?> cls) throws SQLException {
+		Object row = null;
 		ResultSet rs = stmt.executeQuery();
 		if (rs.next()) {
-			l = new long[rs.getMetaData().getColumnCount()];
-			for (int i = 0; i < l.length; i++) {
-				l[i] = rs.getLong(i + 1);
+			int cols = rs.getMetaData().getColumnCount();
+			int[] ints = cls == Integer.class ? new int[cols] : null;
+			long[] longs = cls == Long.class ? new long[cols] : null;
+			List<String> strings = cls == String.class ? new ArrayList<String>(cols) : null;
+			for (int i = 0; i < cols; i++) {
+				if (cls == Integer.class) {
+					ints[i] = rs.getInt(i + 1);
+				} else if (cls == Long.class) {
+					longs[i] = rs.getLong(i + 1);
+				} else {
+					strings.add(rs.getString(i + 1));
+				}
 			}
+			row = ints != null ? ints : longs != null ? longs : strings;
+		} else {
+			row = cls == Integer.class ? EMPTY_INT_ARRAY
+					: cls == Long.class ? EMPTY_LONG_ARRAY : EMPTY_LIST;
 		}
 		stmt.close();
-		return l;
+		return row;
+	}
+
+	/**
+	 * Execute the query, get the int values in the first column of the result set, and close the
+	 * statement.
+	 * 
+	 * @param stmt
+	 *            must already have parameters set
+	 * @since 3.0.0
+	 */
+	public static int[] allInts(PreparedStatement stmt) throws SQLException {
+		return (int[]) all(stmt, Integer.class);
 	}
 
 	/**
@@ -94,21 +242,10 @@ public class Statements {
 	 * 
 	 * @param stmt
 	 *            must already have parameters set
-	 * @return null if the result set is empty
 	 * @since 1.4.0
 	 */
 	public static long[] allLongs(PreparedStatement stmt) throws SQLException {
-		long[] l = null;
-		ResultSet rs = stmt.executeQuery();
-		if (rs.next()) {
-			LongList list = new ArrayLongList();
-			do {
-				list.add(rs.getLong(1));
-			} while (rs.next());
-			l = list.toArray();
-		}
-		stmt.close();
-		return l;
+		return (long[]) all(stmt, Long.class);
 	}
 
 	/**
@@ -117,20 +254,53 @@ public class Statements {
 	 * 
 	 * @param stmt
 	 *            must already have parameters set
-	 * @return null if the result set is empty
 	 * @since 1.5.0
 	 */
+	@SuppressWarnings("unchecked")
 	public static List<String> allStrings(PreparedStatement stmt) throws SQLException {
-		List<String> s = null;
+		return (List<String>) all(stmt, String.class);
+	}
+
+	private static Object all(PreparedStatement stmt, Class<?> cls) throws SQLException {
+		Object all = null;
 		ResultSet rs = stmt.executeQuery();
 		if (rs.next()) {
-			s = new ArrayList<String>();
+			ArrayIntList ints = cls == Integer.class ? new ArrayIntList() : null;
+			ArrayLongList longs = cls == Long.class ? new ArrayLongList() : null;
+			List<String> strings = cls == String.class ? new ArrayList<String>() : null;
 			do {
-				s.add(rs.getString(1));
+				if (cls == Integer.class) {
+					ints.add(rs.getInt(1));
+				} else if (cls == Long.class) {
+					longs.add(rs.getLong(1));
+				} else {
+					strings.add(rs.getString(1));
+				}
 			} while (rs.next());
+			all = ints != null ? ints.toArray() : longs != null ? longs.toArray() : strings;
+		} else {
+			all = cls == Integer.class ? EMPTY_INT_ARRAY
+					: cls == Long.class ? EMPTY_LONG_ARRAY : EMPTY_LIST;
 		}
 		stmt.close();
-		return s;
+		return all;
+	}
+
+	/**
+	 * Execute the insert statement, get the first generated key as an int, and close the statement.
+	 * 
+	 * @param stmt
+	 *            must have been created with {@link Statement#RETURN_GENERATED_KEYS} and already
+	 *            have parameters set
+	 * @return 0 if the statement did not generate any keys
+	 * @since 3.0.0
+	 */
+	public static int firstIntKey(PreparedStatement stmt) throws SQLException {
+		stmt.execute();
+		ResultSet rs = stmt.getGeneratedKeys();
+		int key = rs.next() ? rs.getInt(1) : 0;
+		stmt.close();
+		return key;
 	}
 
 	/**
@@ -144,9 +314,9 @@ public class Statements {
 	public static long firstLongKey(PreparedStatement stmt) throws SQLException {
 		stmt.execute();
 		ResultSet rs = stmt.getGeneratedKeys();
-		long l = rs.next() ? rs.getLong(1) : 0L;
+		long key = rs.next() ? rs.getLong(1) : 0L;
 		stmt.close();
-		return l;
+		return key;
 	}
 
 	/**
@@ -169,11 +339,10 @@ public class Statements {
 	 * 
 	 * @param stmt
 	 *            must already have batches added
-	 * @return null if the statement is null
 	 * @since 1.4.0
 	 */
 	public static int[] batch(PreparedStatement stmt) throws SQLException {
-		int[] rows = null;
+		int[] rows = EMPTY_INT_ARRAY;
 		if (stmt != null) {
 			rows = stmt.executeBatch();
 			stmt.close();
