@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 pushbit <pushbit@gmail.com>
+ * Copyright 2013-2015 pushbit <pushbit@gmail.com>
  * 
  * This file is part of Sprockets.
  * 
@@ -17,7 +17,7 @@
 
 package net.sf.sprockets.test;
 
-import static net.sf.sprockets.google.StreetView.Response.Status.OK;
+import static java.net.HttpURLConnection.HTTP_OK;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -33,9 +33,9 @@ import org.junit.Test;
 public class StreetViewTest {
 	@Test
 	public void testImage() throws IOException {
-		Response<InputStream> image =
-				StreetView.image(new Params().location("18 Rue Cujas, Paris, France"));
-		assertEquals(OK, image.getStatus());
+		Response<InputStream> image = StreetView.image(
+				Params.create().location("18 Rue Cujas, Paris, France"));
+		assertEquals(HTTP_OK, image.getStatus());
 		InputStream in = image.getResult();
 		assertNotNull(in);
 		byte[] b = new byte[8192];

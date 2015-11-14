@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 pushbit <pushbit@gmail.com>
+ * Copyright 2013-2015 pushbit <pushbit@gmail.com>
  * 
  * This file is part of Sprockets.
  * 
@@ -17,7 +17,7 @@
 
 package net.sf.sprockets.test;
 
-import static net.sf.sprockets.google.Places.Response.Status.OK;
+import static net.sf.sprockets.google.Places.Response.STATUS_OK;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -32,107 +32,84 @@ import net.sf.sprockets.google.Place.Prediction;
 import net.sf.sprockets.google.Places;
 import net.sf.sprockets.google.Places.Params;
 import net.sf.sprockets.google.Places.Response;
+import net.sf.sprockets.google.PlacesParams;
 
 import org.junit.Test;
 
 public class PlacesTest {
 	@Test
 	public void testNearbySearch() throws IOException {
-		Response<List<Place>> resp =
-				Places.nearbySearch(new Params().location(40.758897, -73.985126).keyword("pizza"));
-		assertEquals(OK, resp.getStatus());
-		List<Place> places = resp.getResult();
-		assertNotNull(places);
-		assertTrue(places.size() > 0);
-		Place place = places.get(0);
-		assertTrue(place.getName().length() > 0);
+		testSearch(Places.nearbySearch(
+				Params.create().latitude(40.758897).longitude(-73.985126).keyword("pizza")));
 	}
 
 	@Test
 	public void testTextSearch() throws IOException {
-		Response<List<Place>> resp =
-				Places.textSearch(new Params().query("pizza near times square"));
-		assertEquals(OK, resp.getStatus());
-		List<Place> places = resp.getResult();
-		assertNotNull(places);
-		assertTrue(places.size() > 0);
-		Place place = places.get(0);
-		assertTrue(place.getName().length() > 0);
+		testSearch(Places.textSearch(Params.create().query("pizza near times square")));
 	}
 
 	@Test
 	public void testRadarSearch() throws IOException {
-		Response<List<Place>> resp =
-				Places.radarSearch(new Params().location(40.758897, -73.985126).keyword("pizza"));
-		assertEquals(OK, resp.getStatus());
-		List<Place> places = resp.getResult();
-		assertNotNull(places);
-		assertTrue(places.size() > 0);
-		Place place = places.get(0);
-		assertTrue(place.getPlaceId().getId().length() > 0);
+		testSearch(Places.radarSearch(
+				Params.create().latitude(40.758897).longitude(-73.985126).keyword("pizza")));
 	}
 
 	@Test
 	public void testAutocomplete() throws IOException {
-		Response<List<Prediction>> resp = Places.autocomplete(
-				new Params().location(40.758897, -73.985126).query("john's piz"));
-		assertEquals(OK, resp.getStatus());
-		List<Prediction> predictions = resp.getResult();
-		assertNotNull(predictions);
-		assertTrue(predictions.size() > 0);
-		Prediction prediction = predictions.get(0);
-		assertTrue(prediction.getName().length() > 0);
+		testAutocomplete(Places.autocomplete(
+				Params.create().latitude(40.758897).longitude(-73.985126).query("john's piz")));
 	}
 
 	@Test
 	public void testQueryAutocomplete() throws IOException {
-		Response<List<Prediction>> resp = Places.queryAutocomplete(
-				new Params().location(40.758897, -73.985126).query("pizza near tim"));
-		assertEquals(OK, resp.getStatus());
-		List<Prediction> predictions = resp.getResult();
-		assertNotNull(predictions);
-		assertTrue(predictions.size() > 0);
-		Prediction prediction = predictions.get(0);
-		assertTrue(prediction.getName().length() > 0);
+		testAutocomplete(Places.queryAutocomplete(
+				Params.create().latitude(40.758897).longitude(-73.985126).query("pizza near tim")));
+	}
+
+	private void testSearch(Response<List<Place>> resp) {
+		testResponse(resp);
+		assertTrue(!resp.getResult().get(0).getPlaceId().getId().isEmpty());
+	}
+
+	private void testAutocomplete(Response<List<Prediction>> resp) {
+		testResponse(resp);
+		assertTrue(!resp.getResult().get(0).getDescription().isEmpty());
+	}
+
+	private void testResponse(Response<? extends List<?>> resp) {
+		assertEquals(STATUS_OK, resp.getStatus());
+		assertTrue(!resp.getResult().isEmpty());
 	}
 
 	@Test
 	public void testDetails() throws IOException {
-		/* search */
-		Response<List<Place>> search = Places.textSearch(
-				new Params().query("pizza near times square"));
-		assertEquals(OK, search.getStatus());
-		List<Place> places = search.getResult();
-		assertNotNull(places);
-		assertTrue(places.size() > 0);
-		Place place = places.get(0);
-		assertTrue(place.getPlaceId().getId().length() > 0);
-		/* details */
-		Response<Place> details = Places.details(new Params().placeId(place.getPlaceId().getId()));
-		assertEquals(OK, details.getStatus());
+		PlacesParams params = Params.create();
+		Response<List<Place>> search = Places.textSearch(params.query("pizza near times square"));
+		testSearch(search);
+		Place place = search.getResult().get(0);
+		params.clear();
+		Response<Place> details = Places.details(params.placeId(place.getPlaceId().getId()));
+		assertEquals(STATUS_OK, details.getStatus());
 		place = details.getResult();
 		assertNotNull(place);
-		assertTrue(place.getName().length() > 0);
+		assertTrue(!place.getPlaceId().getId().isEmpty());
 	}
 
 	@Test
 	public void testPhoto() throws IOException {
-		Response<List<Place>> search = Places.textSearch(
-				new Params().query("pizza near times square"));
-		assertEquals(OK, search.getStatus());
-		List<Place> places = search.getResult();
-		assertNotNull(places);
-		assertTrue(places.size() > 0);
+		PlacesParams params = Params.create();
+		Response<List<Place>> search = Places.textSearch(params.query("pizza near times square"));
+		testSearch(search);
 		boolean tested = false;
-		for (Place place : places) {
+		for (Place place : search.getResult()) {
 			List<Photo> photos = place.getPhotos();
-			if (photos != null && photos.size() > 0) {
+			if (!photos.isEmpty()) {
 				Photo photo = photos.get(0);
-				assertNotNull(photo);
-				assertTrue(photo.getReference().length() > 0);
+				assertTrue(!photo.getReference().isEmpty());
+				params.clear();
 				Response<InputStream> resp = Places.photo(
-						new Params().reference(photo.getReference()).maxWidth(160).maxHeight(120));
-				assertEquals(OK, resp.getStatus());
+						params.reference(photo.getReference()).maxWidth(100).maxHeight(75));
+				assertEquals(STATUS_OK, resp.getStatus());
 				InputStream in = resp.getResult();
 				assertNotNull(in);
 				byte[] b = new byte[8192];
