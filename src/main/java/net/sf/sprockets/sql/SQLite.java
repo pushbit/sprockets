@@ -248,13 +248,25 @@ public class SQLite {
 	 * @since 2.4.0
 	 */
 	public static String millis(String function, String column) {
+		return millis(function, column, aliased(column));
+	}
+
+	/**
+	 * Get an aliased result column that applies the aggregate function to the datetime column and
+	 * converts the result to epoch milliseconds.
+	 * 
+	 * @param function
+	 *            can be null to not apply a function
+	 * @since 3.0.0
+	 */
+	public static String millis(String function, String column, String alias) {
 		StringBuilder s = new StringBuilder(96).append("strftime('%s', ");
 		if (function != null) {
 			s.append(function).append('(').append(column).append(')');
 		} else {
 			s.append(column);
 		}
-		return s.append(") * 1000 AS ").append(aliased(column)).toString();
+		return s.append(") * 1000 AS ").append(alias).toString();
 	}
 
 	/**
@@ -363,9 +375,8 @@ public class SQLite {
 	private static StringBuilder in(String column, long[] longValues, String[] stringValues,
 			StringBuilder s) {
 		s.append(column).append(" IN (");
-		final boolean longs = longValues != null;
-		final int length = longs ? longValues.length : stringValues.length;
-		for (int i = 0; i < length; i++) {
+		boolean longs = longValues != null;
+		for (int i = 0, length = longs ? longValues.length : stringValues.length; i < length; i++) {
 			if (i > 0) {
 				s.append(',');
 			}
@@ -393,16 +404,16 @@ public class SQLite {
 	private static StringBuilder appendEscapedSQLString(StringBuilder sb, String sqlString) {
 		sb.append('\'');
 		if (sqlString.indexOf('\'') != -1) {
-			int length = sqlString.length();
-			for (int i = 0; i < length; i++) {
+			for (int i = 0, length = sqlString.length(); i < length; i++) {
 				char c = sqlString.charAt(i);
 				if (c == '\'') {
 					sb.append('\'');
 				}
 				sb.append(c);
 			}
-		} else
+		} else {
 			sb.append(sqlString);
+		}
 		sb.append('\'');
 		return sb;
 	}
