@@ -20,8 +20,9 @@ package net.sf.sprockets.util;
 import static net.sf.sprockets.util.MeasureUnit.KILOMETER;
 import static net.sf.sprockets.util.MeasureUnit.MILE;
 
-import java.util.Arrays;
 import java.util.Locale;
+
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Utility methods for working with Locales.
@@ -32,8 +33,10 @@ public class Locales {
 	private Locales() {
 	}
 
-	private static final String[] sMi = { "AS", "BS", "BZ", "DM", "FK", "GB", "GD", "GU", "KN",
-			"KY", "LC", "LR", "MM", "MP", "SH", "TC", "US", "VC", "VG", "VI", "WS" };
+	/** Countries that measure distances in miles. */
+	private static final ImmutableSet<String> USES_MILES = ImmutableSet.of(
+			"AS", "BS", "BZ", "DM", "FK", "GB", "GD", "GU", "KN", "KY", "LC", "LR", "MM", "MP",
+			"SH", "TC", "US", "VC", "VG", "VI", "WS");
 
 	/**
 	 * Get the unit of distance that is used in the default locale, {@code KILOMETER} or
@@ -47,6 +50,6 @@ public class Locales {
 	 * Get the unit of distance that is used in the locale, {@code KILOMETER} or {@code MILE}.
 	 */
 	public static MeasureUnit getDistanceUnit(Locale locale) {
-		return Arrays.binarySearch(sMi, locale.getCountry()) >= 0 ? MILE : KILOMETER;
+		return USES_MILES.contains(locale.getCountry()) ? MILE : KILOMETER;
 	}
 }
