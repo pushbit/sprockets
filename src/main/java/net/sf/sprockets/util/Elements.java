@@ -71,7 +71,7 @@ public class Elements {
 	 * @since 1.4.0
 	 */
 	public static <T> T[] slice(T[] array, int... indexes) {
-		final int length = indexes.length;
+		int length = indexes.length;
 		T[] slice = ObjectArrays.newArray(array, length);
 		for (int i = 0; i < length; i++) {
 			slice[i] = array[indexes[i]];
@@ -85,11 +85,20 @@ public class Elements {
 	 * @since 1.4.0
 	 */
 	public static <T> List<T> slice(List<T> list, int... indexes) {
-		List<T> slice = new ArrayList<T>(indexes.length);
+		List<T> slice = new ArrayList<>(indexes.length);
 		for (int i : indexes) {
 			slice.add(list.get(i));
 		}
 		return slice;
+	}
+
+	/**
+	 * Convert the Strings to an array of ints.
+	 * 
+	 * @since 3.0.0
+	 */
+	public static int[] toInts(String... values) {
+		return (int[]) to(Integer.class, values);
 	}
 
 	/**
@@ -98,12 +107,21 @@ public class Elements {
 	 * @since 2.6.0
 	 */
 	public static long[] toLongs(String... values) {
-		final int length = values.length;
-		long[] l = new long[length];
+		return (long[]) to(Long.class, values);
+	}
+
+	private static Object to(Class<?> cls, String[] strings) {
+		int length = strings.length;
+		int[] ints = cls == Integer.class ? new int[length] : null;
+		long[] longs = cls == Long.class ? new long[length] : null;
 		for (int i = 0; i < length; i++) {
-			l[i] = Long.parseLong(values[i]);
+			if (cls == Integer.class) {
+				ints[i] = Integer.parseInt(strings[i]);
+			} else {
+				longs[i] = Long.parseLong(strings[i]);
+			}
 		}
-		return l;
+		return ints != null ? ints : longs;
 	}
 
 	/**
@@ -125,8 +143,8 @@ public class Elements {
 	}
 
 	private static String[] toStrings(int[] intValues, long[] longValues) {
-		final boolean ints = intValues != null;
-		final int length = ints ? intValues.length : longValues.length;
+		boolean ints = intValues != null;
+		int length = ints ? intValues.length : longValues.length;
 		String[] s = new String[length];
 		for (int i = 0; i < length; i++) {
 			if (ints) {
