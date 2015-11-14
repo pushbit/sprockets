@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 pushbit <pushbit@gmail.com>
+ * Copyright 2013-2015 pushbit <pushbit@gmail.com>
  * 
  * This file is part of Sprockets.
  * 
@@ -37,8 +37,10 @@ import com.squareup.okhttp.OkUrlFactory;
  */
 public class HttpClient {
 	private static final Logger sLog = Loggers.get(HttpClient.class);
+
 	/** Null if using the standard library client. */
 	private static final OkUrlFactory sClient;
+
 	static {
 		String client = Sprockets.getConfig().getString("network.http-client");
 		if ("java.net".equals(client)) {

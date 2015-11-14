@@ -15,7 +15,7 @@ Google Places API
 Full support for Place Search, Details, Photos, Autocomplete, and Query Autocomplete requests, including all parameters and returned fields.  Getting a list of places can be as simple as:
 
 ```java
-Places.textSearch(new Params().query("pizza near willis tower")).getResult();
+Places.textSearch(Params.create().query("pizza near willis tower")).getResult();
 ```
 
 More detailed searches can include lat/long with radius, specific types of places, keywords, price range, places that are open now, etc.  For each returned place, you can also retrieve its full details, reviews, and photos.
@@ -23,9 +23,10 @@ More detailed searches can include lat/long with radius, specific types of place
 The Google Places API can return a lot of information about each place and most of the time you probably won't need every detail.  For maximum performance and minimum memory usage, you can specify which fields you want and limit the number of results.
 
 ```java
-Places.nearbySearch(new Params().location(47.60567, -122.3315).radius(5000)
-        .keyword("swimming").openNow().maxResults(5),
-        NAME, VICINITY, RATING, PHOTOS).getResult();
+Places.nearbySearch(Params.create()
+        .latitude(47.60567).longitude(-122.3315).radius(5000)
+        .keyword("swimming").openNow(true).maxResults(5),
+        FIELD_NAME | FIELD_VICINITY | FIELD_PHOTOS).getResult();
 ```
 
 [Places Javadoc][7]
@@ -33,16 +34,16 @@ Places.nearbySearch(new Params().location(47.60567, -122.3315).radius(5000)
 Google Street View Image API
 ----------------------------
 
-Download a Google Street View Image by supplying a lat/long or location name.
+Download a Google Street View Image by supplying lat/long or location name.
 
 ```java
-StreetView.image(new Params().location("18 Rue Cujas, Paris, France")).getResult();
+StreetView.image(Params.create().location("18 Rue Cujas, Paris, France")).getResult();
 ```
 
 For fine control of the camera, you can also specify the heading, pitch, and field of view.
 
 ```java
-StreetView.image(new Params().location(40.748769, -73.985332)
+StreetView.image(Params.create().latitude(40.748769).longitude(-73.985332)
         .heading(210).pitch(33).fov(110)).getResult();
 ```
 
@@ -57,7 +58,7 @@ Install
 <dependency>
 	<groupId>net.sf.sprockets</groupId>
 	<artifactId>sprockets</artifactId>
-	<version>2.6.0</version>
+	<version>3.0.0</version>
 </dependency>
 ```
 

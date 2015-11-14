@@ -37,8 +37,8 @@ import org.apache.commons.configuration.XMLConfiguration;
  * API key</a>, the recommended method is to download <a href=
  * "https://raw.githubusercontent.com/pushbit/sprockets/master/src/main/resources/net/sf/sprockets/sprockets.xml"
  * target="_blank">sprockets.xml</a> and place it in the root of your application classpath (e.g.
- * {@code src/main/resources/} in a Maven project). You can then update the values in this file and
- * they will automatically be loaded at run-time.
+ * {@code src/main/resources/} in a Maven or Gradle project). You can then update the values in this
+ * file and they will automatically be loaded at run-time.
  * <p>
  * If you would like to override the default settings in another way, you can choose any of the
  * following options, listed from highest to lowest precedence.
@@ -80,13 +80,13 @@ public class Sprockets {
 				try {
 					sConfig.addConfiguration(new XMLConfiguration(config));
 				} catch (ConfigurationException e) {
-					throw new RuntimeException("loading " + key + ": " + config, e);
+					throw new IllegalArgumentException("loading " + key + ": " + config, e);
 				}
 			} else {
 				sLog.log(WARNING, "can''t read {0}: {1}", new String[] { key, config });
 			}
 		}
-		/* in the class path; if not user specified then check for default */
+		/* in the classpath; if not user specified then check for default */
 		key = "sprockets.config.resource";
 		config = System.getProperty(key);
 		String defConfig = "sprockets.xml";
@@ -95,7 +95,7 @@ public class Sprockets {
 			try {
 				sConfig.addConfiguration(new XMLConfiguration(url));
 			} catch (ConfigurationException e) {
-				throw new RuntimeException("loading " + key + ": " + url, e);
+				throw new IllegalArgumentException("loading " + key + ": " + url, e);
 			}
 		} else if (config != null) {
 			sLog.log(WARNING, "can''t read {0}: {1}", new String[] { key, config });
@@ -106,7 +106,7 @@ public class Sprockets {
 			try {
 				sConfig.addConfiguration(new XMLConfiguration(url));
 			} catch (ConfigurationException e) {
-				throw new RuntimeException("loading sprockets default config: " + defConfig, e);
+				throw new IllegalArgumentException("loading default config: " + defConfig, e);
 			}
 		}
 	}

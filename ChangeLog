@@ -1,3 +1,36 @@
+2015-11-14  3.0.0
+
+	Backwards incompatible changes:
+	* requires Java 7
+	* methods returning a Collection or array now return an empty instance instead of null
+	* removed deprecated google.Place.{get{Id,Reference,Events},IdPredicate}
+	* google.Place.Id
+		* Filter is now abstract, use Place.IdFilter or Prediction.IdFilter instead
+		* removed Scope, getScope now returns a String
+	* google.Place.Prediction no longer extends Place and getName renamed to getDescription
+	* google.Places.Params
+		* added create, use instead of constructor
+		* renamed filter to placeFilter
+		* removed location, use latitude and longitude instead
+		* removed RankBy, use RANK_BY_* constants instead
+	* removed google.Places.Field, use FIELD_* constants instead
+	* removed google.Places.Request, use URL_* constants instead
+	* removed google.Places.Response.Status, getStatus now returns a String
+	* google.StreetView.Params
+		* added create, use instead of constructor
+		* removed location, use latitude and longitude instead
+		* removed size, use width and height instead
+	* removed google.StreetView.Response.Status, getStatus now returns an int
+	* added lang.Substring.builder, use instead of constructor
+
+	Other changes:
+	* added google.Place.builder
+	* added google.Places.{add,delete}
+	* added google.Places.Params.predictionFilter
+	* added immutables.value.ClearableBuilder
+	* added lang.Classes
+	* added sql.Statements.set{Int,Long,String}s
+
 2015-07-07  2.6.0
 
 	* overloaded sql.SQLite methods to accept an alias
