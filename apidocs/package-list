@@ -1,5 +1,6 @@
 net.sf.sprockets
 net.sf.sprockets.google
+net.sf.sprockets.immutables.value
 net.sf.sprockets.io
 net.sf.sprockets.lang
 net.sf.sprockets.naming
