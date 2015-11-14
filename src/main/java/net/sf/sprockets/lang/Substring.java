@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 pushbit <pushbit@gmail.com>
+ * Copyright 2013-2015 pushbit <pushbit@gmail.com>
  * 
  * This file is part of Sprockets.
  * 
@@ -17,95 +17,62 @@
 
 package net.sf.sprockets.lang;
 
-import static com.google.common.base.Preconditions.checkArgument;
+import javax.annotation.Nullable;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
+import net.sf.sprockets.lang.ImmutableSubstring.Builder;
+
+import org.immutables.value.Value.Default;
+import org.immutables.value.Value.Immutable;
 
 /**
  * Contextual information about a string found within another string.
  */
-public class Substring {
-	private final int mOffset;
-	private final int mLength;
-	private final String mSub;
-	private final String mSuper;
-	private int mHash;
-
-	/**
-	 * @throws IllegalArgumentException
-	 *             if offset < 0 or length <= 0
-	 */
-	public Substring(int offset, int length) {
-		this(offset, length, null, null);
+@Immutable
+public abstract class Substring {
+	Substring() {
 	}
 
 	/**
-	 * @throws IllegalArgumentException
-	 *             if offset < 0 or length <= 0
+	 * Build an immutable instance.
+	 * 
+	 * @since 3.0.0
 	 */
-	public Substring(int offset, int length, String value, String superstring) {
-		checkArgument(offset >= 0, "offset must be >= 0");
-		checkArgument(length > 0, "length must be > 0");
-		mOffset = offset;
-		mLength = length;
-		mSub = value;
-		mSuper = superstring;
+	public static Builder builder() {
+		return ImmutableSubstring.builder();
 	}
 
 	/**
 	 * Zero-based position of the first character of the substring within the superstring.
 	 */
+	@Default
 	public int getOffset() {
-		return mOffset;
+		String value = getValue();
+		String superstring = getSuperstring();
+		return value != null && superstring != null ? superstring.indexOf(value) : -1;
 	}
 
 	/**
 	 * Number of characters in the substring.
 	 */
+	@Default
 	public int getLength() {
-		return mLength;
+		String value = getValue();
+		return value != null ? value.length() : 0;
 	}
 
 	/**
-	 * Content of the substring. May be null if not available.
+	 * Content of the substring.
+	 * 
+	 * @return null if not available
 	 */
-	public String getValue() {
-		return mSub;
-	}
+	@Nullable
+	public abstract String getValue();
 
 	/**
-	 * Content of the superstring that contains the substring. May be null if not available.
+	 * Content of the superstring that contains the substring.
+	 * 
+	 * @return null if not available
 	 */
-	public String getSuperstring() {
-		return mSuper;
-	}
-
-	@Override
-	public int hashCode() {
-		if (mHash == 0) {
-			mHash = Objects.hashCode(mOffset, mLength, mSub, mSuper);
-		}
-		return mHash;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (obj != null) {
-			if (this == obj) {
-				return true;
-			} else if (obj instanceof Substring) {
-				Substring o = (Substring) obj;
-				return mOffset == o.mOffset && mLength == o.mLength && Objects.equal(mSub, o.mSub)
-						&& Objects.equal(mSuper, o.mSuper);
-			}
-		}
-		return false;
-	}
-
-	@Override
-	public String toString() {
-		return MoreObjects.toStringHelper(this).add("offset", mOffset).add("length", mLength)
-				.add("value", mSub).add("superstring", mSuper).omitNullValues().toString();
-	}
+	@Nullable
+	public abstract String getSuperstring();
 }

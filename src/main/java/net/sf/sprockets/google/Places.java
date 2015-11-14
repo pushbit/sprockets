@@ -22,107 +22,70 @@ import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
 import static java.net.HttpURLConnection.HTTP_FORBIDDEN;
 import static java.net.HttpURLConnection.HTTP_NOT_MODIFIED;
 import static java.net.HttpURLConnection.HTTP_OK;
-import static java.util.Locale.ENGLISH;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static java.util.logging.Level.INFO;
-import static net.sf.sprockets.google.Places.Field.ADDRESS;
-import static net.sf.sprockets.google.Places.Field.EVENTS;
-import static net.sf.sprockets.google.Places.Field.FORMATTED_ADDRESS;
-import static net.sf.sprockets.google.Places.Field.FORMATTED_OPENING_HOURS;
-import static net.sf.sprockets.google.Places.Field.FORMATTED_PHONE_NUMBER;
-import static net.sf.sprockets.google.Places.Field.GEOMETRY;
-import static net.sf.sprockets.google.Places.Field.ICON;
-import static net.sf.sprockets.google.Places.Field.INTL_PHONE_NUMBER;
-import static net.sf.sprockets.google.Places.Field.MATCHED_SUBSTRINGS;
-import static net.sf.sprockets.google.Places.Field.NAME;
-import static net.sf.sprockets.google.Places.Field.OPENING_HOURS;
-import static net.sf.sprockets.google.Places.Field.OPEN_NOW;
-import static net.sf.sprockets.google.Places.Field.PERMANENTLY_CLOSED;
-import static net.sf.sprockets.google.Places.Field.PHOTOS;
-import static net.sf.sprockets.google.Places.Field.PRICE_LEVEL;
-import static net.sf.sprockets.google.Places.Field.RATING;
-import static net.sf.sprockets.google.Places.Field.REVIEWS;
-import static net.sf.sprockets.google.Places.Field.TERMS;
-import static net.sf.sprockets.google.Places.Field.TYPES;
-import static net.sf.sprockets.google.Places.Field.URL;
-import static net.sf.sprockets.google.Places.Field.USER_RATINGS_TOTAL;
-import static net.sf.sprockets.google.Places.Field.UTC_OFFSET;
-import static net.sf.sprockets.google.Places.Field.VICINITY;
-import static net.sf.sprockets.google.Places.Field.WEBSITE;
-import static net.sf.sprockets.google.Places.Params.RankBy.DISTANCE;
-import static net.sf.sprockets.google.Places.Request.AUTOCOMPLETE;
-import static net.sf.sprockets.google.Places.Request.DETAILS;
-import static net.sf.sprockets.google.Places.Request.NEARBY_SEARCH;
-import static net.sf.sprockets.google.Places.Request.PHOTO;
-import static net.sf.sprockets.google.Places.Request.QUERY_AUTOCOMPLETE;
-import static net.sf.sprockets.google.Places.Request.RADAR_SEARCH;
-import static net.sf.sprockets.google.Places.Request.TEXT_SEARCH;
-import static net.sf.sprockets.google.Places.Response.Status.INVALID_REQUEST;
-import static net.sf.sprockets.google.Places.Response.Status.NOT_MODIFIED;
-import static net.sf.sprockets.google.Places.Response.Status.OK;
-import static net.sf.sprockets.google.Places.Response.Status.OVER_QUERY_LIMIT;
-import static net.sf.sprockets.google.Places.Response.Status.UNKNOWN_ERROR;
+import static net.sf.sprockets.google.Places.Response.STATUS_INVALID_REQUEST;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URLConnection;
 import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-import java.util.logging.Logger;
+
+import javax.annotation.Nullable;
 
 import net.sf.sprockets.Sprockets;
+import net.sf.sprockets.google.Place.Id;
 import net.sf.sprockets.google.Place.Photo;
 import net.sf.sprockets.google.Place.Prediction;
-import net.sf.sprockets.google.Places.Params.RankBy;
-import net.sf.sprockets.lang.Maths;
+import net.sf.sprockets.lang.ImmutableSubstring;
 import net.sf.sprockets.net.HttpClient;
+import net.sf.sprockets.net.Urls;
 import net.sf.sprockets.util.concurrent.Interruptibles;
-import net.sf.sprockets.util.logging.Loggers;
 
-import org.apache.commons.configuration.Configuration;
+import org.immutables.value.Value.Default;
+import org.immutables.value.Value.Immutable;
+import org.immutables.value.Value.Modifiable;
+import org.immutables.value.Value.Style;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ObjectArrays;
 import com.google.common.io.Closeables;
 import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
 
 /**
  * Methods for calling <a href="https://developers.google.com/places/webservice/"
- * target="_blank">Google Places API</a> services. All methods require a {@link Params Params}
- * instance that defines the places to search for. Most methods also allow you to specify any number
- * of {@link Field Field}s that should be populated in the results, which can reduce execution time
- * and memory allocation when you are not using all of the available fields. When no Fields are
- * specified, all available are populated in the {@link Response Response} results.
- * {@link Params#maxResults(int) Params.maxResults(int)} can be used to similar effect when you will
- * only use a limited number of results.
+ * target="_blank">Google Places API</a> services. All methods accept {@link Params Params} which
+ * define the places to search for, the photo to download, or the place to add or delete. Most
+ * search methods also have a version that allows you to specify the fields that should be populated
+ * in the results, which can reduce execution time and memory allocation when you are not using all
+ * of the available fields. {@link Params#maxResults() Params.maxResults} can be used to similar
+ * effect when you will only use a limited number of results.
  * <p>
  * Below is a simple example that prints the names and addresses of fish & chips shops that are
  * within 1 km of Big Ben in London and are currently open.
  * </p>
  * 
  * <pre>{@code
- * Response<List<Place>> resp = Places.nearbySearch(new Params()
- *         .location(51.500702, -0.124576).radius(1000).types("food")
- *         .keyword("fish & chips").openNow(), Field.NAME, Field.VICINITY);
- * Status status = resp.getStatus();
+ * Response<List<Place>> resp = Places.nearbySearch(Params.create()
+ *         .latitude(51.500702).longitude(-0.124576).radius(1000)
+ *         .addTypes("food").keyword("fish & chips").openNow(true),
+ *         FIELD_NAME | FIELD_VICINITY);
+ * 
+ * String status = resp.getStatus();
  * List<Place> places = resp.getResult();
  * 
- * if (status == Status.OK && places != null) {
+ * if (STATUS_OK.equals(status)) {
  *     for (Place place : places) {
- *         System.out.println(place.getName() + " - " + place.getVicinity());
+ *         System.out.println(place.getName() + " @ " + place.getVicinity());
  *     }
- * } else if (status == Status.ZERO_RESULTS) {
+ * } else if (STATUS_ZERO_RESULTS.equals(status)) {
  *     System.out.println("no results");
  * } else {
  *     System.out.println("error: " + status);
@@ -130,33 +93,92 @@ import com.google.gson.stream.JsonReader;
  * }</pre>
  */
 public class Places {
-	private static final Logger sLog = Loggers.get(Places.class);
-
-	private Places() {
-	}
+	public static final String URL_NEARBY_SEARCH =
+			"https://maps.googleapis.com/maps/api/place/nearbysearch/json?";
+	public static final String URL_TEXT_SEARCH =
+			"https://maps.googleapis.com/maps/api/place/textsearch/json?";
+	public static final String URL_RADAR_SEARCH =
+			"https://maps.googleapis.com/maps/api/place/radarsearch/json?";
+	public static final String URL_AUTOCOMPLETE =
+			"https://maps.googleapis.com/maps/api/place/autocomplete/json?";
+	public static final String URL_QUERY_AUTOCOMPLETE =
+			"https://maps.googleapis.com/maps/api/place/queryautocomplete/json?";
+	public static final String URL_DETAILS =
+			"https://maps.googleapis.com/maps/api/place/details/json?";
+	public static final String URL_PHOTO = "https://maps.googleapis.com/maps/api/place/photo?";
+	public static final String URL_ADD = "https://maps.googleapis.com/maps/api/place/add/json?";
+	public static final String URL_DELETE =
+			"https://maps.googleapis.com/maps/api/place/delete/json?";
 
 	/**
-	 * Types of requests that can be sent to the Google Places API service.
-	 * 
-	 * @since 1.0.0
+	 * Only populate the {@link Place#getPlaceId() placeId}, {@link Place#getAltIds() altIds}, and
+	 * primitive properties.
 	 */
-	public enum Request {
-		NEARBY_SEARCH("nearbysearch", true), TEXT_SEARCH("textsearch", true),
-		RADAR_SEARCH("radarsearch", false), AUTOCOMPLETE("autocomplete", true),
-		QUERY_AUTOCOMPLETE("queryautocomplete", true), DETAILS("details", true),
-		PHOTO("photo", false);
+	public static final int FIELD_NONE = 1 << 0;
 
-		/** Full path to make the request, just add the query parameters. */
-		private final String mUrl;
+	/** URL for an icon representing the type of place. */
+	public static final int FIELD_ICON = 1 << 1;
 
-		/** True if the request supports the language parameter. */
-		private final boolean mHasLang;
+	/** Google Place page. */
+	public static final int FIELD_URL = 1 << 2;
 
-		Request(String path, boolean hasLang) {
-			mUrl = "https://maps.googleapis.com/maps/api/place/" + path
-					+ (!path.equals("photo") ? "/json?" : "?");
-			mHasLang = hasLang;
-		}
+	/** Name of the place, for example a business or landmark name. */
+	public static final int FIELD_NAME = 1 << 3;
+
+	/** All {@link Place.Address Address} components in separate properties. */
+	public static final int FIELD_ADDRESS = 1 << 4;
+
+	/** String containing all address components. */
+	public static final int FIELD_FORMATTED_ADDRESS = 1 << 5;
+
+	/** Simplified address string that stops after the city level. */
+	public static final int FIELD_VICINITY = 1 << 6;
+
+	/** Includes prefixed country code. */
+	public static final int FIELD_INTL_PHONE_NUMBER = 1 << 7;
+
+	/** In local format. */
+	public static final int FIELD_FORMATTED_PHONE_NUMBER = 1 << 8;
+
+	/** URL of the website for the place. */
+	public static final int FIELD_WEBSITE = 1 << 9;
+
+	/**
+	 * Features describing the place.
+	 * 
+	 * @see <a href="https://developers.google.com/places/supported_types" target="_blank">Place
+	 *      Types</a>
+	 */
+	public static final int FIELD_TYPES = 1 << 10;
+
+	/** Comments and ratings from Google users. */
+	public static final int FIELD_REVIEWS = 1 << 11;
+
+	/** Opening and closing times for each day that the place is open. */
+	public static final int FIELD_OPENING_HOURS = 1 << 12;
+
+	/**
+	 * Opening hours for each day of the week. e.g. ["Monday: 10:00 am – 6:00 pm", ...,
+	 * "Sunday: Closed"]
+	 */
+	public static final int FIELD_FORMATTED_OPENING_HOURS = 1 << 13;
+
+	/** Photos for the place that can be downloaded. */
+	public static final int FIELD_PHOTOS = 1 << 14;
+
+	/** Name of the place or a query suggestion. */
+	public static final int FIELD_DESCRIPTION = 1 << 15;
+
+	/** List of sections and their offset within the place's name. */
+	public static final int FIELD_TERMS = 1 << 16;
+
+	/**
+	 * List of substrings in the place's name that match the search text, often used for
+	 * highlighting.
+	 */
+	public static final int FIELD_MATCHED_SUBSTRINGS = 1 << 17;
+
+	private Places() {
 	}
 
 	/**
@@ -165,46 +187,79 @@ public class Places {
 	 * Required params:
 	 * </p>
 	 * <ul>
-	 * <li>{@link Params#location(double, double) location}</li>
+	 * <li>{@link Params#latitude() latitude}</li>
+	 * <li>{@link Params#longitude() longitude}</li>
 	 * </ul>
 	 * <p>
 	 * Optional params:
 	 * </p>
 	 * <ul>
-	 * <li>{@link Params#radius(int) radius}</li>
-	 * <li>{@link Params#name(String) name}</li>
-	 * <li>{@link Params#keyword(String) keyword}</li>
-	 * <li>{@link Params#types(String...) types}</li>
-	 * <li>{@link Params#minPrice(int) minPrice}</li>
-	 * <li>{@link Params#maxPrice(int) maxPrice}</li>
+	 * <li>{@link Params#radius() radius}</li>
+	 * <li>{@link Params#name() name}</li>
+	 * <li>{@link Params#keyword() keyword}</li>
+	 * <li>{@link Params#types() types}</li>
+	 * <li>{@link Params#minPrice() minPrice}</li>
+	 * <li>{@link Params#maxPrice() maxPrice}</li>
 	 * <li>{@link Params#openNow() openNow}</li>
-	 * <li>{@link Params#language(String) language}</li>
-	 * <li>{@link Params#rankBy(RankBy) rankBy}</li>
-	 * <li>{@link Params#pageToken(String) pageToken}</li>
-	 * <li>{@link Params#filter(Predicate) filter}</li>
-	 * <li>{@link Params#maxResults(int) maxResults}</li>
+	 * <li>{@link Params#language() language}</li>
+	 * <li>{@link Params#rankBy() rankBy}</li>
+	 * <li>{@link Params#pageToken() pageToken}</li>
+	 * </ul>
+	 * 
+	 * @throws IOException
+	 *             if there is a problem communicating with the Google Places API service
+	 * @see <a href="https://developers.google.com/places/web-service/search#PlaceSearchRequests"
+	 *      target="_blank">Nearby Search Requests</a>
+	 */
+	public static Response<List<Place>> nearbySearch(Params params) throws IOException {
+		return nearbySearch(params, 0);
+	}
+
+	/**
+	 * Get places that are near a location.
+	 * <p>
+	 * Required params:
+	 * </p>
+	 * <ul>
+	 * <li>{@link Params#latitude() latitude}</li>
+	 * <li>{@link Params#longitude() longitude}</li>
+	 * </ul>
+	 * <p>
+	 * Optional params:
+	 * </p>
+	 * <ul>
+	 * <li>{@link Params#radius() radius}</li>
+	 * <li>{@link Params#name() name}</li>
+	 * <li>{@link Params#keyword() keyword}</li>
+	 * <li>{@link Params#types() types}</li>
+	 * <li>{@link Params#minPrice() minPrice}</li>
+	 * <li>{@link Params#maxPrice() maxPrice}</li>
+	 * <li>{@link Params#openNow() openNow}</li>
+	 * <li>{@link Params#language() language}</li>
+	 * <li>{@link Params#rankBy() rankBy}</li>
+	 * <li>{@link Params#pageToken() pageToken}</li>
 	 * </ul>
 	 * <p>
 	 * Available fields:
 	 * </p>
 	 * <ul>
-	 * <li>{@link Field#ICON ICON}</li>
-	 * <li>{@link Field#GEOMETRY GEOMETRY}</li>
-	 * <li>{@link Field#NAME NAME}</li>
-	 * <li>{@link Field#VICINITY VICINITY}</li>
-	 * <li>{@link Field#TYPES TYPES}</li>
-	 * <li>{@link Field#PRICE_LEVEL PRICE_LEVEL}</li>
-	 * <li>{@link Field#RATING RATING}</li>
-	 * <li>{@link Field#OPEN_NOW OPEN_NOW}</li>
-	 * <li>{@link Field#PHOTOS PHOTOS}</li>
+	 * <li>{@link #FIELD_ICON}</li>
+	 * <li>{@link #FIELD_NAME}</li>
+	 * <li>{@link #FIELD_VICINITY}</li>
+	 * <li>{@link #FIELD_TYPES}</li>
+	 * <li>{@link #FIELD_PHOTOS}</li>
 	 * </ul>
 	 * 
+	 * @param fields
+	 *            FIELD_* bitmask of the fields to populate in the results
 	 * @throws IOException
 	 *             if there is a problem communicating with the Google Places API service
+	 * @see <a href="https://developers.google.com/places/web-service/search#PlaceSearchRequests"
+	 *      target="_blank">Nearby Search Requests</a>
+	 * @since 3.0.0
 	 */
-	public static Response<List<Place>> nearbySearch(Params params, Field... fields)
-			throws IOException {
-		return places(NEARBY_SEARCH, params, fields);
+	public static Response<List<Place>> nearbySearch(Params params, int fields) throws IOException {
+		return places(URL_NEARBY_SEARCH, params, fields);
 	}
 
 	/**
@@ -213,44 +268,75 @@ public class Places {
 	 * Required params:
 	 * </p>
 	 * <ul>
-	 * <li>{@link Params#query(String) query}</li>
+	 * <li>{@link Params#query() query}</li>
 	 * </ul>
 	 * <p>
 	 * Optional params:
 	 * </p>
 	 * <ul>
-	 * <li>{@link Params#location(double, double) location}</li>
-	 * <li>{@link Params#radius(int) radius}</li>
-	 * <li>{@link Params#types(String...) types}</li>
-	 * <li>{@link Params#minPrice(int) minPrice}</li>
-	 * <li>{@link Params#maxPrice(int) maxPrice}</li>
+	 * <li>{@link Params#latitude() latitude}</li>
+	 * <li>{@link Params#longitude() longitude}</li>
+	 * <li>{@link Params#radius() radius}</li>
+	 * <li>{@link Params#types() types}</li>
+	 * <li>{@link Params#minPrice() minPrice}</li>
+	 * <li>{@link Params#maxPrice() maxPrice}</li>
 	 * <li>{@link Params#openNow() openNow}</li>
-	 * <li>{@link Params#language(String) language}</li>
-	 * <li>{@link Params#pageToken(String) pageToken}</li>
-	 * <li>{@link Params#filter(Predicate) filter}</li>
-	 * <li>{@link Params#maxResults(int) maxResults}</li>
+	 * <li>{@link Params#language() language}</li>
+	 * <li>{@link Params#pageToken() pageToken}</li>
+	 * </ul>
+	 * 
+	 * @throws IOException
+	 *             if there is a problem communicating with the Google Places API service
+	 * @see <a href="https://developers.google.com/places/web-service/search#TextSearchRequests"
+	 *      target="_blank">Text Search Requests</a>
+	 */
+	public static Response<List<Place>> textSearch(Params params) throws IOException {
+		return textSearch(params, 0);
+	}
+
+	/**
+	 * Get places based on a text query, for example "fish & chips in London".
+	 * <p>
+	 * Required params:
+	 * </p>
+	 * <ul>
+	 * <li>{@link Params#query() query}</li>
+	 * </ul>
+	 * <p>
+	 * Optional params:
+	 * </p>
+	 * <ul>
+	 * <li>{@link Params#latitude() latitude}</li>
+	 * <li>{@link Params#longitude() longitude}</li>
+	 * <li>{@link Params#radius() radius}</li>
+	 * <li>{@link Params#types() types}</li>
+	 * <li>{@link Params#minPrice() minPrice}</li>
+	 * <li>{@link Params#maxPrice() maxPrice}</li>
+	 * <li>{@link Params#openNow() openNow}</li>
+	 * <li>{@link Params#language() language}</li>
+	 * <li>{@link Params#pageToken() pageToken}</li>
 	 * </ul>
 	 * <p>
 	 * Available fields:
 	 * </p>
 	 * <ul>
-	 * <li>{@link Field#ICON ICON}</li>
-	 * <li>{@link Field#GEOMETRY GEOMETRY}</li>
-	 * <li>{@link Field#NAME NAME}</li>
-	 * <li>{@link Field#FORMATTED_ADDRESS FORMATTED_ADDRESS}</li>
-	 * <li>{@link Field#TYPES TYPES}</li>
-	 * <li>{@link Field#PRICE_LEVEL PRICE_LEVEL}</li>
-	 * <li>{@link Field#RATING RATING}</li>
-	 * <li>{@link Field#OPEN_NOW OPEN_NOW}</li>
-	 * <li>{@link Field#PHOTOS PHOTOS}</li>
+	 * <li>{@link #FIELD_ICON}</li>
+	 * <li>{@link #FIELD_NAME}</li>
+	 * <li>{@link #FIELD_FORMATTED_ADDRESS}</li>
+	 * <li>{@link #FIELD_TYPES}</li>
+	 * <li>{@link #FIELD_PHOTOS}</li>
 	 * </ul>
 	 * 
+	 * @param fields
+	 *            FIELD_* bitmask of the fields to populate in the results
 	 * @throws IOException
 	 *             if there is a problem communicating with the Google Places API service
+	 * @see <a href="https://developers.google.com/places/web-service/search#TextSearchRequests"
+	 *      target="_blank">Text Search Requests</a>
+	 * @since 3.0.0
 	 */
-	public static Response<List<Place>> textSearch(Params params, Field... fields)
-			throws IOException {
-		return places(TEXT_SEARCH, params, fields);
+	public static Response<List<Place>> textSearch(Params params, int fields) throws IOException {
+		return places(URL_TEXT_SEARCH, params, fields);
 	}
 
 	/**
@@ -259,12 +345,13 @@ public class Places {
 	 * Required params:
 	 * </p>
 	 * <ul>
-	 * <li>{@link Params#location(double, double) location}</li>
+	 * <li>{@link Params#latitude() latitude}</li>
+	 * <li>{@link Params#longitude() longitude}</li>
 	 * <li>At least one of:
 	 * <ul>
-	 * <li>{@link Params#name(String) name}</li>
-	 * <li>{@link Params#keyword(String) keyword}</li>
-	 * <li>{@link Params#types(String...) types}</li>
+	 * <li>{@link Params#name() name}</li>
+	 * <li>{@link Params#keyword() keyword}</li>
+	 * <li>{@link Params#types() types}</li>
 	 * </ul>
 	 * </li>
 	 * </ul>
@@ -272,26 +359,19 @@ public class Places {
 	 * Optional params:
 	 * </p>
 	 * <ul>
-	 * <li>{@link Params#radius(int) radius}</li>
-	 * <li>{@link Params#minPrice(int) minPrice}</li>
-	 * <li>{@link Params#maxPrice(int) maxPrice}</li>
+	 * <li>{@link Params#radius() radius}</li>
+	 * <li>{@link Params#minPrice() minPrice}</li>
+	 * <li>{@link Params#maxPrice() maxPrice}</li>
 	 * <li>{@link Params#openNow() openNow}</li>
-	 * <li>{@link Params#filter(Predicate) filter}</li>
-	 * <li>{@link Params#maxResults(int) maxResults}</li>
-	 * </ul>
-	 * <p>
-	 * Available fields:
-	 * </p>
-	 * <ul>
-	 * <li>{@link Field#GEOMETRY GEOMETRY}</li>
 	 * </ul>
 	 * 
 	 * @throws IOException
 	 *             if there is a problem communicating with the Google Places API service
+	 * @see <a href="https://developers.google.com/places/web-service/search#RadarSearchRequests"
+	 *      target="_blank">Radar Search Requests</a>
 	 */
-	public static Response<List<Place>> radarSearch(Params params, Field... fields)
-			throws IOException {
-		return places(RADAR_SEARCH, params, fields);
+	public static Response<List<Place>> radarSearch(Params params) throws IOException {
+		return places(URL_RADAR_SEARCH, params, 0);
 	}
 
 	/**
@@ -300,16 +380,17 @@ public class Places {
 	 * Required params:
 	 * </p>
 	 * <ul>
-	 * <li>{@link Params#query(String) query}</li>
+	 * <li>{@link Params#query() query}</li>
 	 * </ul>
 	 * <p>
 	 * Optional params:
 	 * </p>
 	 * <ul>
-	 * <li>{@link Params#location(double, double) location}</li>
-	 * <li>{@link Params#radius(int) radius}</li>
-	 * <li>{@link Params#offset(int) offset}</li>
-	 * <li>{@link Params#types(String...) types}
+	 * <li>{@link Params#latitude() latitude}</li>
+	 * <li>{@link Params#longitude() longitude}</li>
+	 * <li>{@link Params#radius() radius}</li>
+	 * <li>{@link Params#offset() offset}</li>
+	 * <li>{@link Params#types() types}
 	 * <ul>
 	 * <li>One of:</li>
 	 * <li>"geocode"</li>
@@ -319,27 +400,71 @@ public class Places {
 	 * <li>"(cities)"</li>
 	 * </ul>
 	 * </li>
-	 * <li>{@link Params#countries(String) countries}</li>
-	 * <li>{@link Params#language(String) language}</li>
-	 * <li>{@link Params#filter(Predicate) filter}</li>
-	 * <li>{@link Params#maxResults(int) maxResults}</li>
+	 * <li>{@link Params#countries() countries}</li>
+	 * <li>{@link Params#language() language}</li>
+	 * </ul>
+	 * 
+	 * @throws IOException
+	 *             if there is a problem communicating with the Google Places API service
+	 * @see <a href=
+	 *      "https://developers.google.com/places/web-service/autocomplete#place_autocomplete_requests"
+	 *      target="_blank">Place Autocomplete Requests</a>
+	 */
+	public static Response<List<Prediction>> autocomplete(Params params) throws IOException {
+		return autocomplete(params, 0);
+	}
+
+	/**
+	 * Get places that match a partial search term.
+	 * <p>
+	 * Required params:
+	 * </p>
+	 * <ul>
+	 * <li>{@link Params#query() query}</li>
+	 * </ul>
+	 * <p>
+	 * Optional params:
+	 * </p>
+	 * <ul>
+	 * <li>{@link Params#latitude() latitude}</li>
+	 * <li>{@link Params#longitude() longitude}</li>
+	 * <li>{@link Params#radius() radius}</li>
+	 * <li>{@link Params#offset() offset}</li>
+	 * <li>{@link Params#types() types}
+	 * <ul>
+	 * <li>One of:</li>
+	 * <li>"geocode"</li>
+	 * <li>"address"</li>
+	 * <li>"establishment"</li>
+	 * <li>"(regions)"</li>
+	 * <li>"(cities)"</li>
+	 * </ul>
+	 * </li>
+	 * <li>{@link Params#countries() countries}</li>
+	 * <li>{@link Params#language() language}</li>
 	 * </ul>
 	 * <p>
 	 * Available fields:
 	 * </p>
 	 * <ul>
-	 * <li>{@link Field#NAME NAME}</li>
-	 * <li>{@link Field#TYPES TYPES}</li>
-	 * <li>{@link Field#TERMS TERMS}</li>
-	 * <li>{@link Field#MATCHED_SUBSTRINGS MATCHED_SUBSTRINGS}</li>
+	 * <li>{@link #FIELD_DESCRIPTION}</li>
+	 * <li>{@link #FIELD_TYPES}</li>
+	 * <li>{@link #FIELD_TERMS}</li>
+	 * <li>{@link #FIELD_MATCHED_SUBSTRINGS}</li>
 	 * </ul>
 	 * 
+	 * @param fields
+	 *            FIELD_* bitmask of the fields to populate in the results
 	 * @throws IOException
 	 *             if there is a problem communicating with the Google Places API service
+	 * @see <a href=
+	 *      "https://developers.google.com/places/web-service/autocomplete#place_autocomplete_requests"
+	 *      target="_blank">Place Autocomplete Requests</a>
+	 * @since 3.0.0
 	 */
-	public static Response<List<Prediction>> autocomplete(Params params, Field... fields)
+	public static Response<List<Prediction>> autocomplete(Params params, int fields)
 			throws IOException {
-		return predictions(AUTOCOMPLETE, params, fields);
+		return predictions(URL_AUTOCOMPLETE, params, fields);
 	}
 
 	/**
@@ -348,55 +473,116 @@ public class Places {
 	 * Required params:
 	 * </p>
 	 * <ul>
-	 * <li>{@link Params#query(String) query}</li>
+	 * <li>{@link Params#query() query}</li>
 	 * </ul>
 	 * <p>
 	 * Optional params:
 	 * </p>
 	 * <ul>
-	 * <li>{@link Params#location(double, double) location}</li>
-	 * <li>{@link Params#radius(int) radius}</li>
-	 * <li>{@link Params#offset(int) offset}</li>
-	 * <li>{@link Params#language(String) language}</li>
-	 * <li>{@link Params#filter(Predicate) filter}</li>
-	 * <li>{@link Params#maxResults(int) maxResults}</li>
+	 * <li>{@link Params#latitude() latitude}</li>
+	 * <li>{@link Params#longitude() longitude}</li>
+	 * <li>{@link Params#radius() radius}</li>
+	 * <li>{@link Params#offset() offset}</li>
+	 * <li>{@link Params#language() language}</li>
+	 * </ul>
+	 * 
+	 * @throws IOException
+	 *             if there is a problem communicating with the Google Places API service
+	 * @see <a href=
+	 *      "https://developers.google.com/places/web-service/query#query_autocomplete_requests"
+	 *      target="_blank">Query Autocomplete Requests</a>
+	 */
+	public static Response<List<Prediction>> queryAutocomplete(Params params) throws IOException {
+		return queryAutocomplete(params, 0);
+	}
+
+	/**
+	 * Get suggested queries for a partial search query.
+	 * <p>
+	 * Required params:
+	 * </p>
+	 * <ul>
+	 * <li>{@link Params#query() query}</li>
+	 * </ul>
+	 * <p>
+	 * Optional params:
+	 * </p>
+	 * <ul>
+	 * <li>{@link Params#latitude() latitude}</li>
+	 * <li>{@link Params#longitude() longitude}</li>
+	 * <li>{@link Params#radius() radius}</li>
+	 * <li>{@link Params#offset() offset}</li>
+	 * <li>{@link Params#language() language}</li>
 	 * </ul>
 	 * <p>
 	 * Available fields:
 	 * </p>
 	 * <ul>
-	 * <li>{@link Field#NAME NAME}</li>
-	 * <li>{@link Field#TYPES TYPES}</li>
-	 * <li>{@link Field#TERMS TERMS}</li>
-	 * <li>{@link Field#MATCHED_SUBSTRINGS MATCHED_SUBSTRINGS}</li>
+	 * <li>{@link #FIELD_NAME}</li>
+	 * <li>{@link #FIELD_TYPES}</li>
+	 * <li>{@link #FIELD_TERMS}</li>
+	 * <li>{@link #FIELD_MATCHED_SUBSTRINGS}</li>
 	 * </ul>
 	 * 
+	 * @param fields
+	 *            FIELD_* bitmask of the fields to populate in the results
 	 * @throws IOException
 	 *             if there is a problem communicating with the Google Places API service
+	 * @see <a href=
+	 *      "https://developers.google.com/places/web-service/query#query_autocomplete_requests"
+	 *      target="_blank">Query Autocomplete Requests</a>
+	 * @since 3.0.0
 	 */
-	public static Response<List<Prediction>> queryAutocomplete(Params params, Field... fields)
+	public static Response<List<Prediction>> queryAutocomplete(Params params, int fields)
 			throws IOException {
-		return predictions(QUERY_AUTOCOMPLETE, params, fields);
+		return predictions(URL_QUERY_AUTOCOMPLETE, params, fields);
 	}
 
 	/**
 	 * Get all data for a place. Normally this will be called after getting a
-	 * {@link Place#getPlaceId() Place ID} from the results of a search or autocomplete method. The
-	 * {@link Params#maxResults(int) maxResults} parameter can be used to limit the number of
-	 * reviews and photos. For example, if maxResults == 1, then at most 1 review and 1 photo will
-	 * be returned.
+	 * {@link Place#getPlaceId() place ID} from the results of a search or autocomplete method. The
+	 * {@link Params#maxResults() maxResults} parameter can be used to limit the number of reviews
+	 * and photos. For example, if maxResults == 1, then at most 1 review and 1 photo will be
+	 * returned.
 	 * <p>
 	 * Required params:
 	 * </p>
 	 * <ul>
-	 * <li>{@link Params#placeId(String) placeId}</li>
+	 * <li>{@link Params#placeId() placeId}</li>
 	 * </ul>
 	 * <p>
 	 * Optional params:
 	 * </p>
 	 * <ul>
-	 * <li>{@link Params#language(String) language}</li>
-	 * <li>{@link Params#maxResults(int) maxResults}</li>
+	 * <li>{@link Params#language() language}</li>
+	 * </ul>
+	 * 
+	 * @throws IOException
+	 *             if there is a problem communicating with the Google Places API service
+	 * @see <a href="https://developers.google.com/places/web-service/details#PlaceDetailsRequests"
+	 *      target="_blank">Place Details Requests</a>
+	 */
+	public static Response<Place> details(Params params) throws IOException {
+		return details(params, 0);
+	}
+
+	/**
+	 * Get all data for a place. Normally this will be called after getting a
+	 * {@link Place#getPlaceId() place ID} from the results of a search or autocomplete method. The
+	 * {@link Params#maxResults() maxResults} parameter can be used to limit the number of reviews
+	 * and photos. For example, if maxResults == 1, then at most 1 review and 1 photo will be
+	 * returned.
+	 * <p>
+	 * Required params:
+	 * </p>
+	 * <ul>
+	 * <li>{@link Params#placeId() placeId}</li>
+	 * </ul>
+	 * <p>
+	 * Optional params:
+	 * </p>
+	 * <ul>
+	 * <li>{@link Params#language() language}</li>
 	 * </ul>
 	 * <p>
 	 * Available fields:
@@ -404,19 +590,25 @@ public class Places {
 	 * <ul>
 	 * <li>All except:
 	 * <ul>
-	 * <li>{@link Field#TERMS TERMS}</li>
-	 * <li>{@link Field#MATCHED_SUBSTRINGS MATCHED_SUBSTRINGS}</li>
+	 * <li>{@link #FIELD_DESCRIPTION}</li>
+	 * <li>{@link #FIELD_TERMS}</li>
+	 * <li>{@link #FIELD_MATCHED_SUBSTRINGS}</li>
 	 * </ul>
 	 * </li>
 	 * </ul>
 	 * 
+	 * @param fields
+	 *            FIELD_* bitmask of the fields to populate in the result
 	 * @throws IOException
 	 *             if there is a problem communicating with the Google Places API service
+	 * @see <a href="https://developers.google.com/places/web-service/details#PlaceDetailsRequests"
+	 *      target="_blank">Place Details Requests</a>
+	 * @since 3.0.0
 	 */
-	public static Response<Place> details(Params params, Field... fields) throws IOException {
-		JsonReader in = reader(params.format(DETAILS));
+	public static Response<Place> details(Params params, int fields) throws IOException {
+		JsonReader in = reader(params.format(URL_DETAILS));
 		try {
-			return new PlaceResponse(in, Field.bits(fields), params);
+			return PlaceResponse.from(in, fields, params);
 		} finally {
 			Closeables.close(in, true);
 		}
@@ -430,11 +622,11 @@ public class Places {
 	 * Required params:
 	 * </p>
 	 * <ul>
-	 * <li>{@link Params#reference(String) reference}</li>
+	 * <li>{@link Params#reference() reference}</li>
 	 * <li>One or both of:
 	 * <ul>
-	 * <li>{@link Params#maxWidth(int) maxWidth}</li>
-	 * <li>{@link Params#maxHeight(int) maxHeight}</li>
+	 * <li>{@link Params#maxWidth() maxWidth}</li>
+	 * <li>{@link Params#maxHeight() maxHeight}</li>
 	 * </ul>
 	 * </li>
 	 * </ul>
@@ -442,38 +634,179 @@ public class Places {
 	 * Optional params:
 	 * </p>
 	 * <ul>
-	 * <li>{@link Params#etag(String) etag}</li>
+	 * <li>{@link Params#etag() etag}</li>
 	 * </ul>
 	 * 
 	 * @throws IOException
 	 *             if there is a problem communicating with the Google Places API service
+	 * @see <a href="https://developers.google.com/places/web-service/photos#place_photo_requests"
+	 *      target="_blank">Place Photo Requests</a>
 	 */
 	public static Response<InputStream> photo(Params params) throws IOException {
-		HttpURLConnection con = HttpClient.openConnection(params.format(PHOTO));
-		if (!Strings.isNullOrEmpty(params.mEtag)) {
-			con.setRequestProperty("If-None-Match", params.mEtag);
+		HttpURLConnection con = HttpClient.openConnection(params.format(URL_PHOTO));
+		String etag = params.etag();
+		if (!Strings.isNullOrEmpty(etag)) {
+			con.setRequestProperty("If-None-Match", etag);
 		}
-		return new PhotoResponse(con);
+		return PhotoResponse.from(con);
 	}
 
 	/**
-	 * Get places for the request.
+	 * Add the place to Google Maps.
+	 * <p>
+	 * Required properties:
+	 * </p>
+	 * <ul>
+	 * <li>{@link Place#getLatitude() latitude}</li>
+	 * <li>{@link Place#getLongitude() longitude}</li>
+	 * <li>{@link Place#getName() name} (max. 255 characters)</li>
+	 * <li>{@link Place#getTypes() types} (max. 1 value)</li>
+	 * </ul>
+	 * <p>
+	 * Recommended properties:
+	 * </p>
+	 * <ul>
+	 * <li>{@link Place#getFormattedAddress() formattedAddress}</li>
+	 * <li>One of:
+	 * <ul>
+	 * <li>{@link Place#getFormattedPhoneNumber() formattedPhoneNumber}</li>
+	 * <li>{@link Place#getIntlPhoneNumber() intlPhoneNumber}</li>
+	 * </ul>
+	 * </li>
+	 * <li>{@link Place#getWebsite() website}</li>
+	 * </ul>
+	 * 
+	 * @throws IOException
+	 *             if there is a problem communicating with the Google Places API service
+	 * @see <a href="https://developers.google.com/places/web-service/add-place#add-place"
+	 *      target="_blank">Add a place</a>
+	 * @since 3.0.0
 	 */
-	private static PlacesResponse places(Request type, Params params, Field[] fields)
+	public static Response<Id> add(Place place) throws IOException {
+		return add(place, Params.create());
+	}
+
+	/**
+	 * Add the place to Google Maps.
+	 * <p>
+	 * Required properties:
+	 * </p>
+	 * <ul>
+	 * <li>{@link Place#getLatitude() latitude}</li>
+	 * <li>{@link Place#getLongitude() longitude}</li>
+	 * <li>{@link Place#getName() name} (max. 255 characters)</li>
+	 * <li>{@link Place#getTypes() types} (exactly 1 value)</li>
+	 * </ul>
+	 * <p>
+	 * Recommended properties:
+	 * </p>
+	 * <ul>
+	 * <li>{@link Place#getFormattedAddress() formattedAddress}</li>
+	 * <li>One of:
+	 * <ul>
+	 * <li>{@link Place#getFormattedPhoneNumber() formattedPhoneNumber}</li>
+	 * <li>{@link Place#getIntlPhoneNumber() intlPhoneNumber}</li>
+	 * </ul>
+	 * </li>
+	 * <li>{@link Place#getWebsite() website}</li>
+	 * </ul>
+	 * <p>
+	 * Optional params:
+	 * </p>
+	 * <ul>
+	 * <li>{@link Params#language() language}</li>
+	 * </ul>
+	 * 
+	 * @throws IOException
+	 *             if there is a problem communicating with the Google Places API service
+	 * @see <a href="https://developers.google.com/places/web-service/add-place#add-place"
+	 *      target="_blank">Add a place</a>
+	 * @since 3.0.0
+	 */
+	public static Response<Id> add(Place place, Params params) throws IOException {
+		URLConnection con = HttpClient.openConnection(params.format(URL_ADD));
+		JsonWriter out = writer(con);
+		JsonReader in = null;
+		try {
+			out.beginObject();
+			out.name("location").beginObject().name("lat").value(place.getLatitude())
+					.name("lng").value(place.getLongitude()).endObject();
+			out.name("name").value(place.getName());
+			out.name("types").beginArray().value(place.getTypes().get(0)).endArray();
+			String address = place.getFormattedAddress();
+			if (!Strings.isNullOrEmpty(address)) {
+				out.name("address").value(address);
+			}
+			String phone = place.getFormattedPhoneNumber();
+			if (Strings.isNullOrEmpty(phone)) {
+				phone = place.getIntlPhoneNumber();
+			}
+			if (!Strings.isNullOrEmpty(phone)) {
+				out.name("phone_number").value(phone);
+			}
+			String website = place.getWebsite();
+			if (!Strings.isNullOrEmpty(website)) {
+				out.name("website").value(Urls.addHttp(website));
+			}
+			String lang = params.language();
+			if (!Strings.isNullOrEmpty(lang)) {
+				out.name("language").value(lang);
+			}
+			out.endObject().close();
+			out = null; // don't try to close it again
+			in = reader(con);
+			return PlaceIdResponse.from(in);
+		} finally {
+			Closeables.close(out, true);
+			Closeables.close(in, true);
+		}
+	}
+
+	/**
+	 * Delete a place from Google Maps that you previously added. The place must not have already
+	 * been moderated and officially added to Google Maps.
+	 * <p>
+	 * Required params:
+	 * </p>
+	 * <ul>
+	 * <li>{@link Params#placeId() placeId}</li>
+	 * </ul>
+	 * 
+	 * @throws IOException
+	 *             if there is a problem communicating with the Google Places API service
+	 * @see <a href="https://developers.google.com/places/web-service/add-place#delete-place"
+	 *      target="_blank">Delete a place</a>
+	 * @since 3.0.0
+	 */
+	public static Response<Void> delete(Params params) throws IOException {
+		URLConnection con = HttpClient.openConnection(params.format(URL_DELETE));
+		JsonWriter out = writer(con);
+		JsonReader in = null;
+		try {
+			out.beginObject().name("place_id").value(params.placeId()).endObject().close();
+			out = null; // don't try to close it again
+			in = reader(con);
+			return VoidResponse.from(in);
+		} finally {
+			Closeables.close(out, true);
+			Closeables.close(in, true);
+		}
+	}
+
+	private static PlacesResponse places(String baseUrl, Params params, int fields)
 			throws IOException {
-		String url = params.format(type);
+		String url = params.format(baseUrl);
 		JsonReader in = reader(url);
 		try {
-			int bits = Field.bits(fields);
-			PlacesResponse resp = new PlacesResponse(in, bits, params);
+			PlacesResponse resp = PlacesResponse.from(in, fields, params);
 			/* try request again if next page wasn't available yet */
-			if (resp.getStatus() == INVALID_REQUEST
-					&& (type == NEARBY_SEARCH || type == TEXT_SEARCH)
-					&& !Strings.isNullOrEmpty(params.mPageToken)) {
+			if (resp.getStatus().equals(STATUS_INVALID_REQUEST)
+					&& (baseUrl.equals(URL_NEARBY_SEARCH) || baseUrl.equals(URL_TEXT_SEARCH))
+					&& !Strings.isNullOrEmpty(params.pageToken())) {
 				in.close();
 				Interruptibles.sleep(2, SECONDS);
 				in = reader(url);
-				resp = new PlacesResponse(in, bits, params);
+				resp = PlacesResponse.from(in, fields, params);
 			}
 			return resp;
 		} finally {
@@ -481,597 +814,362 @@ public class Places {
 		}
 	}
 
-	/**
-	 * Get predictions for the request.
-	 */
-	private static PredictionsResponse predictions(Request type, Params params, Field[] fields)
+	private static PredictionsResponse predictions(String baseUrl, Params params, int fields)
 			throws IOException {
-		JsonReader in = reader(params.format(type));
+		JsonReader in = reader(params.format(baseUrl));
 		try {
-			return new PredictionsResponse(in, Field.bits(fields), params);
+			return PredictionsResponse.from(in, fields, params);
 		} finally {
 			Closeables.close(in, true);
 		}
 	}
 
-	/**
-	 * Get a reader for the URL.
-	 */
+	private static JsonWriter writer(URLConnection con) throws IOException {
+		con.setDoOutput(true);
+		return new JsonWriter(new OutputStreamWriter(con.getOutputStream(), "UTF-8"));
+	}
+
 	private static JsonReader reader(String url) throws IOException {
-		URLConnection con = HttpClient.openConnection(url);
+		return reader(HttpClient.openConnection(url));
+	}
+
+	private static JsonReader reader(URLConnection con) throws IOException {
 		return new JsonReader(new InputStreamReader(con.getInputStream(), "UTF-8"));
 	}
 
 	/**
 	 * <p>
-	 * Parameters for Google Places API services. All methods return their instance so that calls
-	 * can be chained. For example:
+	 * Parameters for Google Places API services. Example usage:
 	 * </p>
 	 * 
 	 * <pre>{@code
-	 * Params p = new Params().location(51.500702, -0.124576).radius(1000)
-	 *         .types("food").keyword("fish & chips").openNow();
+	 * Params.create().latitude(51.500702).longitude(-0.124576).radius(1000)
+	 *         .addTypes("food").keyword("fish & chips").openNow(true);
 	 * }</pre>
 	 */
-	public static class Params {
-		private String mPlaceId;
-		private String mReference;
-		private double mLat = Double.NEGATIVE_INFINITY;
-		private double mLong = Double.NEGATIVE_INFINITY;
-		private int mRadius;
-		private String mName;
-		private String mKeyword;
-		private String mQuery;
-		private int mOffset;
-		private String[] mTypes;
-		private int mMinPrice = -1;
-		private int mMaxPrice = -1;
-		private boolean mOpen;
-		private String[] mCountries;
-		private String mLanguage;
-		private RankBy mRankBy;
-		private String mPageToken;
-		private Predicate<Place> mFilter;
-		private int mMaxResults;
-		private int mMaxWidth;
-		private int mMaxHeight;
-		private String mEtag;
+	@Modifiable
+	@Style(typeModifiable = "Places*", create = "new", get = "*", set = "*")
+	public static abstract class Params {
+		Params() {
+		}
 
 		/**
-		 * Get the place identified by the {@link Place.Id#getId() place ID}, as returned from a
-		 * {@link Places} search, autocomplete, or details method.
+		 * Mutable instance where values can be set.
 		 * 
-		 * @param placeId
-		 *            from {@code Place.getPlaceId().getId()}
+		 * @since 3.0.0
+		 */
+		public static PlacesParams create() {
+			return new PlacesParams();
+		}
+
+		/**
+		 * {@link Place.Id#getId() Place ID} of the place to get, as returned from a {@link Places}
+		 * search, autocomplete, or details method.
+		 * 
 		 * @since 1.5.0
 		 */
-		public Params placeId(String placeId) {
-			mPlaceId = placeId;
-			return this;
-		}
+		@Nullable
+		public abstract String placeId();
 
 		/**
-		 * Get the photo identified by the token, as returned from a {@link Places} search or
-		 * details method.
+		 * Token for the photo to get, as returned from a {@link Places} search or details method.
 		 */
-		public Params reference(String reference) {
-			mReference = reference;
-			return this;
-		}
+		@Nullable
+		public abstract String reference();
 
 		/**
-		 * Search for places in the area of this latitude and longitude.
+		 * Used with {@link #longitude() longitude} and {@link #radius() radius} to define the
+		 * search area for places.
+		 * 
+		 * @since 3.0.0
 		 */
-		public Params location(double latitude, double longitude) {
-			mLat = latitude;
-			mLong = longitude;
-			return this;
+		@Default
+		public double latitude() {
+			return Double.NEGATIVE_INFINITY;
 		}
 
 		/**
-		 * Search for places within this many metres from the specified
-		 * {@link #location(double, double) location}. Must be between 1 and 50000.
+		 * Used with {@link #latitude() latitude} and {@link #radius() radius} to define the search
+		 * area for places.
+		 * 
+		 * @since 3.0.0
 		 */
-		public Params radius(int radius) {
-			mRadius = radius;
-			return this;
+		@Default
+		public double longitude() {
+			return Double.NEGATIVE_INFINITY;
 		}
 
 		/**
-		 * Search for places with this name.
+		 * Used with {@link #latitude() latitude} and {@link #longitude() longitude} to define the
+		 * search area for places. Must be between 1 and 50000 metres. Default value: 50000.
 		 */
-		public Params name(String name) {
-			mName = name;
-			return this;
+		@Default
+		public int radius() {
+			return 50000;
 		}
 
 		/**
-		 * Search for places with this term in their content.
+		 * Name of places to search for.
 		 */
-		public Params keyword(String keyword) {
-			mKeyword = keyword;
-			return this;
-		}
+		@Nullable
+		public abstract String name();
 
 		/**
-		 * Search using this text.
+		 * Term to search for in places content.
 		 */
-		public Params query(String query) {
-			mQuery = query;
-			return this;
-		}
+		@Nullable
+		public abstract String keyword();
 
 		/**
-		 * Only use the characters in the search text that are before this zero-based position. For
-		 * example, if the search text is 'Sprocke' and the offset is 4, then the search will be
+		 * Text to search for.
+		 */
+		@Nullable
+		public abstract String query();
+
+		/**
+		 * Zero-based position at which the previous characters in the search text should be used.
+		 * For example, if the search text is 'Sprocke' and the offset is 4, then the search will be
 		 * performed with 'Spro'. The offset value is typically the position of the text caret.
 		 */
-		public Params offset(int offset) {
-			mOffset = offset;
-			return this;
+		@Default
+		public int offset() {
+			return 0;
 		}
 
 		/**
-		 * Search for places that are at least one of these types. Calling this method multiple
-		 * times will append to the list of types to match. Provide null to reset the list.
+		 * Types of places to search for.
 		 * 
-		 * @see <a href="https://developers.google.com/places/supported_types"
-		 *      target="_blank">Supported Place Types</a>
+		 * @see <a href="https://developers.google.com/places/supported_types" target="_blank">Place
+		 *      Types</a>
 		 */
-		public Params types(String... types) {
-			if (types != null) {
-				if (mTypes == null) {
-					mTypes = types;
-				} else {
-					mTypes = ObjectArrays.concat(mTypes, types, String.class);
-				}
-			} else {
-				mTypes = null;
-			}
-			return this;
+		public abstract List<String> types();
+
+		/**
+		 * Lowest price level of places to search for. Valid values are from 0 (least expensive) to
+		 * 4 (most expensive).
+		 */
+		@Default
+		public int minPrice() {
+			return -1;
 		}
 
 		/**
-		 * Search for places with this price level or higher. Valid values are from 0 (least
-		 * expensive) to 4 (most expensive).
+		 * Highest price level of places to search for. Valid values are from 0 (least expensive) to
+		 * 4 (most expensive).
 		 */
-		public Params minPrice(int minPrice) {
-			mMinPrice = minPrice;
-			return this;
+		@Default
+		public int maxPrice() {
+			return -1;
 		}
 
 		/**
-		 * Search for places with this price level or lower. Valid values are from 0 (least
-		 * expensive) to 4 (most expensive).
+		 * True if only places that have specified opening hours and are open right now should be
+		 * returned.
 		 */
-		public Params maxPrice(int maxPrice) {
-			mMaxPrice = maxPrice;
-			return this;
+		@Default
+		public boolean openNow() {
+			return false;
 		}
 
 		/**
-		 * Search for places that have specified opening hours and are open right now.
+		 * Country to search for places in. The value must be a two character ISO 3166-1 Alpha-2
+		 * compatible country code, e.g. "GB". Currently only one country parameter is supported.
 		 */
-		public Params openNow() {
-			mOpen = true;
-			return this;
-		}
+		@Nullable
+		public abstract String countries();
 
 		/**
-		 * Search for places in this country. The value must be a two character ISO 3166-1 Alpha-2
-		 * compatible country code, e.g. "GB". Currently only one country parameter is supported,
-		 * but if support for multiple country parameters will be added in the future, then this
-		 * will become a varargs param.
-		 */
-		public Params countries(String countries) {
-			if (countries != null) {
-				if (mCountries == null) {
-					mCountries = new String[1];
-				}
-				mCountries[0] = countries;
-			} else {
-				mCountries = null;
-			}
-			return this;
-		}
-
-		/**
-		 * Return results in this language, if possible. The value must be one of the supported
-		 * language codes. If you do not call this method to specify a language, the default locale
-		 * will be used.
+		 * When searching for places, the language to return results in, if possible. If not
+		 * specified, the default locale will be used.
+		 * <p>
+		 * When adding a place, the language of the place's name.
+		 * </p>
+		 * <p>
+		 * The value must be one of the supported language codes.
+		 * </p>
 		 * 
 		 * @see <a href="https://developers.google.com/maps/faq#languagesupport"
 		 *      target="_blank">Supported Languages</a>
 		 */
-		public Params language(String language) {
-			mLanguage = language;
-			return this;
-		}
+		@Nullable
+		public abstract String language();
+
+		/** Sort by importance. */
+		public static final String RANK_BY_PROMINENCE = "prominence";
 
 		/**
-		 * Options for sorting the results.
+		 * Sort by distance from the specified location. When using this option,
+		 * {@link Params#radius() radius} is ignored and one or more of {@link Params#name() name},
+		 * {@link Params#keyword() keyword}, or {@link Params#types() types} is required.
 		 */
-		public enum RankBy {
-			/** Sort by importance. */
-			PROMINENCE,
-
-			/**
-			 * Sort by distance from the specified {@link Params#location(double, double) location}.
-			 * When using this option, {@link Params#radius(int) radius} is ignored and one or more
-			 * of {@link Params#name(String) name}, {@link Params#keyword(String) keyword}, or
-			 * {@link Params#types(String...) types} is required.
-			 */
-			DISTANCE
-		}
+		public static final String RANK_BY_DISTANCE = "distance";
 
 		/**
-		 * Sort the results by this option. By default, results are sorted by
-		 * {@link RankBy#PROMINENCE prominence}.
+		 * How the results should be sorted. Default value: {@link #RANK_BY_PROMINENCE}.
 		 */
-		public Params rankBy(RankBy option) {
-			mRankBy = option;
-			return this;
-		}
+		@Nullable
+		public abstract String rankBy();
 
 		/**
-		 * Get the next 20 results from a previous search. When this value is set, all other
-		 * parameters are ignored.
+		 * Token for the next batch of results from a previous search. When this value is set, all
+		 * other parameters are ignored.
 		 */
-		public Params pageToken(String pageToken) {
-			mPageToken = pageToken;
-			return this;
-		}
+		@Nullable
+		public abstract String pageToken();
 
 		/**
-		 * Only return places for which the filter returns true. Used only in search and
-		 * autocomplete methods.
+		 * Applied to the results of search methods. Return true in {@link Predicate#apply(Object)
+		 * apply} to include the Place in the results or false to filter it out.
 		 * 
-		 * @see Place.Id.Filter
-		 * @since 1.4.0
+		 * @see Place.IdFilter
+		 * @since 3.0.0
 		 */
-		public Params filter(Predicate<Place> filter) {
-			mFilter = filter;
-			return this;
+		@Nullable
+		public abstract Predicate<Place> placeFilter();
+
+		/**
+		 * Applied to the results of autocomplete methods. Return true in
+		 * {@link Predicate#apply(Object) apply} to include the Prediction in the results or false
+		 * to filter it out.
+		 * 
+		 * @see Place.Prediction.IdFilter Prediction.IdFilter
+		 * @since 3.0.0
+		 */
+		@Nullable
+		public abstract Predicate<Prediction> predictionFilter();
+
+		/**
+		 * Maximum number of places, predictions, reviews, or photos to return.
+		 */
+		@Default
+		public int maxResults() {
+			return 0;
 		}
 
 		/**
-		 * Return this many results, at most.
+		 * Maximum width of the photo to download. The original aspect ratio will be preserved. The
+		 * value must be between 1 and 1600 pixels.
 		 */
-		public Params maxResults(int maxResults) {
-			mMaxResults = maxResults;
-			return this;
+		@Default
+		public int maxWidth() {
+			return 0;
 		}
 
 		/**
-		 * If necessary, decrease the width of the image to be this many pixels. The original aspect
-		 * ratio of the image will be preserved. The value must be between 1 and 1600.
+		 * Maximum height of the photo to download. The original aspect ratio will be preserved. The
+		 * value must be between 1 and 1600 pixels.
 		 */
-		public Params maxWidth(int maxWidth) {
-			mMaxWidth = maxWidth;
-			return this;
+		@Default
+		public int maxHeight() {
+			return 0;
 		}
 
 		/**
-		 * If necessary, decrease the height of the image to be this many pixels. The original
-		 * aspect ratio of the image will be preserved. The value must be between 1 and 1600.
+		 * ETag returned when the photo was previously downloaded. If the photo on the server hasn't
+		 * changed, then it will not be downloaded again.
 		 */
-		public Params maxHeight(int maxHeight) {
-			mMaxHeight = maxHeight;
-			return this;
-		}
+		@Nullable
+		public abstract String etag();
 
-		/**
-		 * Don't return the content if it has this ETag (which means it hasn't changed).
-		 */
-		public Params etag(String etag) {
-			mEtag = etag;
-			return this;
-		}
-
-		/** Append the types param with pipe symbols between the values. */
+		/** Append the types parameter with pipe symbols between the values. */
 		private static Joiner sPipes;
 
 		/**
-		 * Get a URL formatted for the type of request.
+		 * Get the URL with appended parameters.
 		 * 
+		 * @param url
+		 *            one of the {@link Places} URL_* constants
 		 * @since 1.0.0
 		 */
-		public String format(Request type) {
-			/* use alternate param names? */
-			boolean alt = type == AUTOCOMPLETE || type == QUERY_AUTOCOMPLETE || type == PHOTO;
-			StringBuilder s = new StringBuilder(type.mUrl.length() + 256);
-			Configuration config = Sprockets.getConfig();
-			String key = config.getString("google.api-key");
+		public String format(String url) {
+			String key = Sprockets.getConfig().getString("google.api-key");
 			checkState(!Strings.isNullOrEmpty(key), "google.api-key not set");
-			s.append(type.mUrl).append("key=").append(key);
-
-			if (!Strings.isNullOrEmpty(mPageToken)) {
-				return s.append("&pagetoken=").append(mPageToken).toString();
+			StringBuilder s = new StringBuilder(url.length() + 256);
+			s.append(url).append("key=").append(key);
+			if (url.equals(URL_ADD) || url.equals(URL_DELETE)) { // don't need any other params
+				return s.toString();
 			}
-			if (!Strings.isNullOrEmpty(mPlaceId)) {
-				s.append("&placeid=").append(mPlaceId);
-			} else if (!Strings.isNullOrEmpty(mReference)) {
-				s.append(alt ? "&photoreference=" : "&reference=").append(mReference);
+			String pageToken = pageToken();
+			if (!Strings.isNullOrEmpty(pageToken)) { // don't need any other params
+				return s.append("&pagetoken=").append(pageToken).toString();
 			}
-			if (mLat > Double.NEGATIVE_INFINITY && mLong > Double.NEGATIVE_INFINITY) {
-				s.append("&location=").append(mLat).append(',').append(mLong);
-				if (mRankBy != DISTANCE) {
-					if (mRadius <= 0) {
-						mRadius = 50000;
-					}
-					s.append("&radius=").append(mRadius);
+			String placeId = placeId();
+			if (!Strings.isNullOrEmpty(placeId)) {
+				s.append("&placeid=").append(placeId);
+			}
+			double lat = latitude();
+			double lon = longitude();
+			String rankBy = rankBy();
+			if (lat > Double.NEGATIVE_INFINITY && lon > Double.NEGATIVE_INFINITY) {
+				s.append("&location=").append(lat).append(',').append(lon);
+				if (!RANK_BY_DISTANCE.equals(rankBy)) {
+					s.append("&radius=").append(radius());
 				}
 			}
 			try {
-				if (!Strings.isNullOrEmpty(mName)) {
-					s.append("&name=").append(URLEncoder.encode(mName, "UTF-8"));
+				String name = name();
+				if (!Strings.isNullOrEmpty(name)) {
+					s.append("&name=").append(URLEncoder.encode(name, "UTF-8"));
 				}
-				if (!Strings.isNullOrEmpty(mKeyword)) {
-					s.append("&keyword=").append(URLEncoder.encode(mKeyword, "UTF-8"));
+				String keyword = keyword();
+				if (!Strings.isNullOrEmpty(keyword)) {
+					s.append("&keyword=").append(URLEncoder.encode(keyword, "UTF-8"));
 				}
-				if (!Strings.isNullOrEmpty(mQuery)) {
-					s.append(alt ? "&input=" : "&query=")
-							.append(URLEncoder.encode(mQuery, "UTF-8"));
+				String query = query();
+				if (!Strings.isNullOrEmpty(query)) {
+					s.append(url.equals(URL_AUTOCOMPLETE) || url.equals(URL_QUERY_AUTOCOMPLETE)
+							? "&input=" : "&query=").append(URLEncoder.encode(query, "UTF-8"));
 				}
 			} catch (UnsupportedEncodingException e) {
-				throw new RuntimeException("UTF-8 encoding isn't supported?!", e);
+				throw new IllegalStateException("UTF-8 encoding isn't supported?!", e);
 			}
-			if (mOffset > 0) {
-				s.append("&offset=").append(mOffset);
+			int offset = offset();
+			if (offset > 0) {
+				s.append("&offset=").append(offset);
 			}
-			if (mTypes != null) {
+			List<String> types = types();
+			if (!types.isEmpty()) {
 				if (sPipes == null) {
-					sPipes = Joiner.on("%7C").skipNulls(); // URL encoded
+					sPipes = Joiner.on("%7C").skipNulls(); // URL encoded pipe
 				}
-				sPipes.appendTo(s.append("&types="), mTypes);
+				sPipes.appendTo(s.append("&types="), types);
 			}
-			if (mMinPrice >= 0) {
-				s.append("&minprice=").append(mMinPrice);
+			int minPrice = minPrice();
+			if (minPrice >= 0) {
+				s.append("&minprice=").append(minPrice);
 			}
-			if (mMaxPrice >= 0) {
-				s.append("&maxprice=").append(mMaxPrice);
+			int maxPrice = maxPrice();
+			if (maxPrice >= 0) {
+				s.append("&maxprice=").append(maxPrice);
 			}
-			if (mOpen) {
+			if (openNow()) {
 				s.append("&opennow");
 			}
-			if (mCountries != null && mCountries.length > 0) {
-				s.append("&components=country:").append(mCountries[0]);
+			String countries = countries();
+			if (!Strings.isNullOrEmpty(countries)) {
+				s.append("&components=country:").append(countries);
 			}
-			if (type.mHasLang) {
-				s.append("&language=").append(
-						!Strings.isNullOrEmpty(mLanguage) ? mLanguage : Locale.getDefault());
+			if (!url.equals(URL_RADAR_SEARCH) && !url.equals(URL_PHOTO)) {
+				String lang = language();
+				s.append("&language=")
+						.append(!Strings.isNullOrEmpty(lang) ? lang : Locale.getDefault());
 			}
-			if (mRankBy != null) {
-				s.append("&rankby=").append(mRankBy.name().toLowerCase(ENGLISH));
+			if (!Strings.isNullOrEmpty(rankBy)) {
+				s.append("&rankby=").append(rankBy);
 			}
-			if (mMaxWidth > 0) {
-				s.append("&maxwidth=").append(mMaxWidth);
+			String reference = reference();
+			if (!Strings.isNullOrEmpty(reference)) {
+				s.append("&photoreference=").append(reference);
 			}
-			if (mMaxHeight > 0) {
-				s.append("&maxheight=").append(mMaxHeight);
+			int maxWidth = maxWidth();
+			if (maxWidth > 0) {
+				s.append("&maxwidth=").append(maxWidth);
+			}
+			int maxHeight = maxHeight();
+			if (maxHeight > 0) {
+				s.append("&maxheight=").append(maxHeight);
 			}
 			return s.toString();
-		}
-
-		/**
-		 * Clear any set parameters so that this instance can be re-used for a new request.
-		 * 
-		 * @since 1.0.0
-		 */
-		public Params clear() {
-			mPlaceId = null;
-			mReference = null;
-			mLat = Double.NEGATIVE_INFINITY;
-			mLong = Double.NEGATIVE_INFINITY;
-			mRadius = 0;
-			mName = null;
-			mKeyword = null;
-			mQuery = null;
-			mOffset = 0;
-			mTypes = null;
-			mMinPrice = -1;
-			mMaxPrice = -1;
-			mOpen = false;
-			mCountries = null;
-			mLanguage = null;
-			mRankBy = null;
-			mPageToken = null;
-			mFilter = null;
-			mMaxResults = 0;
-			mMaxWidth = 0;
-			mMaxHeight = 0;
-			mEtag = null;
-			return this;
-		}
-
-		@Override
-		public int hashCode() {
-			return Objects.hashCode(mPlaceId, mReference, mLat, mLong, mRadius, mName, mKeyword,
-					mQuery, mOffset, Arrays.hashCode(mTypes), mMinPrice, mMaxPrice, mOpen,
-					Arrays.hashCode(mCountries), mLanguage, mRankBy, mPageToken, mFilter,
-					mMaxResults, mMaxWidth, mMaxHeight, mEtag);
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (obj != null) {
-				if (this == obj) {
-					return true;
-				} else if (obj instanceof Params) {
-					Params o = (Params) obj;
-					return Objects.equal(mPlaceId, o.mPlaceId)
-							&& Objects.equal(mReference, o.mReference) && mLat == o.mLat
-							&& mLong == o.mLong && mRadius == o.mRadius
-							&& Objects.equal(mName, o.mName) && Objects.equal(mKeyword, o.mKeyword)
-							&& Objects.equal(mQuery, o.mQuery) && mOffset == o.mOffset
-							&& Objects.equal(mTypes, o.mTypes) && mMinPrice == o.mMinPrice
-							&& mMaxPrice == o.mMaxPrice && mOpen == o.mOpen
-							&& Objects.equal(mCountries, o.mCountries)
-							&& Objects.equal(mLanguage, o.mLanguage) && mRankBy == o.mRankBy
-							&& Objects.equal(mPageToken, o.mPageToken)
-							&& Objects.equal(mFilter, o.mFilter) && mMaxResults == o.mMaxResults
-							&& mMaxWidth == o.mMaxWidth && mMaxHeight == o.mMaxHeight
-							&& Objects.equal(mEtag, o.mEtag);
-				}
-			}
-			return false;
-		}
-
-		@Override
-		public String toString() {
-			boolean loc = mLat != Double.NEGATIVE_INFINITY && mLong != Double.NEGATIVE_INFINITY;
-			return MoreObjects.toStringHelper(this).add("placeId", mPlaceId)
-					.add("reference", mReference).add("location", loc ? mLat + "," + mLong : null)
-					.add("radius", mRadius != 0 ? mRadius : null).add("name", mName)
-					.add("keyword", mKeyword).add("query", mQuery)
-					.add("offset", mOffset != 0 ? mOffset : null)
-					.add("types", mTypes != null ? Arrays.toString(mTypes) : null)
-					.add("minPrice", mMinPrice != -1 ? mMinPrice : null)
-					.add("maxPrice", mMaxPrice != -1 ? mMaxPrice : null)
-					.add("openNow", mOpen ? mOpen : null)
-					.add("countries", mCountries != null ? Arrays.toString(mCountries) : null)
-					.add("language", mLanguage).add("rankBy", mRankBy).add("pageToken", mPageToken)
-					.add("filter", mFilter != null ? true : null)
-					.add("maxResults", mMaxResults != 0 ? mMaxResults : null)
-					.add("maxWidth", mMaxWidth != 0 ? mMaxWidth : null)
-					.add("maxHeight", mMaxHeight != 0 ? mMaxHeight : null).add("etag", mEtag)
-					.omitNullValues().toString();
-		}
-	}
-
-	/**
-	 * Fields included in the results of {@link Response Response}s.
-	 */
-	public enum Field {
-		/** URL for an icon representing the type of place. */
-		ICON,
-
-		/** Google Place page. */
-		URL,
-
-		/** Latitude and longitude. */
-		GEOMETRY,
-
-		/** Name of the place, for example a business or landmark name. */
-		NAME,
-
-		/** List of sections and their offset within the place's name. */
-		TERMS,
-
-		/**
-		 * List of substrings in the place's name that match the search text, often used for
-		 * highlighting.
-		 */
-		MATCHED_SUBSTRINGS,
-
-		/** All {@link Place.Address Address} components in separate properties. */
-		ADDRESS,
-
-		/** String containing all address components. */
-		FORMATTED_ADDRESS,
-
-		/** Simplified address string that stops after the city level. */
-		VICINITY,
-
-		/** Includes prefixed country code. */
-		INTL_PHONE_NUMBER,
-
-		/** In local format. */
-		FORMATTED_PHONE_NUMBER,
-
-		/** URL of the website for the place. */
-		WEBSITE,
-
-		/**
-		 * Features describing the place.
-		 * 
-		 * @see <a href="https://developers.google.com/places/supported_types"
-		 *      target="_blank">Supported Place Types</a>
-		 */
-		TYPES,
-
-		/** Relative level of average expenses at the place. */
-		PRICE_LEVEL,
-
-		/** Based on user reviews. */
-		RATING,
-
-		/**
-		 * Number of ratings that have been submitted.
-		 * 
-		 * @since 1.3.0
-		 */
-		USER_RATINGS_TOTAL,
-
-		/** Comments and ratings from Google users. */
-		REVIEWS,
-
-		/** Opening and closing times for each day that the place is open. */
-		OPENING_HOURS,
-
-		/**
-		 * Opening hours for each day of the week. e.g. ["Monday: 10:00 am – 6:00 pm", ...,
-		 * "Sunday: Closed"]
-		 * 
-		 * @since 2.2.0
-		 */
-		FORMATTED_OPENING_HOURS,
-
-		/** True if the place is currently open. */
-		OPEN_NOW,
-
-		/**
-		 * True if the place has permanently shut down.
-		 * 
-		 * @since 2.2.0
-		 */
-		PERMANENTLY_CLOSED,
-
-		/**
-		 * Current events happening at the place.
-		 * 
-		 * @deprecated the Places API no longer returns events
-		 */
-		@Deprecated
-		EVENTS,
-
-		/** Number of minutes the place's time zone is offset from UTC. */
-		UTC_OFFSET,
-
-		/** Photos for the place that can be downloaded. */
-		PHOTOS,
-
-		/**
-		 * Only populate the {@link Place#getPlaceId() placeId} and {@link Place#getAltIds() altIds}
-		 * properties.
-		 * 
-		 * @since 2.2.0
-		 */
-		NONE;
-
-		/** Unique flag bit to denote this Field. */
-		private final int mMask;
-
-		Field() {
-			mMask = 1 << ordinal(); // will need to upgrade to a long when there are 33 fields
-		}
-
-		/**
-		 * Get a bit field that represents the fields.
-		 */
-		private static int bits(Field[] fields) {
-			int bits = 0;
-			for (Field field : fields) {
-				bits |= field.mMask;
-			}
-			return bits;
-		}
-
-		/**
-		 * Check if this Field is in the bit field.
-		 */
-		boolean in(int fields) {
-			return (fields & mMask) == mMask;
 		}
 	}
 
@@ -1081,252 +1179,100 @@ public class Places {
 	 * @param <T>
 	 *            type of result returned in the response
 	 */
-	public static class Response<T> {
-		/** Maximum number of HTML attributions that are expected to be returned. */
-		private static final int MAX_ATTRIBS = 3; // usually 1 or 2
+	public static abstract class Response<T> {
+		public static final String STATUS_OK = "OK";
+		public static final String STATUS_ZERO_RESULTS = "ZERO_RESULTS";
+		public static final String STATUS_OVER_QUERY_LIMIT = "OVER_QUERY_LIMIT";
+		public static final String STATUS_REQUEST_DENIED = "REQUEST_DENIED";
+		public static final String STATUS_INVALID_REQUEST = "INVALID_REQUEST";
+		public static final String STATUS_NOT_FOUND = "NOT_FOUND";
+		public static final String STATUS_UNKNOWN_ERROR = "UNKNOWN_ERROR";
+		public static final String STATUS_NOT_MODIFIED = "NOT_MODIFIED";
+
+		Response() {
+		}
 
 		/**
-		 * Indications of the success or failure of the request.
+		 * Indication of the success or failure of the request. Should be equal to one of the
+		 * STATUS_* constants.
 		 */
-		public enum Status {
-			OK, ZERO_RESULTS, OVER_QUERY_LIMIT, REQUEST_DENIED, INVALID_REQUEST, NOT_FOUND,
-			UNKNOWN_ERROR, NOT_MODIFIED,
-
-			/** New status that hasn't been added here yet. */
-			UNKNOWN;
-
-			/**
-			 * Get the matching Status or {@link #UNKNOWN} if one can't be found.
-			 */
-			private static Status get(String status) {
-				try {
-					return Status.valueOf(status);
-				} catch (IllegalArgumentException e) {
-					String msg = "Unknown status code: {0}.  "
-							+ "If this hasn''t already been reported, please create a new issue at "
-							+ "https://github.com/pushbit/sprockets/issues";
-					sLog.log(INFO, msg, status);
-					return UNKNOWN;
-				}
-			}
-		}
-
-		Status mStatus;
-		String mMessage;
-		T mResult;
-		List<String> mAttribs;
-		String mToken;
-		String mEtag;
-		private int mHash;
-
-		private Response() {
-		}
+		@Nullable
+		public abstract String getStatus();
 
 		/**
-		 * Set the {@link Status} from the string value.
-		 */
-		void status(String status) {
-			mStatus = Status.get(status);
-		}
-
-		/**
-		 * Indication of the success or failure of the request.
-		 */
-		public Status getStatus() {
-			return mStatus;
-		}
-
-		/**
-		 * Detailed information about why the {@link #getStatus() status} is not {@link Status#OK
+		 * Detailed information about why the {@link #getStatus() status} is not {@link #STATUS_OK
 		 * OK}.
 		 * 
 		 * @return null if an error message was not provided
 		 * @since 1.4.0
 		 */
-		public String getErrorMessage() {
-			return mMessage;
-		}
+		@Nullable
+		public abstract String getErrorMessage();
 
 		/**
-		 * Check the {@link Places} method signature for the specific type of result it returns. Can
-		 * be null if there was a problem with the request or an {@link Params#etag(String) ETag}
-		 * was sent and the content has not changed on the server.
+		 * Check the {@link Places} method signature for the specific type of result it returns.
+		 * 
+		 * @return empty list or null if there was a problem with the request or an
+		 *         {@link Params#etag() ETag} was sent and the photo on the server has not changed
 		 */
-		@SuppressWarnings("unchecked")
-		public T getResult() {
-			if (mResult instanceof List && !(mResult instanceof ImmutableList)) {
-				mResult = (T) ImmutableList.copyOf((List<?>) mResult);
-			}
-			return mResult;
-		}
+		public abstract T getResult();
 
 		/**
-		 * Read the HTML attributions.
+		 * Any attributions for this result that must be displayed to the user.
 		 */
-		void attrib(JsonReader in) throws IOException {
-			in.beginArray();
-			while (in.hasNext()) {
-				if (mAttribs == null) {
-					mAttribs = new ArrayList<String>(MAX_ATTRIBS);
-				}
-				mAttribs.add(in.nextString());
-			}
-			in.endArray();
-		}
+		public abstract List<String> getHtmlAttributions();
 
 		/**
-		 * Attributions for this result that must be displayed to the user if non-null.
+		 * If non-null, can be {@link Params#pageToken() used} in another request to get the next
+		 * batch of results.
 		 */
-		public List<String> getHtmlAttributions() {
-			if (mAttribs != null && !(mAttribs instanceof ImmutableList)) {
-				mAttribs = ImmutableList.copyOf(mAttribs);
-			}
-			return mAttribs;
-		}
+		@Nullable
+		public abstract String getNextPageToken();
 
 		/**
-		 * If non-null, can be provided to {@link Params#pageToken(String) Params.pageToken(String)}
-		 * in another request to get the next 20 results.
+		 * Identifier for this version of the photo. If non-null, can be {@link Params#etag() used}
+		 * in future requests to avoid downloading the photo if it hasn't changed on the server.
 		 */
-		public String getNextPageToken() {
-			return mToken;
-		}
-
-		/**
-		 * Identifier for this version of the content. If non-null, can be provided to
-		 * {@link Params#etag(String) Params.etag(String)} in future requests to avoid downloading
-		 * the same content again if it hasn't changed on the server. Currently only populated for
-		 * {@link Places#photo(Params)} requests.
-		 */
-		public String getEtag() {
-			return mEtag;
-		}
-
-		@Override
-		public int hashCode() {
-			if (mHash == 0) {
-				mHash = Objects.hashCode(mStatus, mMessage, mResult, mAttribs, mToken, mEtag);
-			}
-			return mHash;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (obj != null) {
-				if (this == obj) {
-					return true;
-				} else if (obj instanceof Response) {
-					Response<?> o = (Response<?>) obj;
-					return mStatus == o.mStatus && Objects.equal(mMessage, o.mMessage)
-							&& Objects.equal(mResult, o.mResult)
-							&& Objects.equal(mAttribs, o.mAttribs)
-							&& Objects.equal(mToken, o.mToken) && Objects.equal(mEtag, o.mEtag);
-				}
-			}
-			return false;
-		}
-
-		@Override
-		public String toString() {
-			return MoreObjects.toStringHelper(this).add("status", mStatus)
-					.add("errorMessage", mMessage).add("result", mResult)
-					.add("htmlAttributions", mAttribs != null ? mAttribs.size() : null)
-					.add("nextPageToken", mToken).add("etag", mEtag).omitNullValues().toString();
-		}
-
-		/**
-		 * All known response field keys and {@link #UNKNOWN} for new keys not included here yet.
-		 */
-		enum Key {
-			status, error_message, results, html_attributions, next_page_token, predictions,
-			result, place_id, scope, alt_ids, id, reference, icon(ICON), url(URL),
-			geometry(GEOMETRY), location, lat, lng, viewport, name(NAME), description(NAME),
-			terms(TERMS), offset, value, matched_substrings(MATCHED_SUBSTRINGS), length,
-			address_components(ADDRESS), long_name, short_name, adr_address,
-			formatted_address(FORMATTED_ADDRESS), vicinity(VICINITY),
-			international_phone_number(INTL_PHONE_NUMBER),
-			formatted_phone_number(FORMATTED_PHONE_NUMBER), website(WEBSITE), types(TYPES),
-			price_level(PRICE_LEVEL), rating(RATING), user_ratings_total(USER_RATINGS_TOTAL),
-			reviews(REVIEWS), author_name, author_url, time, aspects, type, language, text,
-			opening_hours(OPENING_HOURS), open_now(OPEN_NOW), periods, open, close, day,
-			weekday_text(FORMATTED_OPENING_HOURS), permanently_closed(PERMANENTLY_CLOSED),
-			events(EVENTS), event_id, start_time, summary, utc_offset(UTC_OFFSET), photos(PHOTOS),
-			photo_reference, width, height, debug_info,
-
-			/** New key that hasn't been added here yet. */
-			UNKNOWN;
-
-			/** Related Field. */
-			final Field mField;
-
-			/**
-			 * Key without a related Field.
-			 */
-			Key() {
-				mField = null;
-			}
-
-			/**
-			 * Key with a related Field.
-			 */
-			Key(Field field) {
-				mField = field;
-			}
-
-			/**
-			 * Get the matching Key or {@link #UNKNOWN} if one can't be found.
-			 */
-			static Key get(String key) {
-				try {
-					return Key.valueOf(key);
-				} catch (IllegalArgumentException e) {
-					String msg = "Unknown response key: {0}.  "
-							+ "If this hasn''t already been reported, please create a new issue at "
-							+ "https://github.com/pushbit/sprockets/issues";
-					sLog.log(INFO, msg, key);
-					return UNKNOWN;
-				}
-			}
-		}
+		@Nullable
+		public abstract String getEtag();
 	}
 
 	/**
 	 * Place search results.
 	 */
-	private static class PlacesResponse extends Response<List<Place>> {
-		/** Maximum number of establishment results that will be returned. */
-		private static final int MAX_RESULTS = 20;
-
-		/** Maximum number of reviews, events, and photos that will be returned. */
-		private static final int MAX_OBJECTS = 3;
-
+	@Immutable
+	static abstract class PlacesResponse extends Response<List<Place>> {
 		/**
 		 * Read fields from a search response.
 		 * 
 		 * @param fields
 		 *            to read or 0 if all fields should be read
 		 */
-		private PlacesResponse(JsonReader in, int fields, Params params) throws IOException {
+		static PlacesResponse from(JsonReader in, int fields, Params params) throws IOException {
+			ImmutablePlacesResponse.Builder b = ImmutablePlacesResponse.builder();
 			in.beginObject();
 			while (in.hasNext()) {
-				switch (Key.get(in.nextName())) {
-				case status:
-					status(in.nextString());
+				switch (in.nextName()) {
+				case "status":
+					b.status(in.nextString());
 					break;
-				case error_message:
-					mMessage = in.nextString();
+				case "error_message":
+					b.errorMessage(in.nextString());
 					break;
-				case results:
+				case "results":
+					int i = 0;
+					int maxResults = params.maxResults();
+					ImmutablePlace.Builder place = ImmutablePlace.builder();
+					ImmutableId.Builder id = ImmutableId.builder();
+					ImmutablePhoto.Builder photo = ImmutablePhoto.builder();
+					Predicate<Place> filter = params.placeFilter();
 					in.beginArray();
 					while (in.hasNext()) {
-						if (mResult == null) {
-							int cap = Maths.clamp(params.mMaxResults, 0, MAX_RESULTS);
-							mResult = new ArrayList<Place>(cap > 0 ? cap : MAX_RESULTS);
-						}
-						if (params.mMaxResults <= 0 || mResult.size() < params.mMaxResults) {
-							Place place = new Place(in, fields, MAX_OBJECTS);
-							if (params.mFilter == null || params.mFilter.apply(place)) {
-								mResult.add(place);
+						if (maxResults <= 0 || i < maxResults) {
+							Place result = Place.from(in, fields, 0, place.clear(), id, photo);
+							if (filter == null || filter.apply(result)) {
+								b.addResult(result);
+								i++;
 							}
 						} else {
 							in.skipValue();
@@ -1334,54 +1280,63 @@ public class Places {
 					}
 					in.endArray();
 					break;
-				case html_attributions:
-					attrib(in);
+				case "html_attributions":
+					in.beginArray();
+					while (in.hasNext()) {
+						b.addHtmlAttributions(in.nextString());
+					}
+					in.endArray();
 					break;
-				case next_page_token:
-					mToken = in.nextString();
+				case "next_page_token":
+					b.nextPageToken(in.nextString());
 					break;
 				default:
 					in.skipValue();
 				}
 			}
 			in.endObject();
+			return b.build();
 		}
 	}
 
 	/**
 	 * Autocomplete search results.
 	 */
-	private static class PredictionsResponse extends Response<List<Prediction>> {
-		/** Maximum number of results that will be returned. */
-		private static final int MAX_RESULTS = 5;
-
+	@Immutable
+	static abstract class PredictionsResponse extends Response<List<Prediction>> {
 		/**
 		 * Read fields from an autocomplete response.
 		 * 
 		 * @param fields
 		 *            to read or 0 if all fields should be read
 		 */
-		private PredictionsResponse(JsonReader in, int fields, Params params) throws IOException {
+		static PredictionsResponse from(JsonReader in, int fields, Params params)
+				throws IOException {
+			ImmutablePredictionsResponse.Builder b = ImmutablePredictionsResponse.builder();
 			in.beginObject();
 			while (in.hasNext()) {
-				switch (Key.get(in.nextName())) {
-				case status:
-					status(in.nextString());
+				switch (in.nextName()) {
+				case "status":
+					b.status(in.nextString());
 					break;
-				case error_message:
-					mMessage = in.nextString();
+				case "error_message":
+					b.errorMessage(in.nextString());
 					break;
-				case predictions:
+				case "predictions":
+					int i = 0;
+					int maxResults = params.maxResults();
+					ImmutablePrediction.Builder pred = ImmutablePrediction.builder();
+					ImmutableId.Builder id = ImmutableId.builder();
+					ImmutableSubstring.Builder s = ImmutableSubstring.builder();
+					Predicate<Prediction> filter = params.predictionFilter();
 					in.beginArray();
 					while (in.hasNext()) {
-						if (mResult == null) {
-							int cap = Maths.clamp(params.mMaxResults, 0, MAX_RESULTS);
-							mResult = new ArrayList<Prediction>(cap > 0 ? cap : MAX_RESULTS);
-						}
-						if (params.mMaxResults <= 0 || mResult.size() < params.mMaxResults) {
-							Prediction pred = new Prediction(in, fields);
-							if (params.mFilter == null || params.mFilter.apply(pred)) {
-								mResult.add(pred);
+						if (maxResults <= 0 || i < maxResults) {
+							Prediction result = Prediction.from(in, fields,
+									pred.clear(), id.clear(), s);
+							if (filter == null || filter.apply(result)) {
+								b.addResult(result);
+								i++;
 							}
 						} else {
 							in.skipValue();
@@ -1394,40 +1349,53 @@ public class Places {
 				}
 			}
 			in.endObject();
+			return b.build();
 		}
 	}
 
 	/**
 	 * Place with full details.
 	 */
-	private static class PlaceResponse extends Response<Place> {
+	@Immutable
+	static abstract class PlaceResponse extends Response<Place> {
+		@Override
+		@Nullable
+		public abstract Place getResult();
+
 		/**
 		 * Read fields from a details response.
 		 * 
 		 * @param fields
 		 *            to read or 0 if all fields should be read
 		 */
-		private PlaceResponse(JsonReader in, int fields, Params params) throws IOException {
+		static PlaceResponse from(JsonReader in, int fields, Params params) throws IOException {
+			ImmutablePlaceResponse.Builder b = ImmutablePlaceResponse.builder();
 			in.beginObject();
 			while (in.hasNext()) {
-				switch (Key.get(in.nextName())) {
-				case status:
-					status(in.nextString());
+				switch (in.nextName()) {
+				case "status":
+					b.status(in.nextString());
 					break;
-				case error_message:
-					mMessage = in.nextString();
+				case "error_message":
+					b.errorMessage(in.nextString());
 					break;
-				case result:
-					mResult = new Place(in, fields, params.mMaxResults);
+				case "result":
+					b.result(Place.from(in, fields, params.maxResults(), ImmutablePlace.builder(),
+							ImmutableId.builder(), ImmutablePhoto.builder()));
 					break;
-				case html_attributions:
-					attrib(in);
+				case "html_attributions":
+					in.beginArray();
+					while (in.hasNext()) {
+						b.addHtmlAttributions(in.nextString());
+					}
+					in.endArray();
 					break;
 				default:
 					in.skipValue();
 				}
 			}
 			in.endObject();
+			return b.build();
 		}
 	}
 
@@ -1435,31 +1403,109 @@ public class Places {
 	 * Photo bitstream for reading. Always {@link InputStream#close() close} the stream when
 	 * finished.
 	 */
-	private static class PhotoResponse extends Response<InputStream> {
+	@Immutable
+	static abstract class PhotoResponse extends Response<InputStream> {
+		@Override
+		@Nullable
+		public abstract InputStream getResult();
+
 		/**
 		 * Get the ETag and InputStream from the connection response.
 		 */
-		private PhotoResponse(HttpURLConnection con) throws IOException {
+		static PhotoResponse from(HttpURLConnection con) throws IOException {
+			ImmutablePhotoResponse.Builder b = ImmutablePhotoResponse.builder();
 			switch (con.getResponseCode()) {
 			case HTTP_OK:
-				mStatus = OK;
-				mEtag = con.getHeaderField("ETag");
-				mResult = con.getInputStream();
+				b.status(STATUS_OK).etag(con.getHeaderField("ETag")).result(con.getInputStream());
 				break;
 			case HTTP_NOT_MODIFIED:
-				mStatus = NOT_MODIFIED;
+				b.status(STATUS_NOT_MODIFIED);
 				break;
 			case HTTP_BAD_REQUEST:
-				mStatus = INVALID_REQUEST;
+				b.status(STATUS_INVALID_REQUEST);
 				break;
 			case HTTP_FORBIDDEN:
-				mStatus = OVER_QUERY_LIMIT;
-				mResult = con.getInputStream(); // "quota has been exceeded" image
+				b.status(STATUS_OVER_QUERY_LIMIT).result(con.getInputStream()); // "quota exceeded"
 				break;
 			default:
-				mStatus = UNKNOWN_ERROR;
-				sLog.log(INFO, "Unexpected response code: {0}", con.getResponseCode());
+				b.status(STATUS_UNKNOWN_ERROR);
 			}
+			return b.build();
+		}
+	}
+
+	/**
+	 * Place ID of added place.
+	 */
+	@Immutable
+	static abstract class PlaceIdResponse extends Response<Id> {
+		@Override
+		@Nullable
+		public abstract Id getResult();
+
+		/**
+		 * Read fields from an add response.
+		 */
+		static PlaceIdResponse from(JsonReader in) throws IOException {
+			ImmutablePlaceIdResponse.Builder b = ImmutablePlaceIdResponse.builder();
+			String placeId = null;
+			String scope = null;
+			in.beginObject();
+			while (in.hasNext()) {
+				switch (in.nextName()) {
+				case "status":
+					b.status(in.nextString());
+					break;
+				case "error_message":
+					b.errorMessage(in.nextString());
+					break;
+				case "place_id":
+					placeId = in.nextString();
+					break;
+				case "scope":
+					scope = in.nextString();
+					break;
+				default:
+					in.skipValue();
+				}
+			}
+			in.endObject();
+			if (!Strings.isNullOrEmpty(placeId)) {
+				b.result(ImmutableId.builder().id(placeId).scope(scope).build());
+			}
+			return b.build();
+		}
+	}
+
+	/**
+	 * No result.
+	 */
+	@Immutable
+	static abstract class VoidResponse extends Response<Void> {
+		@Override
+		@Nullable
+		public abstract Void getResult();
+
+		/**
+		 * Read fields from a delete response.
+		 */
+		static VoidResponse from(JsonReader in) throws IOException {
+			ImmutableVoidResponse.Builder b = ImmutableVoidResponse.builder();
+			in.beginObject();
+			while (in.hasNext()) {
+				switch (in.nextName()) {
+				case "status":
+					b.status(in.nextString());
+					break;
+				case "error_message":
+					b.errorMessage(in.nextString());
+					break;
+				default:
+					in.skipValue();
+				}
+			}
+			in.endObject();
+			return b.build();
 		}
 	}
 }

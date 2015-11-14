@@ -17,83 +17,236 @@
 
 package net.sf.sprockets.google;
 
-import static net.sf.sprockets.google.Places.Response.Key.UNKNOWN;
+import static net.sf.sprockets.google.Places.FIELD_ADDRESS;
+import static net.sf.sprockets.google.Places.FIELD_DESCRIPTION;
+import static net.sf.sprockets.google.Places.FIELD_FORMATTED_ADDRESS;
+import static net.sf.sprockets.google.Places.FIELD_FORMATTED_OPENING_HOURS;
+import static net.sf.sprockets.google.Places.FIELD_FORMATTED_PHONE_NUMBER;
+import static net.sf.sprockets.google.Places.FIELD_ICON;
+import static net.sf.sprockets.google.Places.FIELD_INTL_PHONE_NUMBER;
+import static net.sf.sprockets.google.Places.FIELD_MATCHED_SUBSTRINGS;
+import static net.sf.sprockets.google.Places.FIELD_NAME;
+import static net.sf.sprockets.google.Places.FIELD_OPENING_HOURS;
+import static net.sf.sprockets.google.Places.FIELD_PHOTOS;
+import static net.sf.sprockets.google.Places.FIELD_REVIEWS;
+import static net.sf.sprockets.google.Places.FIELD_TERMS;
+import static net.sf.sprockets.google.Places.FIELD_TYPES;
+import static net.sf.sprockets.google.Places.FIELD_URL;
+import static net.sf.sprockets.google.Places.FIELD_VICINITY;
+import static net.sf.sprockets.google.Places.FIELD_WEBSITE;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.TimeZone;
 
+import javax.annotation.Nullable;
+
 import net.sf.sprockets.google.Places.Params;
-import net.sf.sprockets.google.Places.Response.Key;
+import net.sf.sprockets.lang.ImmutableSubstring;
 import net.sf.sprockets.lang.Maths;
 import net.sf.sprockets.lang.Substring;
 import net.sf.sprockets.time.DayOfWeek;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.base.MoreObjects.ToStringHelper;
-import com.google.common.base.Objects;
+import org.immutables.value.Value.Default;
+import org.immutables.value.Value.Immutable;
+import org.immutables.value.Value.Modifiable;
+import org.immutables.value.Value.Style;
+
 import com.google.common.base.Predicate;
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
 import com.google.gson.stream.JsonReader;
 
 /**
  * Google Place returned from a {@link Places} method. The properties which are populated will vary
- * according to the Places method called and the {@link Places.Field Field}s provided. Check the
- * Places method documentation for the available fields. Properties that have not been populated
- * will return null, when possible, or the default value will be specified in the method
+ * according to the Places method called and the fields provided. {@link #getPlaceId() placeId} and
+ * primitive properties (when available) will always be populated. Properties that have not been
+ * populated will return null, an empty list, or the default primitive value specified in the method
  * documentation.
  */
-public class Place {
-	/** Expected number of alt_ids that will be returned, if any. */
-	private static final int MAX_ALT_IDS = 1;
-
-	/** Maximum number of reviews that will be returned. */
-	private static final int MAX_REVIEWS = 5;
-
-	/** Maximum number of events that will be returned. */
-	private static final int MAX_EVENTS = 10;
-
-	/** Maximum number of photos that will be returned. */
-	private static final int MAX_PHOTOS = 10;
-
-	Id mPlaceId;
-	List<Id> mAltIds;
-	String mId;
-	String mReference;
-	String mIcon;
-	String mUrl;
-	double mLat = Double.NEGATIVE_INFINITY;
-	double mLong = Double.NEGATIVE_INFINITY;
-	String mName;
-	Address mAddress;
-	String mFmtAddress;
-	String mVicinity;
-	String mIntlPhone;
-	String mFmtPhone;
-	String mWebsite;
-	List<String> mTypes;
-	int mPrice = -1;
-	float mRating = -1.0f;
-	int mRatingCount = -1;
-	List<Review> mReviews;
-	Boolean mOpen;
-	List<OpeningHours> mOpenHours;
-	List<String> mFmtOpenHours;
-	boolean mPermClosed;
-	List<Event> mEvents;
-	int mUtcOffset = Integer.MIN_VALUE;
-	List<Photo> mPhotos;
-	private int mHash;
+@Immutable
+public abstract class Place {
+	Place() {
+	}
 
 	/**
-	 * Empty Place for subclasses.
+	 * Build an immutable instance.
+	 * 
+	 * @since 3.0.0
 	 */
-	private Place() {
+	public static ImmutablePlace.Builder builder() {
+		return ImmutablePlace.builder();
 	}
+
+	/**
+	 * Unique identifier that can be used to retrieve {@link Places#details(Params) details} about
+	 * this place.
+	 * 
+	 * @since 1.5.0
+	 */
+	@Nullable
+	public abstract Id getPlaceId();
+
+	/**
+	 * Alternative identifiers that have been mapped to {@link #getPlaceId() the main one}.
+	 * 
+	 * @since 1.5.0
+	 */
+	public abstract List<Id> getAltIds();
+
+	/**
+	 * URL for an icon representing this type of place.
+	 */
+	@Nullable
+	public abstract String getIcon();
+
+	/**
+	 * Google Place page.
+	 */
+	@Nullable
+	public abstract String getUrl();
+
+	/**
+	 * Default value: {@link Double#NEGATIVE_INFINITY}.
+	 */
+	@Default
+	public double getLatitude() {
+		return Double.NEGATIVE_INFINITY;
+	}
+
+	/**
+	 * Default value: {@link Double#NEGATIVE_INFINITY}.
+	 */
+	@Default
+	public double getLongitude() {
+		return Double.NEGATIVE_INFINITY;
+	}
+
+	/**
+	 * Name of this place, for example a business or landmark name.
+	 */
+	@Nullable
+	public abstract String getName();
+
+	/**
+	 * All address components in separate properties.
+	 */
+	@Nullable
+	public abstract Address getAddress();
+
+	/**
+	 * All address components formatted together.
+	 */
+	@Nullable
+	public abstract String getFormattedAddress();
+
+	/**
+	 * Simplified address that stops after the city level.
+	 */
+	@Nullable
+	public abstract String getVicinity();
+
+	/**
+	 * Includes prefixed country code.
+	 */
+	@Nullable
+	public abstract String getIntlPhoneNumber();
+
+	/**
+	 * In local format.
+	 */
+	@Nullable
+	public abstract String getFormattedPhoneNumber();
+
+	/**
+	 * URL of the website for this place.
+	 */
+	@Nullable
+	public abstract String getWebsite();
+
+	/**
+	 * Features describing this place.
+	 * 
+	 * @see <a href="https://developers.google.com/places/supported_types" target="_blank">Place
+	 *      Types</a>
+	 */
+	public abstract List<String> getTypes();
+
+	/**
+	 * Relative level of average expenses at this place. From 0 (least expensive) to 4 (most
+	 * expensive). Default value: -1.
+	 */
+	@Default
+	public int getPriceLevel() {
+		return -1;
+	}
+
+	/**
+	 * From 0.0 to 5.0, based on user reviews. Default value: -1.0f.
+	 */
+	@Default
+	public float getRating() {
+		return -1.0f;
+	}
+
+	/**
+	 * Number of ratings that have been submitted. Default value: -1.
+	 * 
+	 * @since 1.3.0
+	 */
+	@Default
+	public int getRatingCount() {
+		return -1;
+	}
+
+	/**
+	 * Comments and ratings from Google users.
+	 */
+	public abstract List<Review> getReviews();
+
+	/**
+	 * True if this place is currently open.
+	 * 
+	 * @return null if unknown
+	 */
+	@Nullable
+	public abstract Boolean getOpenNow();
+
+	/**
+	 * Opening and closing times for each day that this place is open.
+	 */
+	public abstract List<OpeningHours> getOpeningHours();
+
+	/**
+	 * Opening hours for each day of the week. e.g. ["Monday: 10:00 am – 6:00 pm", ...,
+	 * "Sunday: Closed"]
+	 * 
+	 * @since 2.2.0
+	 */
+	public abstract List<String> getFormattedOpeningHours();
+
+	/**
+	 * True if this place has permanently shut down.
+	 * 
+	 * @since 2.2.0
+	 */
+	@Default
+	public boolean isPermanentlyClosed() {
+		return false;
+	}
+
+	/**
+	 * Number of minutes this place's time zone is offset from UTC. Default value:
+	 * {@link Integer#MIN_VALUE}.
+	 */
+	@Default
+	public int getUtcOffset() {
+		return Integer.MIN_VALUE;
+	}
+
+	/**
+	 * Photos for this place that can be downloaded by supplying the
+	 * {@link Place.Photo#getReference() reference} to {@link Places#photo(Params)}.
+	 */
+	public abstract List<Photo> getPhotos();
 
 	/**
 	 * Read fields from a result object.
@@ -101,58 +254,50 @@ public class Place {
 	 * @param fields
 	 *            to read or 0 if all fields should be read
 	 * @param maxResults
-	 *            maximum number of reviews, events, and photos to return
+	 *            maximum number of reviews and photos to return or 0 to return all
 	 */
-	Place(JsonReader in, int fields, int maxResults) throws IOException {
+	static Place from(JsonReader in, int fields, int maxResults, ImmutablePlace.Builder place,
+			ImmutableId.Builder id, ImmutablePhoto.Builder photo) throws IOException {
+		String placeId = null; // save for later so `id` can be used for alt_ids
+		String scope = null;
 		in.beginObject();
 		while (in.hasNext()) {
-			Key key = Key.get(in.nextName());
-			if (key == UNKNOWN || fields != 0 && key.mField != null && !key.mField.in(fields)) {
-				in.skipValue(); // unknown field or caller doesn't want it
-				continue;
-			}
-
-			switch (key) {
-			case place_id:
-				mPlaceId = Id.id(mPlaceId, in.nextString());
+			switch (in.nextName()) {
+			case "place_id":
+				placeId = in.nextString();
 				break;
-			case scope:
-				mPlaceId = Id.scope(mPlaceId, in.nextString());
+			case "scope":
+				scope = in.nextString();
 				break;
-			case alt_ids:
+			case "alt_ids":
 				in.beginArray();
 				while (in.hasNext()) {
-					if (mAltIds == null) {
-						mAltIds = new ArrayList<Id>(MAX_ALT_IDS);
-					}
-					mAltIds.add(new Id(in));
+					place.addAltIds(Id.from(in, id.clear()));
 				}
 				in.endArray();
 				break;
-			case id:
-				mId = in.nextString();
+			case "icon":
+				if (wants(FIELD_ICON, fields, in)) {
+					place.icon(in.nextString());
+				}
 				break;
-			case reference:
-				mReference = in.nextString();
+			case "url":
+				if (wants(FIELD_URL, fields, in)) {
+					place.url(in.nextString());
+				}
 				break;
-			case icon:
-				mIcon = in.nextString();
-				break;
-			case url:
-				mUrl = in.nextString();
-				break;
-			case geometry:
+			case "geometry":
 				in.beginObject();
 				while (in.hasNext()) {
 					if (in.nextName().equals("location")) {
 						in.beginObject();
 						while (in.hasNext()) {
-							switch (Key.get(in.nextName())) {
-							case lat:
-								mLat = in.nextDouble();
+							switch (in.nextName()) {
+							case "lat":
+								place.latitude(in.nextDouble());
 								break;
-							case lng:
-								mLong = in.nextDouble();
+							case "lng":
+								place.longitude(in.nextDouble());
 								break;
 							default:
 								in.skipValue();
@@ -165,80 +310,101 @@ public class Place {
 				}
 				in.endObject();
 				break;
-			case name:
-				mName = in.nextString();
-				break;
-			case address_components:
-				mAddress = new Address(in);
-				break;
-			case formatted_address:
-				mFmtAddress = in.nextString();
-				break;
-			case vicinity:
-				mVicinity = in.nextString();
-				break;
-			case international_phone_number:
-				mIntlPhone = in.nextString();
-				break;
-			case formatted_phone_number:
-				mFmtPhone = in.nextString();
-				break;
-			case website:
-				mWebsite = in.nextString();
-				break;
-			case types:
-				types(in);
-				break;
-			case price_level:
-				mPrice = in.nextInt();
-				break;
-			case rating:
-				mRating = (float) in.nextDouble();
-				break;
-			case user_ratings_total:
-				mRatingCount = in.nextInt();
-				break;
-			case reviews:
-				in.beginArray();
-				while (in.hasNext()) {
-					if (mReviews == null) {
-						int cap = Maths.clamp(maxResults, 0, MAX_REVIEWS);
-						mReviews = new ArrayList<Review>(cap > 0 ? cap : MAX_REVIEWS);
-					}
-					if (maxResults <= 0 || mReviews.size() < maxResults) {
-						mReviews.add(new Review(in));
-					} else {
-						in.skipValue();
-					}
+			case "name":
+				if (wants(FIELD_NAME, fields, in)) {
+					place.name(in.nextString());
 				}
-				in.endArray();
 				break;
-			case opening_hours:
+			case "address_components":
+				if (wants(FIELD_ADDRESS, fields, in)) {
+					place.address(Address.from(in));
+				}
+				break;
+			case "formatted_address":
+				if (wants(FIELD_FORMATTED_ADDRESS, fields, in)) {
+					place.formattedAddress(in.nextString());
+				}
+				break;
+			case "vicinity":
+				if (wants(FIELD_VICINITY, fields, in)) {
+					place.vicinity(in.nextString());
+				}
+				break;
+			case "international_phone_number":
+				if (wants(FIELD_INTL_PHONE_NUMBER, fields, in)) {
+					place.intlPhoneNumber(in.nextString());
+				}
+				break;
+			case "formatted_phone_number":
+				if (wants(FIELD_FORMATTED_PHONE_NUMBER, fields, in)) {
+					place.formattedPhoneNumber(in.nextString());
+				}
+				break;
+			case "website":
+				if (wants(FIELD_WEBSITE, fields, in)) {
+					place.website(in.nextString());
+				}
+				break;
+			case "types":
+				if (wants(FIELD_TYPES, fields, in)) {
+					in.beginArray();
+					while (in.hasNext()) {
+						place.addTypes(in.nextString());
+					}
+					in.endArray();
+				}
+				break;
+			case "price_level":
+				place.priceLevel(in.nextInt());
+				break;
+			case "rating":
+				place.rating((float) in.nextDouble());
+				break;
+			case "user_ratings_total":
+				place.ratingCount(in.nextInt());
+				break;
+			case "reviews":
+				if (wants(FIELD_REVIEWS, fields, in)) {
+					int i = 0;
+					ImmutableReview.Builder review = ImmutableReview.builder();
+					ImmutableAspect.Builder aspect = ImmutableAspect.builder();
+					in.beginArray();
+					while (in.hasNext()) {
+						if (maxResults <= 0 || i < maxResults) {
+							place.addReviews(Review.from(in, review.clear(), aspect));
+							i++;
+						} else {
+							in.skipValue();
+						}
+					}
+					in.endArray();
+				}
+				break;
+			case "opening_hours":
 				in.beginObject();
 				while (in.hasNext()) {
-					switch (Key.get(in.nextName())) {
-					case open_now:
-						mOpen = in.nextBoolean();
+					switch (in.nextName()) {
+					case "open_now":
+						place.openNow(in.nextBoolean());
 						break;
-					case periods:
-						in.beginArray();
-						while (in.hasNext()) {
-							if (mOpenHours == null) {
-								mOpenHours = new ArrayList<OpeningHours>();
+					case "periods":
+						if (wants(FIELD_OPENING_HOURS, fields, in)) {
+							ImmutableOpeningHours.Builder hours = ImmutableOpeningHours.builder();
+							in.beginArray();
+							while (in.hasNext()) {
+								place.addOpeningHours(OpeningHours.from(in, hours.clear()));
 							}
-							mOpenHours.add(new OpeningHours(in));
+							in.endArray();
 						}
-						in.endArray();
 						break;
-					case weekday_text:
-						in.beginArray();
-						while (in.hasNext()) {
-							if (mFmtOpenHours == null) {
-								mFmtOpenHours = new ArrayList<String>(7);
+					case "weekday_text":
+						if (wants(FIELD_FORMATTED_OPENING_HOURS, fields, in)) {
+							in.beginArray();
+							while (in.hasNext()) {
+								place.addFormattedOpeningHours(in.nextString());
 							}
-							mFmtOpenHours.add(in.nextString());
+							in.endArray();
 						}
-						in.endArray();
 						break;
 					default:
 						in.skipValue();
@@ -246,604 +412,315 @@ public class Place {
 				}
 				in.endObject();
 				break;
-			case permanently_closed:
-				mPermClosed = in.nextBoolean();
+			case "permanently_closed":
+				place.isPermanentlyClosed(in.nextBoolean());
 				break;
-			case events:
-				in.beginArray();
-				while (in.hasNext()) {
-					if (mEvents == null) {
-						int cap = Maths.clamp(maxResults, 0, MAX_EVENTS);
-						mEvents = new ArrayList<Event>(cap > 0 ? cap : MAX_EVENTS);
+			case "utc_offset":
+				place.utcOffset(in.nextInt());
+				break;
+			case "photos":
+				if (wants(FIELD_PHOTOS, fields, in)) {
+					int i = 0;
+					in.beginArray();
+					while (in.hasNext()) {
+						if (maxResults <= 0 || i < maxResults) {
+							place.addPhotos(Photo.from(in, photo.clear()));
+							i++;
+						} else {
+							in.skipValue();
+						}
 					}
-					if (maxResults <= 0 || mEvents.size() < maxResults) {
-						mEvents.add(new Event(in));
-					} else {
-						in.skipValue();
-					}
+					in.endArray();
 				}
-				in.endArray();
-				break;
-			case utc_offset:
-				mUtcOffset = in.nextInt();
-				break;
-			case photos:
-				in.beginArray();
-				while (in.hasNext()) {
-					if (mPhotos == null) {
-						int cap = Maths.clamp(maxResults, 0, MAX_PHOTOS);
-						mPhotos = new ArrayList<Photo>(cap > 0 ? cap : MAX_PHOTOS);
-					}
-					if (maxResults <= 0 || mPhotos.size() < maxResults) {
-						mPhotos.add(new Photo(in));
-					} else {
-						in.skipValue();
-					}
-				}
-				in.endArray();
 				break;
 			default:
 				in.skipValue();
 			}
 		}
 		in.endObject();
+		return place.placeId(id.clear().id(placeId).scope(scope).build()).build();
 	}
 
 	/**
-	 * Read field values from a types array.
+	 * True if fields is zero or the field is in the fields bitmask. If false and a JsonReader was
+	 * provided, the next JSON value will be skipped.
 	 */
-	void types(JsonReader in) throws IOException {
-		in.beginArray();
-		while (in.hasNext()) {
-			if (mTypes == null) {
-				mTypes = new ArrayList<String>();
-			}
-			mTypes.add(in.nextString());
+	private static boolean wants(int field, int fields, JsonReader in) throws IOException {
+		boolean wants = fields == 0 || (fields & field) == field;
+		if (!wants && in != null) {
+			in.skipValue();
 		}
-		in.endArray();
+		return wants;
 	}
 
 	/**
-	 * Unique identifier that can be used to retrieve details about this place.
+	 * Unique identifier that can be used to retrieve {@link Places#details(Params) details} about a
+	 * place.
 	 * 
 	 * @since 1.5.0
 	 */
-	public Id getPlaceId() {
-		return mPlaceId;
-	}
-
-	/**
-	 * Alternative identifiers that have been mapped to {@link #getPlaceId() the main one}.
-	 * 
-	 * @since 1.5.0
-	 */
-	public List<Id> getAltIds() {
-		if (mAltIds != null && !(mAltIds instanceof ImmutableList)) {
-			mAltIds = ImmutableList.copyOf(mAltIds);
+	@Immutable
+	public static abstract class Id {
+		Id() {
 		}
-		return mAltIds;
-	}
 
-	/**
-	 * Unique identifier that can be used to consolidate information about this place.
-	 * 
-	 * @deprecated use {@link Place.Id#getId() getPlaceId().getId()} instead
-	 */
-	@Deprecated
-	public String getId() {
-		return mId;
-	}
+		/** Local to an application. */
+		public static final String SCOPE_APP = "APP";
 
-	/**
-	 * Token that can be used to retrieve details about this place. This may be one of multiple
-	 * references that can be used to access this place.
-	 * 
-	 * @deprecated use {@link Place.Id#getId() getPlaceId().getId()} instead
-	 */
-	@Deprecated
-	public String getReference() {
-		return mReference;
-	}
+		/** Publicly available. */
+		public static final String SCOPE_GOOGLE = "GOOGLE";
 
-	/**
-	 * URL for an icon representing this type of place.
-	 */
-	public String getIcon() {
-		return mIcon;
-	}
+		/**
+		 * Unique identifier that can be used to retrieve {@link Places#details(Params) details}
+		 * about the place.
+		 */
+		@Nullable
+		public abstract String getId();
 
-	/**
-	 * Google Place page.
-	 */
-	public String getUrl() {
-		return mUrl;
-	}
-
-	/**
-	 * Default value: {@link Double#NEGATIVE_INFINITY}.
-	 */
-	public double getLatitude() {
-		return mLat;
-	}
-
-	/**
-	 * Default value: {@link Double#NEGATIVE_INFINITY}.
-	 */
-	public double getLongitude() {
-		return mLong;
-	}
-
-	/**
-	 * Name of this place, for example a business or landmark name.
-	 */
-	public String getName() {
-		return mName;
-	}
-
-	/**
-	 * All address components in separate properties.
-	 */
-	public Address getAddress() {
-		return mAddress;
-	}
-
-	/**
-	 * All address components formatted together.
-	 */
-	public String getFormattedAddress() {
-		return mFmtAddress;
-	}
-
-	/**
-	 * Simplified address that stops after the city level.
-	 */
-	public String getVicinity() {
-		return mVicinity;
-	}
-
-	/**
-	 * Includes prefixed country code.
-	 */
-	public String getIntlPhoneNumber() {
-		return mIntlPhone;
-	}
-
-	/**
-	 * In local format.
-	 */
-	public String getFormattedPhoneNumber() {
-		return mFmtPhone;
-	}
-
-	/**
-	 * URL of the website for this place.
-	 */
-	public String getWebsite() {
-		return mWebsite;
-	}
-
-	/**
-	 * Features describing this place.
-	 * 
-	 * @see <a href="https://developers.google.com/places/supported_types" target="_blank">Supported
-	 *      Place Types</a>
-	 */
-	public List<String> getTypes() {
-		if (mTypes != null && !(mTypes instanceof ImmutableList)) {
-			mTypes = ImmutableList.copyOf(mTypes);
-		}
-		return mTypes;
-	}
-
-	/**
-	 * Relative level of average expenses at this place. From 0 (least expensive) to 4 (most
-	 * expensive). Default value: -1.
-	 */
-	public int getPriceLevel() {
-		return mPrice;
-	}
-
-	/**
-	 * From 0.0 to 5.0, based on user reviews. Default value: -1.0.
-	 */
-	public float getRating() {
-		return mRating;
-	}
-
-	/**
-	 * Number of ratings that have been submitted. Default value: -1.
-	 * 
-	 * @since 1.3.0
-	 */
-	public int getRatingCount() {
-		return mRatingCount;
-	}
-
-	/**
-	 * Comments and ratings from Google users.
-	 */
-	public List<Review> getReviews() {
-		if (mReviews != null && !(mReviews instanceof ImmutableList)) {
-			mReviews = ImmutableList.copyOf(mReviews);
-		}
-		return mReviews;
-	}
-
-	/**
-	 * True if this place is currently open.
-	 */
-	public Boolean getOpenNow() {
-		return mOpen;
-	}
-
-	/**
-	 * Opening and closing times for each day that this place is open.
-	 */
-	public List<OpeningHours> getOpeningHours() {
-		if (mOpenHours != null && !(mOpenHours instanceof ImmutableList)) {
-			mOpenHours = ImmutableList.copyOf(mOpenHours);
-		}
-		return mOpenHours;
-	}
-
-	/**
-	 * Opening hours for each day of the week. e.g. ["Monday: 10:00 am – 6:00 pm", ...,
-	 * "Sunday: Closed"]
-	 * 
-	 * @since 2.2.0
-	 */
-	public List<String> getFormattedOpeningHours() {
-		if (mFmtOpenHours != null && !(mFmtOpenHours instanceof ImmutableList)) {
-			mFmtOpenHours = ImmutableList.copyOf(mFmtOpenHours);
-		}
-		return mFmtOpenHours;
-	}
-
-	/**
-	 * True if this place has permanently shut down.
-	 * 
-	 * @since 2.2.0
-	 */
-	public boolean isPermanentlyClosed() {
-		return mPermClosed;
-	}
-
-	/**
-	 * Current events happening at this place.
-	 * 
-	 * @deprecated the Places API no longer returns events
-	 */
-	@Deprecated
-	public List<Event> getEvents() {
-		if (mEvents != null && !(mEvents instanceof ImmutableList)) {
-			mEvents = ImmutableList.copyOf(mEvents);
-		}
-		return mEvents;
-	}
-
-	/**
-	 * Number of minutes this place's time zone is offset from UTC. Default value:
-	 * {@link Integer#MIN_VALUE}.
-	 */
-	public int getUtcOffset() {
-		return mUtcOffset;
-	}
-
-	/**
-	 * Photos for this place that can be downloaded by supplying the {@link Photo#getReference()
-	 * reference} to {@link Places#photo(Params)}.
-	 */
-	public List<Photo> getPhotos() {
-		if (mPhotos != null && !(mPhotos instanceof ImmutableList)) {
-			mPhotos = ImmutableList.copyOf(mPhotos);
-		}
-		return mPhotos;
-	}
-
-	@Override
-	public int hashCode() {
-		if (mHash == 0) {
-			mHash = mPlaceId != null ? mPlaceId.hashCode() : super.hashCode();
-		}
-		return mHash;
-	}
-
-	/**
-	 * True if they have the same {@link #getPlaceId() place ID}.
-	 */
-	@Override
-	public boolean equals(Object obj) {
-		if (obj != null) {
-			if (this == obj) {
-				return true;
-			} else if (obj instanceof Place && mPlaceId != null) {
-				return mPlaceId.equals(((Place) obj).mPlaceId);
-			}
-		}
-		return false;
-	}
-
-	@Override
-	public String toString() {
-		return helper().toString();
-	}
-
-	/**
-	 * Shared ToStringHelper for subclasses.
-	 */
-	ToStringHelper helper() {
-		return MoreObjects.toStringHelper(this).add("placeId", mPlaceId)
-				.add("altIds", mAltIds != null ? mAltIds.size() : null).add("id", mId)
-				.add("reference", mReference).add("icon", mIcon).add("url", mUrl)
-				.add("latitude", mLat != Double.NEGATIVE_INFINITY ? mLat : null)
-				.add("longitude", mLong != Double.NEGATIVE_INFINITY ? mLong : null)
-				.add("name", mName).add("address", mAddress != null ? true : null)
-				.add("formattedAddress", mFmtAddress).add("vicinity", mVicinity)
-				.add("intlPhoneNumber", mIntlPhone).add("formattedPhoneNumber", mFmtPhone)
-				.add("website", mWebsite).add("types", mTypes)
-				.add("priceLevel", mPrice != -1 ? mPrice : null)
-				.add("rating", mRating != -1.0f ? mRating : null)
-				.add("ratingCount", mRatingCount != -1 ? mRatingCount : null)
-				.add("reviews", mReviews != null ? mReviews.size() : null).add("openNow", mOpen)
-				.add("openingHours", mOpenHours != null ? mOpenHours.size() : null)
-				.add("formattedOpeningHours", mFmtOpenHours != null ? true : null)
-				.add("permanentlyClosed", mPermClosed)
-				.add("events", mEvents != null ? mEvents.size() : null)
-				.add("utcOffset", mUtcOffset != Integer.MIN_VALUE ? mUtcOffset : null)
-				.add("photos", mPhotos != null ? mPhotos.size() : null).omitNullValues();
-	}
-
-	/**
-	 * Unique identifier that can be used to retrieve details about a place.
-	 * 
-	 * @since 1.5.0
-	 */
-	public static class Id {
-		private String mId;
-		private Scope mScope;
-		private int mHash;
-
-		private Id() {
-		}
+		/**
+		 * Availability of this place ID. If set, should be equal to {@link #SCOPE_GOOGLE} or
+		 * {@link #SCOPE_APP}.
+		 */
+		@Nullable
+		public abstract String getScope();
 
 		/**
 		 * Read fields from an alt_id object.
 		 */
-		private Id(JsonReader in) throws IOException {
+		static Id from(JsonReader in, ImmutableId.Builder b) throws IOException {
 			in.beginObject();
 			while (in.hasNext()) {
-				switch (Key.get(in.nextName())) {
-				case place_id:
-					mId = in.nextString();
+				switch (in.nextName()) {
+				case "place_id":
+					b.id(in.nextString());
 					break;
-				case scope:
-					mScope = Scope.get(in.nextString());
+				case "scope":
+					b.scope(in.nextString());
 					break;
 				default:
 					in.skipValue();
 				}
 			}
 			in.endObject();
+			return b.build();
 		}
 
 		/**
-		 * Set the place ID of the Id, creating it if necessary.
-		 */
-		private static Id id(Id id, String placeId) {
-			if (id == null) {
-				id = new Id();
-			}
-			id.mId = placeId;
-			return id;
-		}
-
-		/**
-		 * Unique identifier that can be used to retrieve details about the place.
-		 */
-		public String getId() {
-			return mId;
-		}
-
-		/**
-		 * Set the scope of the Id, creating it if necessary.
-		 */
-		private static Id scope(Id id, String scope) {
-			if (id == null) {
-				id = new Id();
-			}
-			id.mScope = Scope.get(scope);
-			return id;
-		}
-
-		/**
-		 * Availability of this place ID.
-		 */
-		public Scope getScope() {
-			return mScope;
-		}
-
-		@Override
-		public int hashCode() {
-			if (mHash == 0) {
-				mHash = mId != null ? mId.hashCode() : super.hashCode();
-			}
-			return mHash;
-		}
-
-		/**
-		 * True if they have the same {@link #getId() ID}.
-		 */
-		@Override
-		public boolean equals(Object obj) {
-			if (obj != null) {
-				if (this == obj) {
-					return true;
-				} else if (obj instanceof Id && mId != null) {
-					return mId.equals(((Id) obj).mId);
-				}
-			}
-			return false;
-		}
-
-		@Override
-		public String toString() {
-			return MoreObjects.toStringHelper(this).add("id", mId).add("scope", mScope)
-					.omitNullValues().toString();
-		}
-
-		/**
-		 * Availability of a place ID.
-		 */
-		public enum Scope {
-			/** Local to an application. */
-			APP,
-			/** Publicly available. */
-			GOOGLE;
-
-			/**
-			 * Get the matching Scope or null if one can't be found.
-			 */
-			private static Scope get(String scope) {
-				try {
-					return Scope.valueOf(scope);
-				} catch (IllegalArgumentException e) {
-					return null;
-				}
-			}
-		}
-
-		/**
-		 * Search or autocomplete {@link Params#filter(Predicate) filter} on place IDs. After
-		 * creating an instance, call {@link #include(String...) include} or
-		 * {@link #exclude(String...) exclude} to provide the IDs to filter.
+		 * Base class for {@link Predicate}s that filter on place IDs.
 		 * 
-		 * @since 1.6.0
+		 * @since 3.0.0
 		 */
-		public static class Filter implements Predicate<Place> {
-			/** Include or exclude the IDs. */
-			private boolean mInclude;
-			private final HashSet<String> mIds = new HashSet<String>();
-
-			/**
-			 * Add the IDs to those that the place must match to be returned.
-			 */
-			public Filter include(String... ids) {
-				if (!mInclude) {
-					reset().mInclude = true;
-				}
-				Collections.addAll(mIds, ids);
-				return this;
+		public static abstract class Filter {
+			Filter() {
 			}
 
 			/**
-			 * Add the IDs to those that the place must not match to be returned.
+			 * IDs of places to filter out.
 			 */
-			public Filter exclude(String... ids) {
-				if (mInclude) {
-					reset().mInclude = false;
-				}
-				Collections.addAll(mIds, ids);
-				return this;
-			}
+			public abstract List<String> ids();
 
 			/**
-			 * Reset the list of IDs to match.
+			 * True if the place with the ID should be included.
 			 */
-			public Filter reset() {
-				mIds.clear();
-				return this;
-			}
-
-			@Override
-			public boolean apply(Place place) {
-				boolean contains = mIds.contains(place.getPlaceId().getId());
-				return mInclude ? contains : !contains;
-			}
-
-			@Override
-			public int hashCode() {
-				return Objects.hashCode(mInclude, mIds);
-			}
-
-			@Override
-			public boolean equals(Object obj) {
-				if (obj != null) {
-					if (this == obj) {
-						return true;
-					} else if (obj instanceof Filter) {
-						Filter o = (Filter) obj;
-						return mInclude == o.mInclude && Objects.equal(mIds, o.mIds);
-					}
-				}
-				return false;
-			}
-
-			@Override
-			public String toString() {
-				return MoreObjects.toStringHelper(this)
-						.add("filter", mInclude ? "include" : "exclude").add("ids", mIds)
-						.omitNullValues().toString();
+			protected boolean apply(Id id) {
+				return id == null || !ids().contains(id.getId());
 			}
 		}
 	}
 
 	/**
-	 * All address components in separate properties. For each property the intention is to have a
-	 * full name, e.g. "New York", and an abbreviated name, e.g. "NY". Though note that as of May
-	 * 2013, Google Places data often provides the same value for both properties. Typically this is
-	 * the full name, though for countries and states/provinces it is often the abbreviated name.
-	 * Properties will be null when the value is not available.
+	 * Search {@link Params#placeFilter() filter} on place IDs.
+	 * 
+	 * @since 3.0.0
 	 */
-	public static class Address {
-		private String mCountry;
-		private String mCountryAbbr;
-		private String mAdminL1;
-		private String mAdminL1Abbr;
-		private String mAdminL2;
-		private String mAdminL2Abbr;
-		private String mLocality;
-		private String mLocalityAbbr;
-		private String mSublocality;
-		private String mSublocalityAbbr;
-		private String mPostalCode;
-		private String mPostalCodeAbbr;
-		private String mPostalTown;
-		private String mPostalTownAbbr;
-		private String mRoute;
-		private String mRouteAbbr;
-		private String mStreetNum;
-		private String mStreetNumAbbr;
-		private int mHash;
+	@Modifiable
+	@Style(typeModifiable = "Place*", create = "new", get = "*", set = "*")
+	public static abstract class IdFilter extends Id.Filter implements Predicate<Place> {
+		IdFilter() {
+		}
+
+		/**
+		 * Mutable instance where values can be set.
+		 */
+		public static PlaceIdFilter create() {
+			return new PlaceIdFilter();
+		}
+
+		@Override
+		public boolean apply(Place place) {
+			return apply(place.getPlaceId());
+		}
+	}
+
+	/**
+	 * All address components in separate properties. Each property has a full name, e.g.
+	 * "New York", and when applicable an abbreviated name, e.g. "NY". Properties will be null when
+	 * the value is not available.
+	 */
+	@Immutable
+	public static abstract class Address {
+		Address() {
+		}
+
+		@Nullable
+		public abstract String getCountry();
+
+		@Nullable
+		public abstract String getCountryAbbr();
+
+		/**
+		 * State or province.
+		 */
+		@Nullable
+		public abstract String getAdminAreaL1();
+
+		@Nullable
+		public abstract String getAdminAreaL1Abbr();
+
+		/**
+		 * County or region.
+		 */
+		@Nullable
+		public abstract String getAdminAreaL2();
+
+		@Nullable
+		public abstract String getAdminAreaL2Abbr();
+
+		@Nullable
+		public abstract String getAdminAreaL3();
+
+		@Nullable
+		public abstract String getAdminAreaL3Abbr();
+
+		@Nullable
+		public abstract String getAdminAreaL4();
+
+		@Nullable
+		public abstract String getAdminAreaL4Abbr();
+
+		@Nullable
+		public abstract String getAdminAreaL5();
+
+		@Nullable
+		public abstract String getAdminAreaL5Abbr();
+
+		/**
+		 * City.
+		 */
+		@Nullable
+		public abstract String getLocality();
+
+		@Nullable
+		public abstract String getLocalityAbbr();
+
+		/**
+		 * City district.
+		 */
+		@Nullable
+		public abstract String getSublocality();
+
+		@Nullable
+		public abstract String getSublocalityAbbr();
+
+		@Nullable
+		public abstract String getSublocalityL1();
+
+		@Nullable
+		public abstract String getSublocalityL1Abbr();
+
+		@Nullable
+		public abstract String getSublocalityL2();
+
+		@Nullable
+		public abstract String getSublocalityL2Abbr();
+
+		@Nullable
+		public abstract String getSublocalityL3();
+
+		@Nullable
+		public abstract String getSublocalityL3Abbr();
+
+		@Nullable
+		public abstract String getSublocalityL4();
+
+		@Nullable
+		public abstract String getSublocalityL4Abbr();
+
+		@Nullable
+		public abstract String getSublocalityL5();
+
+		@Nullable
+		public abstract String getSublocalityL5Abbr();
+
+		@Nullable
+		public abstract String getNeighborhood();
+
+		@Nullable
+		public abstract String getNeighborhoodAbbr();
+
+		@Nullable
+		public abstract String getPostalCode();
+
+		@Nullable
+		public abstract String getPostalCodeAbbr();
+
+		@Nullable
+		public abstract String getPostalTown();
+
+		@Nullable
+		public abstract String getPostalTownAbbr();
+
+		/**
+		 * Street.
+		 */
+		@Nullable
+		public abstract String getRoute();
+
+		@Nullable
+		public abstract String getRouteAbbr();
+
+		@Nullable
+		public abstract String getPremise();
+
+		@Nullable
+		public abstract String getPremiseAbbr();
+
+		@Nullable
+		public abstract String getStreetNumber();
+
+		@Nullable
+		public abstract String getStreetNumberAbbr();
 
 		/**
 		 * Read fields from an address components array.
 		 */
-		private Address(JsonReader in) throws IOException {
+		static Address from(JsonReader in) throws IOException {
+			ImmutableAddress.Builder b = ImmutableAddress.builder();
 			in.beginArray();
 			while (in.hasNext()) {
+				String type = null;
 				String longName = null;
 				String shortName = null;
-				Type type = null;
 
 				in.beginObject();
 				while (in.hasNext()) {
-					switch (Key.get(in.nextName())) {
-					case long_name:
-						longName = in.nextString();
-						break;
-					case short_name:
-						shortName = in.nextString();
-						break;
-					case types:
+					switch (in.nextName()) {
+					case "types":
 						in.beginArray();
 						while (in.hasNext()) {
-							if (type == null) { // only use the first match, ignore "political"
-								type = Type.get(in.nextString());
+							if (type == null) { // only use the first match
+								type = in.nextString();
 							} else {
 								in.skipValue();
 							}
 						}
 						in.endArray();
+						break;
+					case "long_name":
+						longName = in.nextString();
+						break;
+					case "short_name":
+						shortName = in.nextString();
 						break;
 					default:
 						in.skipValue();
@@ -853,303 +730,109 @@ public class Place {
 
 				if (type != null) {
 					switch (type) {
-					case country:
-						mCountry = longName;
-						mCountryAbbr = shortName;
+					case "country":
+						b.country(longName).countryAbbr(shortName);
 						break;
-					case administrative_area_level_1:
-						mAdminL1 = longName;
-						mAdminL1Abbr = shortName;
+					case "administrative_area_level_1":
+						b.adminAreaL1(longName).adminAreaL1Abbr(shortName);
 						break;
-					case administrative_area_level_2:
-						mAdminL2 = longName;
-						mAdminL2Abbr = shortName;
+					case "administrative_area_level_2":
+						b.adminAreaL2(longName).adminAreaL2Abbr(shortName);
 						break;
-					case locality:
-						mLocality = longName;
-						mLocalityAbbr = shortName;
+					case "administrative_area_level_3":
+						b.adminAreaL3(longName).adminAreaL3Abbr(shortName);
 						break;
-					case sublocality:
-						mSublocality = longName;
-						mSublocalityAbbr = shortName;
+					case "administrative_area_level_4":
+						b.adminAreaL4(longName).adminAreaL4Abbr(shortName);
 						break;
-					case postal_code:
-						mPostalCode = longName;
-						mPostalCodeAbbr = shortName;
+					case "administrative_area_level_5":
+						b.adminAreaL5(longName).adminAreaL5Abbr(shortName);
 						break;
-					case postal_town:
-						mPostalTown = longName;
-						mPostalTownAbbr = shortName;
+					case "locality":
+						b.locality(longName).localityAbbr(shortName);
 						break;
-					case route:
-						mRoute = longName;
-						mRouteAbbr = shortName;
+					case "sublocality":
+						b.sublocality(longName).sublocalityAbbr(shortName);
 						break;
-					case street_number:
-						mStreetNum = longName;
-						mStreetNumAbbr = shortName;
+					case "sublocality_level_1":
+						b.sublocalityL1(longName).sublocalityL1Abbr(shortName);
+						break;
+					case "sublocality_level_2":
+						b.sublocalityL2(longName).sublocalityL2Abbr(shortName);
+						break;
+					case "sublocality_level_3":
+						b.sublocalityL3(longName).sublocalityL3Abbr(shortName);
+						break;
+					case "sublocality_level_4":
+						b.sublocalityL4(longName).sublocalityL4Abbr(shortName);
+						break;
+					case "sublocality_level_5":
+						b.sublocalityL5(longName).sublocalityL5Abbr(shortName);
+						break;
+					case "neighborhood":
+						b.neighborhood(longName).neighborhoodAbbr(shortName);
+						break;
+					case "postal_code":
+						b.postalCode(longName).postalCodeAbbr(shortName);
+						break;
+					case "postal_town":
+						b.postalTown(longName).postalTownAbbr(shortName);
+						break;
+					case "route":
+						b.route(longName).routeAbbr(shortName);
+						break;
+					case "premise":
+						b.premise(longName).premiseAbbr(shortName);
+						break;
+					case "street_number":
+						b.streetNumber(longName).streetNumberAbbr(shortName);
 						break;
 					}
 				}
 			}
 			in.endArray();
-		}
-
-		/**
-		 * Types of address components that are currently supported.
-		 */
-		private enum Type {
-			country, administrative_area_level_1, administrative_area_level_2, locality,
-			sublocality, postal_code, postal_town, route, street_number;
-
-			/**
-			 * Get the matching Type or null if one can't be found.
-			 */
-			private static Type get(String type) {
-				try {
-					return Type.valueOf(type);
-				} catch (IllegalArgumentException e) {
-					return null;
-				}
-			}
-		}
-
-		public String getCountry() {
-			return mCountry;
-		}
-
-		public String getCountryAbbr() {
-			return mCountryAbbr;
-		}
-
-		/**
-		 * State or province.
-		 */
-		public String getAdminAreaL1() {
-			return mAdminL1;
-		}
-
-		public String getAdminAreaL1Abbr() {
-			return mAdminL1Abbr;
-		}
-
-		/**
-		 * County or region.
-		 */
-		public String getAdminAreaL2() {
-			return mAdminL2;
-		}
-
-		public String getAdminAreaL2Abbr() {
-			return mAdminL2Abbr;
-		}
-
-		/**
-		 * City.
-		 */
-		public String getLocality() {
-			return mLocality;
-		}
-
-		public String getLocalityAbbr() {
-			return mLocalityAbbr;
-		}
-
-		/**
-		 * City district.
-		 */
-		public String getSublocality() {
-			return mSublocality;
-		}
-
-		public String getSublocalityAbbr() {
-			return mSublocalityAbbr;
-		}
-
-		public String getPostalCode() {
-			return mPostalCode;
-		}
-
-		public String getPostalCodeAbbr() {
-			return mPostalCodeAbbr;
-		}
-
-		public String getPostalTown() {
-			return mPostalTown;
-		}
-
-		public String getPostalTownAbbr() {
-			return mPostalTownAbbr;
-		}
-
-		/**
-		 * Street.
-		 */
-		public String getRoute() {
-			return mRoute;
-		}
-
-		public String getRouteAbbr() {
-			return mRouteAbbr;
-		}
-
-		public String getStreetNumber() {
-			return mStreetNum;
-		}
-
-		public String getStreetNumberAbbr() {
-			return mStreetNumAbbr;
-		}
-
-		@Override
-		public int hashCode() {
-			if (mHash == 0) {
-				mHash = Objects.hashCode(mCountry, mCountryAbbr, mAdminL1, mAdminL1Abbr, mAdminL2,
-						mAdminL2Abbr, mLocality, mLocalityAbbr, mSublocality, mSublocalityAbbr,
-						mPostalCode, mPostalCodeAbbr, mPostalTown, mPostalTownAbbr, mRoute,
-						mRouteAbbr, mStreetNum, mStreetNumAbbr);
-			}
-			return mHash;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (obj != null) {
-				if (this == obj) {
-					return true;
-				} else if (obj instanceof Address) {
-					Address o = (Address) obj;
-					return Objects.equal(mCountry, o.mCountry)
-							&& Objects.equal(mCountryAbbr, o.mCountryAbbr)
-							&& Objects.equal(mAdminL1, o.mAdminL1)
-							&& Objects.equal(mAdminL1Abbr, o.mAdminL1Abbr)
-							&& Objects.equal(mAdminL2, o.mAdminL2)
-							&& Objects.equal(mAdminL2Abbr, o.mAdminL2Abbr)
-							&& Objects.equal(mLocality, o.mLocality)
-							&& Objects.equal(mLocalityAbbr, o.mLocalityAbbr)
-							&& Objects.equal(mSublocality, o.mSublocality)
-							&& Objects.equal(mSublocalityAbbr, o.mSublocalityAbbr)
-							&& Objects.equal(mPostalCode, o.mPostalCode)
-							&& Objects.equal(mPostalCodeAbbr, o.mPostalCodeAbbr)
-							&& Objects.equal(mPostalTown, o.mPostalTown)
-							&& Objects.equal(mPostalTownAbbr, o.mPostalTownAbbr)
-							&& Objects.equal(mRoute, o.mRoute)
-							&& Objects.equal(mRouteAbbr, o.mRouteAbbr)
-							&& Objects.equal(mStreetNum, o.mStreetNum)
-							&& Objects.equal(mStreetNumAbbr, o.mStreetNumAbbr);
-				}
-			}
-			return false;
-		}
-
-		@Override
-		public String toString() {
-			return MoreObjects.toStringHelper(this).add("country", mCountry)
-					.add("countryAbbr", mCountryAbbr).add("adminL1", mAdminL1)
-					.add("adminL1Abbr", mAdminL1Abbr).add("adminL2", mAdminL2)
-					.add("adminL2Abbr", mAdminL2Abbr).add("locality", mLocality)
-					.add("localityAbbr", mLocalityAbbr).add("sublocality", mSublocality)
-					.add("sublocalityAbbr", mSublocalityAbbr).add("postalCode", mPostalCode)
-					.add("postalCodeAbbr", mPostalCodeAbbr).add("postalTown", mPostalTown)
-					.add("postalTownAbbr", mPostalTownAbbr).add("route", mRoute)
-					.add("routeAbbr", mRouteAbbr).add("streetNum", mStreetNum)
-					.add("streetNumAbbr", mStreetNumAbbr).omitNullValues().toString();
+			return b.build();
 		}
 	}
 
 	/**
 	 * Comments and ratings from a Google user.
 	 */
-	public static class Review {
-		/** Maximum number of aspects that will be returned. */
-		private static final int MAX_ASPECTS = 3;
-
-		private String mAuthorName;
-		private String mAuthorUrl;
-		private long mTime;
-		private List<Aspect> mAspects;
-		private int mRating;
-		private String mLanguage;
-		private String mText;
-		private int mHash;
-
-		/**
-		 * Read fields from a review object.
-		 */
-		private Review(JsonReader in) throws IOException {
-			in.beginObject();
-			while (in.hasNext()) {
-				switch (Key.get(in.nextName())) {
-				case author_name:
-					mAuthorName = in.nextString();
-					break;
-				case author_url:
-					mAuthorUrl = in.nextString();
-					break;
-				case time:
-					mTime = in.nextLong();
-					break;
-				case aspects:
-					in.beginArray();
-					while (in.hasNext()) {
-						if (mAspects == null) {
-							mAspects = new ArrayList<Aspect>(MAX_ASPECTS);
-						}
-						mAspects.add(new Aspect(in));
-					}
-					in.endArray();
-					break;
-				case rating:
-					mRating = in.nextInt();
-					break;
-				case language:
-					mLanguage = in.nextString();
-					break;
-				case text:
-					mText = in.nextString();
-					break;
-				default:
-					in.skipValue();
-				}
-			}
-			in.endObject();
+	@Immutable
+	public static abstract class Review {
+		Review() {
 		}
 
-		public String getAuthorName() {
-			return mAuthorName;
-		}
+		@Nullable
+		public abstract String getAuthorName();
 
 		/**
 		 * Google+ profile.
 		 */
-		public String getAuthorUrl() {
-			return mAuthorUrl;
-		}
+		@Nullable
+		public abstract String getAuthorUrl();
 
 		/**
 		 * When the review was submitted, in epoch seconds.
 		 */
+		@Default
 		public long getTime() {
-			return mTime;
+			return 0L;
 		}
 
 		/**
 		 * Ratings for different attributes of the place. The first element is the primary aspect.
 		 */
-		public List<Aspect> getAspects() {
-			if (mAspects != null && !(mAspects instanceof ImmutableList)) {
-				mAspects = ImmutableList.copyOf(mAspects);
-			}
-			return mAspects;
-		}
+		public abstract List<Aspect> getAspects();
 
 		/**
 		 * From 1 to 5, the user's overall rating. Default value: 0.
 		 * 
 		 * @since 1.2.0
 		 */
+		@Default
 		public int getRating() {
-			return mRating;
+			return 0;
 		}
 
 		/**
@@ -1158,119 +841,97 @@ public class Place {
 		 * 
 		 * @since 1.2.0
 		 */
-		public String getLanguage() {
-			return mLanguage;
-		}
+		@Nullable
+		public abstract String getLanguage();
 
 		/**
 		 * Review comments, which can contain HTML character and entity references.
 		 */
-		public String getText() {
-			return mText;
-		}
+		@Nullable
+		public abstract String getText();
 
-		@Override
-		public int hashCode() {
-			if (mHash == 0) {
-				mHash = Objects.hashCode(mAuthorName, mAuthorUrl, mTime, mAspects, mRating,
-						mLanguage, mText);
-			}
-			return mHash;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (obj != null) {
-				if (this == obj) {
-					return true;
-				} else if (obj instanceof Review) {
-					Review o = (Review) obj;
-					return Objects.equal(mAuthorName, o.mAuthorName)
-							&& Objects.equal(mAuthorUrl, o.mAuthorUrl) && mTime == o.mTime
-							&& Objects.equal(mAspects, o.mAspects) && mRating == o.mRating
-							&& Objects.equal(mLanguage, o.mLanguage)
-							&& Objects.equal(mText, o.mText);
+		/**
+		 * Read fields from a review object.
+		 */
+		static Review from(JsonReader in, ImmutableReview.Builder review,
+				ImmutableAspect.Builder aspect) throws IOException {
+			in.beginObject();
+			while (in.hasNext()) {
+				switch (in.nextName()) {
+				case "author_name":
+					review.authorName(in.nextString());
+					break;
+				case "author_url":
+					review.authorUrl(in.nextString());
+					break;
+				case "time":
+					review.time(in.nextLong());
+					break;
+				case "aspects":
+					in.beginArray();
+					while (in.hasNext()) {
+						review.addAspects(Aspect.from(in, aspect.clear()));
+					}
+					in.endArray();
+					break;
+				case "rating":
+					review.rating(in.nextInt());
+					break;
+				case "language":
+					review.language(in.nextString());
+					break;
+				case "text":
+					review.text(in.nextString());
+					break;
+				default:
+					in.skipValue();
 				}
 			}
-			return false;
-		}
-
-		@Override
-		public String toString() {
-			return MoreObjects.toStringHelper(this).add("authorName", mAuthorName)
-					.add("authorUrl", mAuthorUrl).add("time", mTime)
-					.add("aspects", mAspects != null ? mAspects.size() : null)
-					.add("rating", mRating != 0 ? mRating : null).add("language", mLanguage)
-					.add("text", mText).omitNullValues().toString();
+			in.endObject();
+			return review.build();
 		}
 
 		/**
 		 * Rating for one attribute of a place.
 		 */
-		public static class Aspect {
-			private String mType;
-			private int mRating;
-			private int mHash;
+		@Immutable
+		public static abstract class Aspect {
+			Aspect() {
+			}
+
+			/**
+			 * The aspect that was rated, e.g. atmosphere, service, food, overall, etc.
+			 */
+			@Nullable
+			public abstract String getType();
+
+			/**
+			 * From 0 to 3.
+			 */
+			@Default
+			public int getRating() {
+				return 0;
+			}
 
 			/**
 			 * Read fields from an aspect object.
 			 */
-			private Aspect(JsonReader in) throws IOException {
+			static Aspect from(JsonReader in, ImmutableAspect.Builder b) throws IOException {
 				in.beginObject();
 				while (in.hasNext()) {
-					switch (Key.get(in.nextName())) {
-					case type:
-						mType = in.nextString();
+					switch (in.nextName()) {
+					case "type":
+						b.type(in.nextString());
 						break;
-					case rating:
-						mRating = in.nextInt();
+					case "rating":
+						b.rating(in.nextInt());
 						break;
 					default:
 						in.skipValue();
 					}
 				}
 				in.endObject();
-			}
-
-			/**
-			 * The aspect that was rated, e.g. atmosphere, service, food, overall, etc.
-			 */
-			public String getType() {
-				return mType;
-			}
-
-			/**
-			 * From 0 to 3.
-			 */
-			public int getRating() {
-				return mRating;
-			}
-
-			@Override
-			public int hashCode() {
-				if (mHash == 0) {
-					mHash = Objects.hashCode(mType, mRating);
-				}
-				return mHash;
-			}
-
-			@Override
-			public boolean equals(Object obj) {
-				if (obj != null) {
-					if (this == obj) {
-						return true;
-					} else if (obj instanceof Aspect) {
-						Aspect o = (Aspect) obj;
-						return Objects.equal(mType, o.mType) && mRating == o.mRating;
-					}
-				}
-				return false;
-			}
-
-			@Override
-			public String toString() {
-				return MoreObjects.toStringHelper(this).add("type", mType).add("rating", mRating)
-						.omitNullValues().toString();
+				return b.build();
 			}
 		}
 	}
@@ -1278,91 +939,37 @@ public class Place {
 	/**
 	 * Opening and closing times for a day (or span of days) on which a place is open.
 	 */
-	public static class OpeningHours {
-		private DayOfWeek mOpenDay;
-		private int mOpenTime = -1;
-		private DayOfWeek mCloseDay;
-		private int mCloseTime = -1;
-		private int mHash;
-
-		/**
-		 * Read fields from a period object.
-		 */
-		private OpeningHours(JsonReader in) throws IOException {
-			in.beginObject();
-			while (in.hasNext()) {
-				switch (Key.get(in.nextName())) {
-				case open:
-					in.beginObject();
-					while (in.hasNext()) {
-						switch (Key.get(in.nextName())) {
-						case day:
-							mOpenDay = day(in.nextInt());
-							break;
-						case time:
-							mOpenTime = Integer.parseInt(in.nextString());
-							break;
-						default:
-							in.skipValue();
-						}
-					}
-					in.endObject();
-					break;
-				case close:
-					in.beginObject();
-					while (in.hasNext()) {
-						switch (Key.get(in.nextName())) {
-						case day:
-							mCloseDay = day(in.nextInt());
-							break;
-						case time:
-							mCloseTime = Integer.parseInt(in.nextString());
-							break;
-						default:
-							in.skipValue();
-						}
-					}
-					in.endObject();
-					break;
-				default:
-					in.skipValue();
-				}
-			}
-			in.endObject();
+	@Immutable
+	public static abstract class OpeningHours {
+		OpeningHours() {
 		}
 
-		/**
-		 * Get the DayOfWeek for the day number, where 0 == Sunday.
-		 */
-		private DayOfWeek day(int day) {
-			return DayOfWeek.values()[Maths.rollover(day - 1, 0, 6)]; // DayOfWeek starts on Monday
-		}
-
-		public DayOfWeek getOpenDay() {
-			return mOpenDay;
-		}
+		@Nullable
+		public abstract DayOfWeek getOpenDay();
 
 		/**
 		 * 0-2359. Default value: -1.
 		 * 
 		 * @since 2.3.0
 		 */
+		@Default
 		public int getOpenTime() {
-			return mOpenTime;
+			return -1;
 		}
 
 		/**
 		 * 0-23. Default value: -1.
 		 */
 		public int getOpenHour() {
-			return mOpenTime >= 0 ? mOpenTime / 100 : mOpenTime;
+			int time = getOpenTime();
+			return time >= 0 ? time / 100 : time;
 		}
 
 		/**
 		 * 0-59. Default value: -1.
 		 */
 		public int getOpenMinute() {
-			return mOpenTime % 100;
+			return getOpenTime() % 100;
 		}
 
 		/**
@@ -1371,34 +978,36 @@ public class Place {
 		 * @since 2.3.0
 		 */
 		public int getOpenTimeMillis() {
-			return mOpenTime >= 0 ? millis(getOpenHour(), getOpenMinute()) : mOpenTime;
+			int time = getOpenTime();
+			return time >= 0 ? millis(getOpenHour(), getOpenMinute()) : time;
 		}
 
-		public DayOfWeek getCloseDay() {
-			return mCloseDay;
-		}
+		@Nullable
+		public abstract DayOfWeek getCloseDay();
 
 		/**
 		 * 0-2359. Default value: -1.
 		 * 
 		 * @since 2.3.0
 		 */
+		@Default
 		public int getCloseTime() {
-			return mCloseTime;
+			return -1;
 		}
 
 		/**
 		 * 0-23. Default value: -1.
 		 */
 		public int getCloseHour() {
-			return mCloseTime >= 0 ? mCloseTime / 100 : mCloseTime;
+			int time = getCloseTime();
+			return time >= 0 ? time / 100 : time;
 		}
 
 		/**
 		 * 0-59. Default value: -1.
 		 */
 		public int getCloseMinute() {
-			return mCloseTime % 100;
+			return getCloseTime() % 100;
 		}
 
 		/**
@@ -1407,7 +1016,8 @@ public class Place {
 		 * @since 2.3.0
 		 */
 		public int getCloseTimeMillis() {
-			return mCloseTime >= 0 ? millis(getCloseHour(), getCloseMinute()) : mCloseTime;
+			int time = getCloseTime();
+			return time >= 0 ? millis(getCloseHour(), getCloseMinute()) : time;
 		}
 
 		/**
@@ -1417,129 +1027,61 @@ public class Place {
 			return (hours * 60 + minutes) * 60 * 1000 - TimeZone.getDefault().getOffset(0L);
 		}
 
-		@Override
-		public int hashCode() {
-			if (mHash == 0) {
-				mHash = Objects.hashCode(mOpenDay, mOpenTime, mCloseDay, mCloseTime);
-			}
-			return mHash;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (obj != null) {
-				if (this == obj) {
-					return true;
-				} else if (obj instanceof OpeningHours) {
-					OpeningHours o = (OpeningHours) obj;
-					return mOpenDay == o.mOpenDay && mOpenTime == o.mOpenTime
-							&& mCloseDay == o.mCloseDay && mCloseTime == o.mCloseTime;
-				}
-			}
-			return false;
-		}
-
-		@Override
-		public String toString() {
-			return MoreObjects.toStringHelper(this).add("openDay", mOpenDay)
-					.add("openTime", mOpenTime).add("closeDay", mCloseDay)
-					.add("closeTime", mCloseTime).omitNullValues().toString();
-		}
-	}
-
-	/**
-	 * Current event happening at a place.
-	 * 
-	 * @deprecated the Places API no longer returns events
-	 */
-	@Deprecated
-	public static class Event {
-		private String mId;
-		private long mTime;
-		private String mSummary;
-		private String mUrl;
-		private int mHash;
-
 		/**
-		 * Read fields from an event object.
+		 * Read fields from a period object.
 		 */
-		private Event(JsonReader in) throws IOException {
+		static OpeningHours from(JsonReader in, ImmutableOpeningHours.Builder b)
+				throws IOException {
 			in.beginObject();
 			while (in.hasNext()) {
-				switch (Key.get(in.nextName())) {
-				case event_id:
-					mId = in.nextString();
+				switch (in.nextName()) {
+				case "open":
+					in.beginObject();
+					while (in.hasNext()) {
+						switch (in.nextName()) {
+						case "day":
+							b.openDay(day(in.nextInt()));
+							break;
+						case "time":
+							b.openTime(Integer.parseInt(in.nextString()));
+							break;
+						default:
+							in.skipValue();
+						}
+					}
+					in.endObject();
 					break;
-				case start_time:
-					mTime = in.nextLong();
-					break;
-				case summary:
-					mSummary = in.nextString();
-					break;
-				case url:
-					mUrl = in.nextString();
+				case "close":
+					in.beginObject();
+					while (in.hasNext()) {
+						switch (in.nextName()) {
+						case "day":
+							b.closeDay(day(in.nextInt()));
+							break;
+						case "time":
+							b.closeTime(Integer.parseInt(in.nextString()));
+							break;
+						default:
+							in.skipValue();
+						}
+					}
+					in.endObject();
 					break;
 				default:
 					in.skipValue();
 				}
 			}
 			in.endObject();
+			return b.build();
 		}
+
+		private static final DayOfWeek[] sDaysOfWeek = DayOfWeek.values(); // clone only once
 
 		/**
-		 * Unique identifier for this event.
+		 * Get the DayOfWeek for the day number, where 0 == Sunday.
 		 */
-		public String getId() {
-			return mId;
-		}
-
-		/**
-		 * When the event starts, in epoch seconds.
-		 */
-		public long getStartTime() {
-			return mTime;
-		}
-
-		/**
-		 * Description of the event, which can contain HTML.
-		 */
-		public String getSummary() {
-			return mSummary;
-		}
-
-		/**
-		 * Web page with details about the event.
-		 */
-		public String getUrl() {
-			return mUrl;
-		}
-
-		@Override
-		public int hashCode() {
-			if (mHash == 0) {
-				mHash = Objects.hashCode(mId, mTime, mSummary, mUrl);
-			}
-			return mHash;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (obj != null) {
-				if (this == obj) {
-					return true;
-				} else if (obj instanceof Event) {
-					Event o = (Event) obj;
-					return Objects.equal(mId, o.mId) && mTime == o.mTime
-							&& Objects.equal(mSummary, o.mSummary) && Objects.equal(mUrl, o.mUrl);
-				}
-			}
-			return false;
-		}
-
-		@Override
-		public String toString() {
-			return MoreObjects.toStringHelper(this).add("id", mId).add("startTime", mTime)
-					.add("summary", mSummary).add("url", mUrl).omitNullValues().toString();
+		private static DayOfWeek day(int day) {
+			return sDaysOfWeek[Maths.rollover(day - 1, 0, 6)]; // DayOfWeek starts on Monday
 		}
 	}
 
@@ -1547,39 +1089,59 @@ public class Place {
 	 * Photo for a place that can be downloaded by supplying the {@link #getReference() reference}
 	 * to {@link Places#photo(Params)}.
 	 */
-	public static class Photo {
-		/** Maximum number of HTML attributions that are expected to be returned. */
-		private static final int MAX_ATTRIBS = 2; // usually 1
+	@Immutable
+	public static abstract class Photo {
+		Photo() {
+		}
 
-		private String mReference;
-		private int mWidth;
-		private int mHeight;
-		private List<String> mAttribs;
-		private int mHash;
+		/**
+		 * Token that can be used to download the photo by supplying it to
+		 * {@link Places#photo(Params)}.
+		 */
+		@Nullable
+		public abstract String getReference();
+
+		/**
+		 * Maximum available pixels.
+		 */
+		@Default
+		public int getWidth() {
+			return 0;
+		}
+
+		/**
+		 * Maximum available pixels.
+		 */
+		@Default
+		public int getHeight() {
+			return 0;
+		}
+
+		/**
+		 * Any attributions that must be displayed along with the photo.
+		 */
+		public abstract List<String> getHtmlAttributions();
 
 		/**
 		 * Read fields from a photo object.
 		 */
-		private Photo(JsonReader in) throws IOException {
+		static Photo from(JsonReader in, ImmutablePhoto.Builder b) throws IOException {
 			in.beginObject();
 			while (in.hasNext()) {
-				switch (Key.get(in.nextName())) {
-				case photo_reference:
-					mReference = in.nextString();
+				switch (in.nextName()) {
+				case "photo_reference":
+					b.reference(in.nextString());
 					break;
-				case width:
-					mWidth = in.nextInt();
+				case "width":
+					b.width(in.nextInt());
 					break;
-				case height:
-					mHeight = in.nextInt();
+				case "height":
+					b.height(in.nextInt());
 					break;
-				case html_attributions:
+				case "html_attributions":
 					in.beginArray();
 					while (in.hasNext()) {
-						if (mAttribs == null) {
-							mAttribs = new ArrayList<String>(MAX_ATTRIBS);
-						}
-						mAttribs.add(in.nextString());
+						b.addHtmlAttributions(in.nextString());
 					}
 					in.endArray();
 					break;
@@ -1588,83 +1150,51 @@ public class Place {
 				}
 			}
 			in.endObject();
-		}
-
-		/**
-		 * Token that can be used to download the photo by supplying it to
-		 * {@link Places#photo(Params)}.
-		 */
-		public String getReference() {
-			return mReference;
-		}
-
-		/**
-		 * Maximum available pixels.
-		 */
-		public int getWidth() {
-			return mWidth;
-		}
-
-		/**
-		 * Maximum available pixels.
-		 */
-		public int getHeight() {
-			return mHeight;
-		}
-
-		/**
-		 * Attributions that must be displayed along with the photo if non-null.
-		 */
-		public List<String> getHtmlAttributions() {
-			if (mAttribs != null && !(mAttribs instanceof ImmutableList)) {
-				mAttribs = ImmutableList.copyOf(mAttribs);
-			}
-			return mAttribs;
-		}
-
-		@Override
-		public int hashCode() {
-			if (mHash == 0) {
-				mHash = Objects.hashCode(mReference, mWidth, mHeight, mAttribs);
-			}
-			return mHash;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (obj != null) {
-				if (this == obj) {
-					return true;
-				} else if (obj instanceof Photo) {
-					Photo o = (Photo) obj;
-					return Objects.equal(mReference, o.mReference) && mWidth == o.mWidth
-							&& mHeight == o.mHeight && Objects.equal(mAttribs, o.mAttribs);
-				}
-			}
-			return false;
-		}
-
-		@Override
-		public String toString() {
-			return MoreObjects.toStringHelper(this).add("reference", mReference)
-					.add("width", mWidth).add("height", mHeight)
-					.add("htmlAttributions", mAttribs != null ? mAttribs.size() : null)
-					.omitNullValues().toString();
+			return b.build();
 		}
 	}
 
 	/**
 	 * Place or query that was returned from a {@link Places} autocomplete method.
 	 */
-	public static class Prediction extends Place {
-		/**
-		 * Technically, there could be more, though it appears only one is ever returned. Add an
-		 * extra slot, just in case.
-		 */
-		private static final int MAX_MATCHES = 2;
+	@Immutable
+	public static abstract class Prediction {
+		Prediction() {
+		}
 
-		private List<Substring> mTerms;
-		private List<Substring> mMatches;
+		/**
+		 * Unique identifier that can be used to retrieve {@link Places#details(Params) details}
+		 * about this place. Not available if this is a query prediction.
+		 */
+		@Nullable
+		public abstract Id getPlaceId();
+
+		/**
+		 * Name of this place or a query suggestion.
+		 * 
+		 * @since 3.0.0
+		 */
+		@Nullable
+		public abstract String getDescription();
+
+		/**
+		 * Features describing this place.
+		 * 
+		 * @see <a href="https://developers.google.com/places/supported_types" target="_blank">Place
+		 *      Types</a>
+		 */
+		public abstract List<String> getTypes();
+
+		/**
+		 * Sections in the {@link Place.Prediction#getDescription() description}.
+		 */
+		public abstract List<Substring> getTerms();
+
+		/**
+		 * Substrings in the {@link Place.Prediction#getDescription() description} that match the
+		 * search text, often used for highlighting.
+		 */
+		public abstract List<Substring> getMatchedSubstrings();
 
 		/**
 		 * Read fields from a prediction object.
@@ -1672,221 +1202,119 @@ public class Place {
 		 * @param fields
 		 *            to read or 0 if all fields should be read
 		 */
-		Prediction(JsonReader in, int fields) throws IOException {
+		static Prediction from(JsonReader in, int fields, ImmutablePrediction.Builder pred,
+				ImmutableId.Builder id, ImmutableSubstring.Builder s) throws IOException {
+			String description = null; // save for use in Substrings
 			in.beginObject();
 			while (in.hasNext()) {
-				Key key = Key.get(in.nextName());
-				if (key == UNKNOWN || fields != 0 && key.mField != null && !key.mField.in(fields)) {
-					in.skipValue(); // unknown field or caller doesn't want it
-					continue;
-				}
-
-				switch (key) {
-				case place_id:
-					mPlaceId = Id.id(mPlaceId, in.nextString());
+				switch (in.nextName()) {
+				case "place_id":
+					pred.placeId(id.id(in.nextString()).build());
 					break;
-				case id:
-					mId = in.nextString();
-					break;
-				case reference:
-					mReference = in.nextString();
-					break;
-				case description:
-					mName = in.nextString();
-					break;
-				case types:
-					types(in);
-					break;
-				case terms:
-					in.beginArray();
-					while (in.hasNext()) {
-						int offset = -1;
-						String value = null;
-						in.beginObject();
-						while (in.hasNext()) {
-							switch (Key.get(in.nextName())) {
-							case offset:
-								offset = in.nextInt();
-								break;
-							case value:
-								value = in.nextString();
-								break;
-							default:
-								in.skipValue();
-							}
-						}
-						in.endObject();
-
-						if (offset >= 0 && !Strings.isNullOrEmpty(value)) {
-							if (mTerms == null) {
-								mTerms = new ArrayList<Substring>();
-							}
-							mTerms.add(new Substring(offset, value.length(), value, mName));
-						}
+				case "description":
+					description = in.nextString();
+					if (wants(FIELD_DESCRIPTION, fields, null)) {
+						pred.description(description);
 					}
-					in.endArray();
 					break;
-				case matched_substrings:
-					in.beginArray();
-					while (in.hasNext()) {
-						int offset = -1;
-						int length = 0;
-						in.beginObject();
+				case "types":
+					if (wants(FIELD_TYPES, fields, in)) {
+						in.beginArray();
 						while (in.hasNext()) {
-							switch (Key.get(in.nextName())) {
-							case offset:
-								offset = in.nextInt();
-								break;
-							case length:
-								length = in.nextInt();
-								break;
-							default:
-								in.skipValue();
-							}
+							pred.addTypes(in.nextString());
 						}
-						in.endObject();
-
-						if (offset >= 0 && length > 0) {
-							int end = offset + length;
-							String value = mName != null && mName.length() >= end ? mName
-									.substring(offset, end) : null;
-							if (mMatches == null) {
-								mMatches = new ArrayList<Substring>(MAX_MATCHES);
-							}
-							mMatches.add(new Substring(offset, length, value, mName));
-						}
+						in.endArray();
 					}
-					in.endArray();
+					break;
+				case "terms":
+					if (wants(FIELD_TERMS, fields, in)) {
+						in.beginArray();
+						while (in.hasNext()) {
+							s.clear().superstring(description);
+							in.beginObject();
+							while (in.hasNext()) {
+								switch (in.nextName()) {
+								case "offset":
+									s.offset(in.nextInt());
+									break;
+								case "value":
+									s.value(in.nextString());
+									break;
+								default:
+									in.skipValue();
+								}
+							}
+							in.endObject();
+							pred.addTerms(s.build());
+						}
+						in.endArray();
+					}
+					break;
+				case "matched_substrings":
+					if (wants(FIELD_MATCHED_SUBSTRINGS, fields, in)) {
+						in.beginArray();
+						while (in.hasNext()) {
+							s.clear().superstring(description);
+							int offset = -1;
+							int length = 0;
+							in.beginObject();
+							while (in.hasNext()) {
+								switch (in.nextName()) {
+								case "offset":
+									offset = in.nextInt();
+									s.offset(offset);
+									break;
+								case "length":
+									length = in.nextInt();
+									s.length(length);
+									break;
+								default:
+									in.skipValue();
+								}
+							}
+							in.endObject();
+
+							if (offset >= 0 && length > 0) {
+								int end = offset + length;
+								if (description != null && description.length() >= end) {
+									s.value(description.substring(offset, end));
+								}
+							}
+							pred.addMatchedSubstrings(s.build());
+						}
+						in.endArray();
+					}
 					break;
 				default:
 					in.skipValue();
 				}
 			}
 			in.endObject();
+			return pred.build();
 		}
 
 		/**
-		 * Sections in the {@link Place#getName() name}.
+		 * Autocomplete {@link Params#predictionFilter() filter} on place IDs.
+		 * 
+		 * @since 3.0.0
 		 */
-		public List<Substring> getTerms() {
-			if (mTerms != null && !(mTerms instanceof ImmutableList)) {
-				mTerms = ImmutableList.copyOf(mTerms);
+		@Modifiable
+		@Style(typeModifiable = "Prediction*", create = "new", get = "*", set = "*")
+		public static abstract class IdFilter extends Id.Filter implements Predicate<Prediction> {
+			IdFilter() {
 			}
-			return mTerms;
-		}
 
-		/**
-		 * Substrings in the {@link Place#getName() name} that match the search text, often used for
-		 * highlighting.
-		 */
-		public List<Substring> getMatchedSubstrings() {
-			if (mMatches != null && !(mMatches instanceof ImmutableList)) {
-				mMatches = ImmutableList.copyOf(mMatches);
+			/**
+			 * Mutable instance where values can be set.
+			 */
+			public static PredictionIdFilter create() {
+				return new PredictionIdFilter();
 			}
-			return mMatches;
-		}
 
-		/**
-		 * True if they have the same {@link #getPlaceId() place ID} and
-		 * {@link #getMatchedSubstrings() matched substrings}.
-		 */
-		@Override
-		public boolean equals(Object obj) {
-			if (obj != null) {
-				if (this == obj) {
-					return true;
-				} else if (obj.getClass().equals(Place.class)) {
-					return super.equals(obj);
-				} else if (obj instanceof Prediction) {
-					Prediction o = (Prediction) obj;
-					return super.equals(o) && Objects.equal(mMatches, o.mMatches);
-				}
+			@Override
+			public boolean apply(Prediction pred) {
+				return apply(pred.getPlaceId());
 			}
-			return false;
-		}
-
-		@Override
-		public String toString() {
-			return helper().add("terms", mTerms != null ? mTerms.size() : null)
-					.add("matchedSubstrings", mMatches != null ? mMatches.size() : null).toString();
-		}
-	}
-
-	/**
-	 * Search or autocomplete {@link Params#filter(Predicate) filter} on place IDs. After creating
-	 * an instance, call {@link #include(String...) include} or {@link #exclude(String...) exclude}
-	 * to provide the IDs to filter.
-	 * 
-	 * @since 1.4.0
-	 * @deprecated use {@link Place.Id.Filter} instead
-	 */
-	@Deprecated
-	public static class IdPredicate implements Predicate<Place> {
-		/** Include or exclude the IDs. */
-		private boolean mInclude;
-		private final HashSet<String> mIds = new HashSet<String>();
-		private int mHash;
-
-		/**
-		 * Add the IDs to those that the place must match to be returned.
-		 */
-		public IdPredicate include(String... ids) {
-			if (!mInclude) {
-				reset().mInclude = true;
-			}
-			Collections.addAll(mIds, ids);
-			return this;
-		}
-
-		/**
-		 * Add the IDs to those that the place must not match to be returned.
-		 */
-		public IdPredicate exclude(String... ids) {
-			if (mInclude) {
-				reset().mInclude = false;
-			}
-			Collections.addAll(mIds, ids);
-			return this;
-		}
-
-		/**
-		 * Reset the list of IDs to match.
-		 */
-		public IdPredicate reset() {
-			mIds.clear();
-			return this;
-		}
-
-		@Override
-		public boolean apply(Place place) {
-			return mInclude ? mIds.contains(place.getId()) : !mIds.contains(place.getId());
-		}
-
-		@Override
-		public int hashCode() {
-			if (mHash == 0) {
-				mHash = Objects.hashCode(mInclude, mIds);
-			}
-			return mHash;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (obj != null) {
-				if (this == obj) {
-					return true;
-				} else if (obj instanceof IdPredicate) {
-					IdPredicate o = (IdPredicate) obj;
-					return mInclude == o.mInclude && Objects.equal(mIds, o.mIds);
-				}
-			}
-			return false;
-		}
-
-		@Override
-		public String toString() {
-			return Objects.toStringHelper(this).add("filter", mInclude ? "include" : "exclude")
-					.add("ids", mIds).omitNullValues().toString();
 		}
 	}
 }

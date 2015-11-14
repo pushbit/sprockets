@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2014 pushbit <pushbit@gmail.com>
+ * Copyright 2013-2015 pushbit <pushbit@gmail.com>
  * 
  * This file is part of Sprockets.
  * 
@@ -18,62 +18,51 @@
 package net.sf.sprockets.google;
 
 import static com.google.common.base.Preconditions.checkState;
-import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
-import static java.net.HttpURLConnection.HTTP_FORBIDDEN;
-import static java.net.HttpURLConnection.HTTP_OK;
-import static java.util.logging.Level.INFO;
-import static net.sf.sprockets.google.StreetView.Response.Status.INVALID_REQUEST;
-import static net.sf.sprockets.google.StreetView.Response.Status.OK;
-import static net.sf.sprockets.google.StreetView.Response.Status.OVER_QUERY_LIMIT;
-import static net.sf.sprockets.google.StreetView.Response.Status.UNKNOWN_ERROR;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URLEncoder;
-import java.util.logging.Logger;
+
+import javax.annotation.Nullable;
 
 import net.sf.sprockets.Sprockets;
 import net.sf.sprockets.net.HttpClient;
-import net.sf.sprockets.util.logging.Loggers;
 
 import org.apache.commons.configuration.Configuration;
+import org.immutables.value.Value.Default;
+import org.immutables.value.Value.Immutable;
+import org.immutables.value.Value.Modifiable;
+import org.immutables.value.Value.Style;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 
 /**
  * <p>
  * Method for downloading a <a href="https://developers.google.com/maps/documentation/streetview/"
- * target="_blank">Google Street View Image</a> by supplying a lat/long or location name. For
- * example:
+ * target="_blank">Google Street View Image</a> by supplying lat/long or location name. For example:
  * </p>
  * 
  * <pre>{@code
- * Response<InputStream> image = StreetView.image(new Params()
- *         .location("18 Rue Cujas, Paris, France").size(480, 360));
- * Status status = image.getStatus();
+ * Response<InputStream> image = StreetView.image(Params.create()
+ *         .location("18 Rue Cujas, Paris, France").width(480).height(360));
+ * 
+ * int status = image.getStatus();
  * InputStream in = image.getResult();
  * 
- * if (status == Status.OK && in != null) {
+ * if (status == HTTP_OK && in != null) {
  *     readImage(in);
  * } else {
- *     System.out.println("error: " + status);
+ *     System.out.println("error, HTTP status code: " + status);
  * }
  * 
- * if (in != null) {
- *     in.close();
- * }
+ * Closeables.closeQuietly(in);
  * }</pre>
  * 
  * @since 1.0.0
  */
 public class StreetView {
-	private static final Logger sLog = Loggers.get(StreetView.class);
-	private static final String URL = "https://maps.googleapis.com/maps/api/streetview?";
-
 	private StreetView() {
 	}
 
@@ -86,8 +75,8 @@ public class StreetView {
 	 * <ul>
 	 * <li>One of:
 	 * <ul>
-	 * <li>{@link Params#location(double, double) location lat/long}</li>
-	 * <li>{@link Params#location(String) location name}</li>
+	 * <li>{@link Params#latitude() latitude} and {@link Params#longitude() longitude}</li>
+	 * <li>{@link Params#location() location name}</li>
 	 * </ul>
 	 * </li>
 	 * </ul>
@@ -95,176 +84,156 @@ public class StreetView {
 	 * Optional params:
 	 * </p>
 	 * <ul>
-	 * <li>{@link Params#heading(int) heading}</li>
-	 * <li>{@link Params#pitch(int) pitch}</li>
-	 * <li>{@link Params#fov(int) fov}</li>
-	 * <li>{@link Params#size(int, int) size}</li>
+	 * <li>{@link Params#heading() heading}</li>
+	 * <li>{@link Params#pitch() pitch}</li>
+	 * <li>{@link Params#fov() fov}</li>
+	 * <li>{@link Params#width() width}</li>
+	 * <li>{@link Params#height() height}</li>
 	 * </ul>
 	 * 
 	 * @throws IOException
 	 *             if there is a problem communicating with the Google Street View Image API service
 	 */
 	public static Response<InputStream> image(Params params) throws IOException {
-		return new ImageResponse(HttpClient.openConnection(params.format()));
+		return ImageResponse.from(HttpClient.openConnection(params.format()));
 	}
 
 	/**
 	 * <p>
-	 * Parameters for the Google Street View Image API service. All methods return their instance so
-	 * that calls can be chained. For example:
+	 * Parameters for the Google Street View Image API service. Example usage:
 	 * </p>
 	 * 
 	 * <pre>{@code
-	 * Params p = new Params().location("empire state bldg")
-	 *         .pitch(30).fov(100).size(360, 480);
+	 * Params.create().location("empire state bldg")
+	 *         .pitch(30).fov(100).width(360).height(480);
 	 * }</pre>
 	 */
-	public static class Params {
-		private double mLat = Double.NEGATIVE_INFINITY;
-		private double mLong = Double.NEGATIVE_INFINITY;
-		private String mLocation;
-		private int mHeading = Integer.MIN_VALUE;
-		private int mPitch = Integer.MIN_VALUE;
-		private int mFov;
-		private int mWidth = 320;
-		private int mHeight = 320;
-
-		/**
-		 * Get the image closest to this latitude and longitude.
-		 */
-		public Params location(double latitude, double longitude) {
-			mLat = latitude;
-			mLong = longitude;
-			return this;
+	@Modifiable
+	@Style(typeModifiable = "StreetView*", create = "new", get = "*", set = "*")
+	public static abstract class Params {
+		Params() {
 		}
 
 		/**
-		 * Get the image closest to this location. May be an address, landmark, etc. If
-		 * {@link #location(double, double)} is called, this value will be ignored.
+		 * Mutable instance where values can be set.
+		 * 
+		 * @since 3.0.0
 		 */
-		public Params location(String location) {
-			mLocation = location;
-			return this;
+		public static StreetViewParams create() {
+			return new StreetViewParams();
 		}
 
 		/**
-		 * Get the image at this compass heading. By default, the camera points at the specified
-		 * location.
+		 * Used with {@link #longitude() longitude} to get the closest image.
+		 * 
+		 * @since 3.0.0
 		 */
-		public Params heading(int degrees) {
-			mHeading = degrees;
-			return this;
+		@Default
+		public double latitude() {
+			return Double.NEGATIVE_INFINITY;
 		}
 
 		/**
-		 * Angle the camera up or down from the default of 0 degrees (which is usually flat
-		 * horizontal).
+		 * Used with {@link #latitude() latitude} to get the closest image.
+		 * 
+		 * @since 3.0.0
 		 */
-		public Params pitch(int degrees) {
-			mPitch = degrees;
-			return this;
+		@Default
+		public double longitude() {
+			return Double.NEGATIVE_INFINITY;
 		}
 
 		/**
-		 * Adjust the field of view to zoom in (down to 10 degrees) or out (up to 120 degrees). The
-		 * default FOV is 90 degrees.
+		 * Address, landmark name, or other description of the place to get the closest image of. If
+		 * latitude and longitude are set, this value will be ignored.
 		 */
-		public Params fov(int degrees) {
-			mFov = degrees;
-			return this;
+		@Nullable
+		public abstract String location();
+
+		/**
+		 * Compass heading for the camera. By default, the camera points at the specified location.
+		 */
+		@Default
+		public int heading() {
+			return Integer.MIN_VALUE;
 		}
 
 		/**
-		 * Get an image with this many pixels. Valid sizes range from 16x16 to 640x640. The default
-		 * size is 320x320.
+		 * Camera angle which can be tilted up or down from the default of 0 degrees (which is
+		 * usually flat horizontal).
 		 */
-		public Params size(int width, int height) {
-			mWidth = width;
-			mHeight = height;
-			return this;
+		@Default
+		public int pitch() {
+			return Integer.MIN_VALUE;
+		}
+
+		/**
+		 * Field of view which can be zoomed in (down to 10 degrees) or out (up to 120 degrees).
+		 * Default value: 90.
+		 */
+		@Default
+		public int fov() {
+			return 0;
+		}
+
+		/**
+		 * Width of the image to get in pixels. May be from 16 to 640. Default value: 320.
+		 * 
+		 * @since 3.0.0
+		 */
+		@Default
+		public int width() {
+			return 320;
+		}
+
+		/**
+		 * Height of the image to get in pixels. May be from 16 to 640. Default value: 320.
+		 * 
+		 * @since 3.0.0
+		 */
+		@Default
+		public int height() {
+			return 320;
 		}
 
 		/**
 		 * Get a URL for this request.
 		 */
 		public String format() {
-			StringBuilder s = new StringBuilder(URL.length() + 256);
+			String url = "https://maps.googleapis.com/maps/api/streetview?";
+			StringBuilder s = new StringBuilder(url.length() + 256);
+			s.append(url);
 			Configuration config = Sprockets.getConfig();
-			s.append(URL);
 			if (config.getBoolean("google.street-view.use-api-key")) {
 				String key = config.getString("google.api-key");
 				checkState(!Strings.isNullOrEmpty(key), "google.api-key not set");
 				s.append("&key=").append(key);
 			}
-			if (mLat > Double.NEGATIVE_INFINITY && mLong > Double.NEGATIVE_INFINITY) {
-				s.append("&location=").append(mLat).append(',').append(mLong);
-			} else if (!Strings.isNullOrEmpty(mLocation)) {
+			double lat = latitude();
+			double lon = longitude();
+			String location = location();
+			if (lat > Double.NEGATIVE_INFINITY && lon > Double.NEGATIVE_INFINITY) {
+				s.append("&location=").append(lat).append(',').append(lon);
+			} else if (!Strings.isNullOrEmpty(location)) {
 				try {
-					s.append("&location=").append(URLEncoder.encode(mLocation, "UTF-8"));
+					s.append("&location=").append(URLEncoder.encode(location, "UTF-8"));
 				} catch (UnsupportedEncodingException e) {
 					throw new RuntimeException("UTF-8 encoding isn't supported?!", e);
 				}
 			}
-			if (mHeading > Integer.MIN_VALUE) {
-				s.append("&heading=").append(mHeading);
+			int heading = heading();
+			if (heading > Integer.MIN_VALUE) {
+				s.append("&heading=").append(heading);
 			}
-			if (mPitch > Integer.MIN_VALUE) {
-				s.append("&pitch=").append(mPitch);
+			int pitch = pitch();
+			if (pitch > Integer.MIN_VALUE) {
+				s.append("&pitch=").append(pitch);
 			}
-			if (mFov > 0) {
-				s.append("&fov=").append(mFov);
+			int fov = fov();
+			if (fov > 0) {
+				s.append("&fov=").append(fov);
 			}
-			return s.append("&size=").append(mWidth).append('x').append(mHeight).toString();
-		}
-
-		/**
-		 * Clear any set parameters so that this instance can be re-used for a new request.
-		 * 
-		 * @since 1.1.0
-		 */
-		public Params clear() {
-			mLat = Double.NEGATIVE_INFINITY;
-			mLong = Double.NEGATIVE_INFINITY;
-			mLocation = null;
-			mHeading = Integer.MIN_VALUE;
-			mPitch = Integer.MIN_VALUE;
-			mFov = 0;
-			mWidth = 320;
-			mHeight = 320;
-			return this;
-		}
-
-		@Override
-		public int hashCode() {
-			return Objects
-					.hashCode(mLat, mLong, mLocation, mHeading, mPitch, mFov, mWidth, mHeight);
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (obj != null) {
-				if (this == obj) {
-					return true;
-				} else if (obj instanceof Params) {
-					Params o = (Params) obj;
-					return mLat == o.mLat && mLong == o.mLong
-							&& Objects.equal(mLocation, o.mLocation) && mHeading == o.mHeading
-							&& mPitch == o.mPitch && mFov == o.mFov && mWidth == o.mWidth
-							&& mHeight == o.mHeight;
-				}
-			}
-			return false;
-		}
-
-		@Override
-		public String toString() {
-			boolean l = mLat != Double.NEGATIVE_INFINITY && mLong != Double.NEGATIVE_INFINITY;
-			return MoreObjects.toStringHelper(this)
-					.add("location", l ? mLat + "," + mLong : mLocation)
-					.add("heading", mHeading != Integer.MIN_VALUE ? mHeading : null)
-					.add("pitch", mPitch != Integer.MIN_VALUE ? mPitch : null)
-					.add("fov", mFov != 0 ? mFov : null).add("size", mWidth + "x" + mHeight)
-					.omitNullValues().toString();
+			return s.append("&size=").append(width()).append('x').append(height()).toString();
 		}
 	}
 
@@ -274,89 +243,36 @@ public class StreetView {
 	 * @param <T>
 	 *            type of result returned in the response
 	 */
-	public static class Response<T> {
-		/**
-		 * Indications of the success or failure of the request.
-		 */
-		public enum Status {
-			OK, OVER_QUERY_LIMIT, INVALID_REQUEST, UNKNOWN_ERROR
-		}
-
-		Status mStatus;
-		T mResult;
-		private int mHash;
-
-		private Response() {
+	public static abstract class Response<T> {
+		Response() {
 		}
 
 		/**
 		 * Indication of the success or failure of the request.
+		 * 
+		 * @return one of the {@link HttpURLConnection} HTTP_* constants or -1 if the response is
+		 *         not valid
 		 */
-		public Status getStatus() {
-			return mStatus;
-		}
+		public abstract int getStatus();
 
 		/**
 		 * Check the {@link StreetView} method signature for the specific type of result it returns.
-		 * Can be null if there was a problem with the request.
+		 * 
+		 * @return null if there was a problem with the request
 		 */
-		public T getResult() {
-			return mResult;
-		}
-
-		@Override
-		public int hashCode() {
-			if (mHash == 0) {
-				mHash = Objects.hashCode(mStatus, mResult);
-			}
-			return mHash;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (obj != null) {
-				if (this == obj) {
-					return true;
-				} else if (obj instanceof Response) {
-					Response<?> o = (Response<?>) obj;
-					return mStatus == o.mStatus && Objects.equal(mResult, o.mResult);
-				}
-			}
-			return false;
-		}
-
-		@Override
-		public String toString() {
-			return MoreObjects.toStringHelper(this).add("status", mStatus).add("result", mResult)
-					.omitNullValues().toString();
-		}
+		@Nullable
+		public abstract T getResult();
 	}
 
 	/**
 	 * Image bitstream for reading. Always {@link InputStream#close() close} the stream when
 	 * finished.
 	 */
-	private static class ImageResponse extends Response<InputStream> {
-		/**
-		 * Get the InputStream from the connection response.
-		 */
-		private ImageResponse(HttpURLConnection con) throws IOException {
-			switch (con.getResponseCode()) {
-			case HTTP_OK:
-				mStatus = OK;
-				mResult = con.getInputStream();
-				break;
-			case HTTP_BAD_REQUEST:
-				mStatus = INVALID_REQUEST;
-				break;
-			case HTTP_FORBIDDEN:
-				mStatus = OVER_QUERY_LIMIT;
-				mResult = con.getInputStream(); // "quota has been exceeded" image
-				break;
-			default:
-				mStatus = UNKNOWN_ERROR;
-				sLog.log(INFO, "Unexpected response code: {0}", con.getResponseCode());
-			}
+	@Immutable
+	static abstract class ImageResponse extends Response<InputStream> {
+		static ImageResponse from(HttpURLConnection con) throws IOException {
+			return ImmutableImageResponse.builder().status(con.getResponseCode())
+					.result(con.getInputStream()).build();
 		}
 	}
 }
