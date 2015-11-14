@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 pushbit <pushbit@gmail.com>
+ * Copyright 2014-2015 pushbit <pushbit@gmail.com>
  * 
  * This file is part of Sprockets.
  * 
@@ -30,9 +30,17 @@ public class Urls {
 	 * If the URL does not start with {@code http://} or {@code https://}, prepend {@code http://}.
 	 */
 	public static String addHttp(String url) {
-		if (!(url.startsWith("http://") || url.startsWith("https://"))) {
-			url = "http://" + url;
+		int i = 4;
+		if (!url.startsWith("http") || url.length() <= i) {
+			return http(url);
 		}
-		return url;
+		if (url.charAt(i) == 's') {
+			i++;
+		}
+		return url.startsWith("://", i) ? url : http(url);
+	}
+
+	private static String http(String url) {
+		return "http://" + url;
 	}
 }
