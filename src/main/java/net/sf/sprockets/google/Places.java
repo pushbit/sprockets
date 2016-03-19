@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 pushbit <pushbit@gmail.com>
+ * Copyright 2013-2016 pushbit <pushbit@gmail.com>
  * 
  * This file is part of Sprockets.
  * 
@@ -75,7 +75,7 @@ import com.google.gson.stream.JsonWriter;
  * <pre>{@code
  * Response<List<Place>> resp = Places.nearbySearch(Params.create()
  *         .latitude(51.500702).longitude(-0.124576).radius(1000)
- *         .addTypes("food").keyword("fish & chips").openNow(true),
+ *         .type("restaurant").keyword("fish & chips").openNow(true),
  *         FIELD_NAME | FIELD_VICINITY);
  * 
  * String status = resp.getStatus();
@@ -197,7 +197,7 @@ public class Places {
 	 * <li>{@link Params#radius() radius}</li>
 	 * <li>{@link Params#name() name}</li>
 	 * <li>{@link Params#keyword() keyword}</li>
-	 * <li>{@link Params#types() types}</li>
+	 * <li>{@link Params#type() type}</li>
 	 * <li>{@link Params#minPrice() minPrice}</li>
 	 * <li>{@link Params#maxPrice() maxPrice}</li>
 	 * <li>{@link Params#openNow() openNow}</li>
@@ -231,7 +231,7 @@ public class Places {
 	 * <li>{@link Params#radius() radius}</li>
 	 * <li>{@link Params#name() name}</li>
 	 * <li>{@link Params#keyword() keyword}</li>
-	 * <li>{@link Params#types() types}</li>
+	 * <li>{@link Params#type() type}</li>
 	 * <li>{@link Params#minPrice() minPrice}</li>
 	 * <li>{@link Params#maxPrice() maxPrice}</li>
 	 * <li>{@link Params#openNow() openNow}</li>
@@ -277,7 +277,7 @@ public class Places {
 	 * <li>{@link Params#latitude() latitude}</li>
 	 * <li>{@link Params#longitude() longitude}</li>
 	 * <li>{@link Params#radius() radius}</li>
-	 * <li>{@link Params#types() types}</li>
+	 * <li>{@link Params#type() type}</li>
 	 * <li>{@link Params#minPrice() minPrice}</li>
 	 * <li>{@link Params#maxPrice() maxPrice}</li>
 	 * <li>{@link Params#openNow() openNow}</li>
@@ -309,7 +309,7 @@ public class Places {
 	 * <li>{@link Params#latitude() latitude}</li>
 	 * <li>{@link Params#longitude() longitude}</li>
 	 * <li>{@link Params#radius() radius}</li>
-	 * <li>{@link Params#types() types}</li>
+	 * <li>{@link Params#type() type}</li>
 	 * <li>{@link Params#minPrice() minPrice}</li>
 	 * <li>{@link Params#maxPrice() maxPrice}</li>
 	 * <li>{@link Params#openNow() openNow}</li>
@@ -351,7 +351,7 @@ public class Places {
 	 * <ul>
 	 * <li>{@link Params#name() name}</li>
 	 * <li>{@link Params#keyword() keyword}</li>
-	 * <li>{@link Params#types() types}</li>
+	 * <li>{@link Params#type() type}</li>
 	 * </ul>
 	 * </li>
 	 * </ul>
@@ -363,6 +363,7 @@ public class Places {
 	 * <li>{@link Params#minPrice() minPrice}</li>
 	 * <li>{@link Params#maxPrice() maxPrice}</li>
 	 * <li>{@link Params#openNow() openNow}</li>
+	 * <li>{@link Params#language() language}</li>
 	 * </ul>
 	 * 
 	 * @throws IOException
@@ -390,9 +391,8 @@ public class Places {
 	 * <li>{@link Params#longitude() longitude}</li>
 	 * <li>{@link Params#radius() radius}</li>
 	 * <li>{@link Params#offset() offset}</li>
-	 * <li>{@link Params#types() types}
+	 * <li>{@link Params#type() type}
 	 * <ul>
-	 * <li>One of:</li>
 	 * <li>"geocode"</li>
 	 * <li>"address"</li>
 	 * <li>"establishment"</li>
@@ -430,9 +430,8 @@ public class Places {
 	 * <li>{@link Params#longitude() longitude}</li>
 	 * <li>{@link Params#radius() radius}</li>
 	 * <li>{@link Params#offset() offset}</li>
-	 * <li>{@link Params#types() types}
+	 * <li>{@link Params#type() type}
 	 * <ul>
-	 * <li>One of:</li>
 	 * <li>"geocode"</li>
 	 * <li>"address"</li>
 	 * <li>"establishment"</li>
@@ -844,7 +843,7 @@ public class Places {
 	 * 
 	 * <pre>{@code
 	 * Params.create().latitude(51.500702).longitude(-0.124576).radius(1000)
-	 *         .addTypes("food").keyword("fish & chips").openNow(true);
+	 *         .type("restaurant").keyword("fish & chips").openNow(true);
 	 * }</pre>
 	 */
 	@Modifiable
@@ -937,11 +936,23 @@ public class Places {
 		}
 
 		/**
+		 * Type of places to search for.
+		 * 
+		 * @see <a href="https://developers.google.com/places/supported_types" target="_blank">Place
+		 *      Types</a>
+		 * @since 3.1.0
+		 */
+		@Nullable
+		public abstract String type();
+
+		/**
 		 * Types of places to search for.
 		 * 
 		 * @see <a href="https://developers.google.com/places/supported_types" target="_blank">Place
 		 *      Types</a>
+		 * @deprecated use {@link #type()} instead
 		 */
+		@Deprecated
 		public abstract List<String> types();
 
 		/**
@@ -1000,7 +1011,7 @@ public class Places {
 		/**
 		 * Sort by distance from the specified location. When using this option,
 		 * {@link Params#radius() radius} is ignored and one or more of {@link Params#name() name},
-		 * {@link Params#keyword() keyword}, or {@link Params#types() types} is required.
+		 * {@link Params#keyword() keyword}, or {@link Params#type() type} is required.
 		 */
 		public static final String RANK_BY_DISTANCE = "distance";
 
@@ -1126,6 +1137,10 @@ public class Places {
 			int offset = offset();
 			if (offset > 0) {
 				s.append("&offset=").append(offset);
+			}
+			String type = type();
+			if (!Strings.isNullOrEmpty(type)) {
+				s.append("&type=").append(type);
 			}
 			List<String> types = types();
 			if (!types.isEmpty()) {
