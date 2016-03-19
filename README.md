@@ -18,7 +18,7 @@ Full support for Place Search, Details, Photos, Autocomplete, and Query Autocomp
 Places.textSearch(Params.create().query("pizza near willis tower")).getResult();
 ```
 
-More detailed searches can include lat/long with radius, specific types of places, keywords, price range, places that are open now, etc.  For each returned place, you can also retrieve its full details, reviews, and photos.
+More detailed searches can include lat/long with radius, a specific type of places, keywords, price range, places that are open now, etc.  For each returned place, you can also retrieve its full details, reviews, and photos.
 
 The Google Places API can return a lot of information about each place and most of the time you probably won't need every detail.  For maximum performance and minimum memory usage, you can specify which fields you want and limit the number of results.
 
@@ -58,7 +58,7 @@ Install
 <dependency>
 	<groupId>net.sf.sprockets</groupId>
 	<artifactId>sprockets</artifactId>
-	<version>3.0.0</version>
+	<version>3.1.0</version>
 </dependency>
 ```
 

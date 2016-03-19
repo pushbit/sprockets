@@ -1,3 +1,9 @@
+2016-03-19  3.1.0
+
+	* added google.Places.Params.type
+	* deprecated google.Places.Params.types
+	* added immutables.value.NamedMutable
+
 2015-11-14  3.0.0
 
 	Backwards incompatible changes:
