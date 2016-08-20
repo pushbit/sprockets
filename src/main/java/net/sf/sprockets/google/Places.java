@@ -1,16 +1,16 @@
 /*
  * Copyright 2013-2016 pushbit <pushbit@gmail.com>
- * 
+ *
  * This file is part of Sprockets.
- * 
+ *
  * Sprockets is free software: you can redistribute it and/or modify it under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * Sprockets is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public License along with Sprockets. If
  * not, see <http://www.gnu.org/licenses/>.
  */
@@ -38,15 +38,6 @@ import java.util.Locale;
 
 import javax.annotation.Nullable;
 
-import net.sf.sprockets.Sprockets;
-import net.sf.sprockets.google.Place.Id;
-import net.sf.sprockets.google.Place.Photo;
-import net.sf.sprockets.google.Place.Prediction;
-import net.sf.sprockets.lang.ImmutableSubstring;
-import net.sf.sprockets.net.HttpClient;
-import net.sf.sprockets.net.Urls;
-import net.sf.sprockets.util.concurrent.Interruptibles;
-
 import org.immutables.value.Value.Default;
 import org.immutables.value.Value.Immutable;
 import org.immutables.value.Value.Modifiable;
@@ -59,28 +50,38 @@ import com.google.common.io.Closeables;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
+import net.sf.sprockets.Sprockets;
+import net.sf.sprockets.google.Place.Id;
+import net.sf.sprockets.google.Place.Photo;
+import net.sf.sprockets.google.Place.Prediction;
+import net.sf.sprockets.lang.ImmutableSubstring;
+import net.sf.sprockets.net.HttpClient;
+import net.sf.sprockets.net.Urls;
+import net.sf.sprockets.util.concurrent.Interruptibles;
+
 /**
- * Methods for calling <a href="https://developers.google.com/places/webservice/"
- * target="_blank">Google Places API</a> services. All methods accept {@link Params Params} which
- * define the places to search for, the photo to download, or the place to add or delete. Most
- * search methods also have a version that allows you to specify the fields that should be populated
- * in the results, which can reduce execution time and memory allocation when you are not using all
- * of the available fields. {@link Params#maxResults() Params.maxResults} can be used to similar
- * effect when you will only use a limited number of results.
+ * Methods for calling
+ * <a href="https://developers.google.com/places/webservice/" target="_blank">Google Places API</a>
+ * services. All methods accept {@link Params Params} which define the places to search for, the
+ * photo to download, or the place to add or delete. Most search methods also have a version that
+ * allows you to specify the fields that should be populated in the results, which can reduce
+ * execution time and memory allocation when you are not using all of the available fields.
+ * {@link Params#maxResults() Params.maxResults} can be used to similar effect when you will only
+ * use a limited number of results.
  * <p>
  * Below is a simple example that prints the names and addresses of fish & chips shops that are
  * within 1 km of Big Ben in London and are currently open.
  * </p>
- * 
+ *
  * <pre>{@code
  * Response<List<Place>> resp = Places.nearbySearch(Params.create()
  *         .latitude(51.500702).longitude(-0.124576).radius(1000)
  *         .type("restaurant").keyword("fish & chips").openNow(true),
  *         FIELD_NAME | FIELD_VICINITY);
- * 
+ *
  * String status = resp.getStatus();
  * List<Place> places = resp.getResult();
- * 
+ *
  * if (STATUS_OK.equals(status)) {
  *     for (Place place : places) {
  *         System.out.println(place.getName() + " @ " + place.getVicinity());
@@ -93,22 +94,22 @@ import com.google.gson.stream.JsonWriter;
  * }</pre>
  */
 public class Places {
-	public static final String URL_NEARBY_SEARCH =
-			"https://maps.googleapis.com/maps/api/place/nearbysearch/json?";
-	public static final String URL_TEXT_SEARCH =
-			"https://maps.googleapis.com/maps/api/place/textsearch/json?";
-	public static final String URL_RADAR_SEARCH =
-			"https://maps.googleapis.com/maps/api/place/radarsearch/json?";
-	public static final String URL_AUTOCOMPLETE =
-			"https://maps.googleapis.com/maps/api/place/autocomplete/json?";
-	public static final String URL_QUERY_AUTOCOMPLETE =
-			"https://maps.googleapis.com/maps/api/place/queryautocomplete/json?";
-	public static final String URL_DETAILS =
-			"https://maps.googleapis.com/maps/api/place/details/json?";
+	public static final String URL_NEARBY_SEARCH
+			= "https://maps.googleapis.com/maps/api/place/nearbysearch/json?";
+	public static final String URL_TEXT_SEARCH
+			= "https://maps.googleapis.com/maps/api/place/textsearch/json?";
+	public static final String URL_RADAR_SEARCH
+			= "https://maps.googleapis.com/maps/api/place/radarsearch/json?";
+	public static final String URL_AUTOCOMPLETE
+			= "https://maps.googleapis.com/maps/api/place/autocomplete/json?";
+	public static final String URL_QUERY_AUTOCOMPLETE
+			= "https://maps.googleapis.com/maps/api/place/queryautocomplete/json?";
+	public static final String URL_DETAILS
+			= "https://maps.googleapis.com/maps/api/place/details/json?";
 	public static final String URL_PHOTO = "https://maps.googleapis.com/maps/api/place/photo?";
 	public static final String URL_ADD = "https://maps.googleapis.com/maps/api/place/add/json?";
-	public static final String URL_DELETE =
-			"https://maps.googleapis.com/maps/api/place/delete/json?";
+	public static final String URL_DELETE
+			= "https://maps.googleapis.com/maps/api/place/delete/json?";
 
 	/**
 	 * Only populate the {@link Place#getPlaceId() placeId}, {@link Place#getAltIds() altIds}, and
@@ -145,7 +146,7 @@ public class Places {
 
 	/**
 	 * Features describing the place.
-	 * 
+	 *
 	 * @see <a href="https://developers.google.com/places/supported_types" target="_blank">Place
 	 *      Types</a>
 	 */
@@ -158,8 +159,8 @@ public class Places {
 	public static final int FIELD_OPENING_HOURS = 1 << 12;
 
 	/**
-	 * Opening hours for each day of the week. e.g. ["Monday: 10:00 am – 6:00 pm", ...,
-	 * "Sunday: Closed"]
+	 * Opening hours for each day of the week. e.g. ["Monday: 10:00 am – 6:00 pm", ..., "Sunday:
+	 * Closed"]
 	 */
 	public static final int FIELD_FORMATTED_OPENING_HOURS = 1 << 13;
 
@@ -205,7 +206,7 @@ public class Places {
 	 * <li>{@link Params#rankBy() rankBy}</li>
 	 * <li>{@link Params#pageToken() pageToken}</li>
 	 * </ul>
-	 * 
+	 *
 	 * @throws IOException
 	 *             if there is a problem communicating with the Google Places API service
 	 * @see <a href="https://developers.google.com/places/web-service/search#PlaceSearchRequests"
@@ -249,7 +250,7 @@ public class Places {
 	 * <li>{@link #FIELD_TYPES}</li>
 	 * <li>{@link #FIELD_PHOTOS}</li>
 	 * </ul>
-	 * 
+	 *
 	 * @param fields
 	 *            FIELD_* bitmask of the fields to populate in the results
 	 * @throws IOException
@@ -284,7 +285,7 @@ public class Places {
 	 * <li>{@link Params#language() language}</li>
 	 * <li>{@link Params#pageToken() pageToken}</li>
 	 * </ul>
-	 * 
+	 *
 	 * @throws IOException
 	 *             if there is a problem communicating with the Google Places API service
 	 * @see <a href="https://developers.google.com/places/web-service/search#TextSearchRequests"
@@ -326,7 +327,7 @@ public class Places {
 	 * <li>{@link #FIELD_TYPES}</li>
 	 * <li>{@link #FIELD_PHOTOS}</li>
 	 * </ul>
-	 * 
+	 *
 	 * @param fields
 	 *            FIELD_* bitmask of the fields to populate in the results
 	 * @throws IOException
@@ -365,7 +366,7 @@ public class Places {
 	 * <li>{@link Params#openNow() openNow}</li>
 	 * <li>{@link Params#language() language}</li>
 	 * </ul>
-	 * 
+	 *
 	 * @throws IOException
 	 *             if there is a problem communicating with the Google Places API service
 	 * @see <a href="https://developers.google.com/places/web-service/search#RadarSearchRequests"
@@ -403,7 +404,7 @@ public class Places {
 	 * <li>{@link Params#countries() countries}</li>
 	 * <li>{@link Params#language() language}</li>
 	 * </ul>
-	 * 
+	 *
 	 * @throws IOException
 	 *             if there is a problem communicating with the Google Places API service
 	 * @see <a href=
@@ -451,7 +452,7 @@ public class Places {
 	 * <li>{@link #FIELD_TERMS}</li>
 	 * <li>{@link #FIELD_MATCHED_SUBSTRINGS}</li>
 	 * </ul>
-	 * 
+	 *
 	 * @param fields
 	 *            FIELD_* bitmask of the fields to populate in the results
 	 * @throws IOException
@@ -484,7 +485,7 @@ public class Places {
 	 * <li>{@link Params#offset() offset}</li>
 	 * <li>{@link Params#language() language}</li>
 	 * </ul>
-	 * 
+	 *
 	 * @throws IOException
 	 *             if there is a problem communicating with the Google Places API service
 	 * @see <a href=
@@ -522,7 +523,7 @@ public class Places {
 	 * <li>{@link #FIELD_TERMS}</li>
 	 * <li>{@link #FIELD_MATCHED_SUBSTRINGS}</li>
 	 * </ul>
-	 * 
+	 *
 	 * @param fields
 	 *            FIELD_* bitmask of the fields to populate in the results
 	 * @throws IOException
@@ -555,7 +556,7 @@ public class Places {
 	 * <ul>
 	 * <li>{@link Params#language() language}</li>
 	 * </ul>
-	 * 
+	 *
 	 * @throws IOException
 	 *             if there is a problem communicating with the Google Places API service
 	 * @see <a href="https://developers.google.com/places/web-service/details#PlaceDetailsRequests"
@@ -595,7 +596,7 @@ public class Places {
 	 * </ul>
 	 * </li>
 	 * </ul>
-	 * 
+	 *
 	 * @param fields
 	 *            FIELD_* bitmask of the fields to populate in the result
 	 * @throws IOException
@@ -635,7 +636,7 @@ public class Places {
 	 * <ul>
 	 * <li>{@link Params#etag() etag}</li>
 	 * </ul>
-	 * 
+	 *
 	 * @throws IOException
 	 *             if there is a problem communicating with the Google Places API service
 	 * @see <a href="https://developers.google.com/places/web-service/photos#place_photo_requests"
@@ -674,11 +675,11 @@ public class Places {
 	 * </li>
 	 * <li>{@link Place#getWebsite() website}</li>
 	 * </ul>
-	 * 
+	 *
 	 * @throws IOException
 	 *             if there is a problem communicating with the Google Places API service
-	 * @see <a href="https://developers.google.com/places/web-service/add-place#add-place"
-	 *      target="_blank">Add a place</a>
+	 * @see <a href="https://developers.google.com/places/web-service/add-place#add-place" target=
+	 *      "_blank">Add a place</a>
 	 * @since 3.0.0
 	 */
 	public static Response<Id> add(Place place) throws IOException {
@@ -715,11 +716,11 @@ public class Places {
 	 * <ul>
 	 * <li>{@link Params#language() language}</li>
 	 * </ul>
-	 * 
+	 *
 	 * @throws IOException
 	 *             if there is a problem communicating with the Google Places API service
-	 * @see <a href="https://developers.google.com/places/web-service/add-place#add-place"
-	 *      target="_blank">Add a place</a>
+	 * @see <a href="https://developers.google.com/places/web-service/add-place#add-place" target=
+	 *      "_blank">Add a place</a>
 	 * @since 3.0.0
 	 */
 	public static Response<Id> add(Place place, Params params) throws IOException {
@@ -728,8 +729,8 @@ public class Places {
 		JsonReader in = null;
 		try {
 			out.beginObject();
-			out.name("location").beginObject().name("lat").value(place.getLatitude())
-					.name("lng").value(place.getLongitude()).endObject();
+			out.name("location").beginObject().name("lat").value(place.getLatitude()).name("lng")
+					.value(place.getLongitude()).endObject();
 			out.name("name").value(place.getName());
 			out.name("types").beginArray().value(place.getTypes().get(0)).endArray();
 			String address = place.getFormattedAddress();
@@ -770,11 +771,11 @@ public class Places {
 	 * <ul>
 	 * <li>{@link Params#placeId() placeId}</li>
 	 * </ul>
-	 * 
+	 *
 	 * @throws IOException
 	 *             if there is a problem communicating with the Google Places API service
-	 * @see <a href="https://developers.google.com/places/web-service/add-place#delete-place"
-	 *      target="_blank">Delete a place</a>
+	 * @see <a href="https://developers.google.com/places/web-service/add-place#delete-place" target
+	 *      ="_blank">Delete a place</a>
 	 * @since 3.0.0
 	 */
 	public static Response<Void> delete(Params params) throws IOException {
@@ -840,21 +841,22 @@ public class Places {
 	 * <p>
 	 * Parameters for Google Places API services. Example usage:
 	 * </p>
-	 * 
+	 *
 	 * <pre>{@code
 	 * Params.create().latitude(51.500702).longitude(-0.124576).radius(1000)
 	 *         .type("restaurant").keyword("fish & chips").openNow(true);
 	 * }</pre>
 	 */
 	@Modifiable
-	@Style(typeModifiable = "Places*", create = "new", get = "*", set = "*")
+	@Style(typeModifiable = "Places*", create = "new", get = "*", set = "*",
+			deferCollectionAllocation = true) // TODO remove defer when removing `types`
 	public static abstract class Params {
 		Params() {
 		}
 
 		/**
 		 * Mutable instance where values can be set.
-		 * 
+		 *
 		 * @since 3.0.0
 		 */
 		public static PlacesParams create() {
@@ -864,7 +866,7 @@ public class Places {
 		/**
 		 * {@link Place.Id#getId() Place ID} of the place to get, as returned from a {@link Places}
 		 * search, autocomplete, or details method.
-		 * 
+		 *
 		 * @since 1.5.0
 		 */
 		@Nullable
@@ -879,7 +881,7 @@ public class Places {
 		/**
 		 * Used with {@link #longitude() longitude} and {@link #radius() radius} to define the
 		 * search area for places.
-		 * 
+		 *
 		 * @since 3.0.0
 		 */
 		@Default
@@ -890,7 +892,7 @@ public class Places {
 		/**
 		 * Used with {@link #latitude() latitude} and {@link #radius() radius} to define the search
 		 * area for places.
-		 * 
+		 *
 		 * @since 3.0.0
 		 */
 		@Default
@@ -937,7 +939,7 @@ public class Places {
 
 		/**
 		 * Type of places to search for.
-		 * 
+		 *
 		 * @see <a href="https://developers.google.com/places/supported_types" target="_blank">Place
 		 *      Types</a>
 		 * @since 3.1.0
@@ -947,7 +949,7 @@ public class Places {
 
 		/**
 		 * Types of places to search for.
-		 * 
+		 *
 		 * @see <a href="https://developers.google.com/places/supported_types" target="_blank">Place
 		 *      Types</a>
 		 * @deprecated use {@link #type()} instead
@@ -998,9 +1000,9 @@ public class Places {
 		 * <p>
 		 * The value must be one of the supported language codes.
 		 * </p>
-		 * 
-		 * @see <a href="https://developers.google.com/maps/faq#languagesupport"
-		 *      target="_blank">Supported Languages</a>
+		 *
+		 * @see <a href="https://developers.google.com/maps/faq#languagesupport" target="_blank">
+		 *      Supported Languages</a>
 		 */
 		@Nullable
 		public abstract String language();
@@ -1031,7 +1033,7 @@ public class Places {
 		/**
 		 * Applied to the results of search methods. Return true in {@link Predicate#apply(Object)
 		 * apply} to include the Place in the results or false to filter it out.
-		 * 
+		 *
 		 * @see Place.IdFilter
 		 * @since 3.0.0
 		 */
@@ -1042,7 +1044,7 @@ public class Places {
 		 * Applied to the results of autocomplete methods. Return true in
 		 * {@link Predicate#apply(Object) apply} to include the Prediction in the results or false
 		 * to filter it out.
-		 * 
+		 *
 		 * @see Place.Prediction.IdFilter Prediction.IdFilter
 		 * @since 3.0.0
 		 */
@@ -1087,7 +1089,7 @@ public class Places {
 
 		/**
 		 * Get the URL with appended parameters.
-		 * 
+		 *
 		 * @param url
 		 *            one of the {@link Places} URL_* constants
 		 * @since 1.0.0
@@ -1190,7 +1192,7 @@ public class Places {
 
 	/**
 	 * Result from one of the {@link Places} methods.
-	 * 
+	 *
 	 * @param <T>
 	 *            type of result returned in the response
 	 */
@@ -1217,7 +1219,7 @@ public class Places {
 		/**
 		 * Detailed information about why the {@link #getStatus() status} is not {@link #STATUS_OK
 		 * OK}.
-		 * 
+		 *
 		 * @return null if an error message was not provided
 		 * @since 1.4.0
 		 */
@@ -1226,7 +1228,7 @@ public class Places {
 
 		/**
 		 * Check the {@link Places} method signature for the specific type of result it returns.
-		 * 
+		 *
 		 * @return empty list or null if there was a problem with the request or an
 		 *         {@link Params#etag() ETag} was sent and the photo on the server has not changed
 		 */
@@ -1259,7 +1261,7 @@ public class Places {
 	static abstract class PlacesResponse extends Response<List<Place>> {
 		/**
 		 * Read fields from a search response.
-		 * 
+		 *
 		 * @param fields
 		 *            to read or 0 if all fields should be read
 		 */
@@ -1321,7 +1323,7 @@ public class Places {
 	static abstract class PredictionsResponse extends Response<List<Prediction>> {
 		/**
 		 * Read fields from an autocomplete response.
-		 * 
+		 *
 		 * @param fields
 		 *            to read or 0 if all fields should be read
 		 */
@@ -1347,8 +1349,8 @@ public class Places {
 					in.beginArray();
 					while (in.hasNext()) {
 						if (maxResults <= 0 || i < maxResults) {
-							Prediction result = Prediction.from(in, fields,
-									pred.clear(), id.clear(), s);
+							Prediction result
+									= Prediction.from(in, fields, pred.clear(), id.clear(), s);
 							if (filter == null || filter.apply(result)) {
 								b.addResult(result);
 								i++;
@@ -1379,7 +1381,7 @@ public class Places {
 
 		/**
 		 * Read fields from a details response.
-		 * 
+		 *
 		 * @param fields
 		 *            to read or 0 if all fields should be read
 		 */

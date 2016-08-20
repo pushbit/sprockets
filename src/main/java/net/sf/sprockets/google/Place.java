@@ -1,16 +1,16 @@
 /*
  * Copyright 2013-2015 pushbit <pushbit@gmail.com>
- * 
+ *
  * This file is part of Sprockets.
- * 
+ *
  * Sprockets is free software: you can redistribute it and/or modify it under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * Sprockets is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public License along with Sprockets. If
  * not, see <http://www.gnu.org/licenses/>.
  */
@@ -41,12 +41,6 @@ import java.util.TimeZone;
 
 import javax.annotation.Nullable;
 
-import net.sf.sprockets.google.Places.Params;
-import net.sf.sprockets.lang.ImmutableSubstring;
-import net.sf.sprockets.lang.Maths;
-import net.sf.sprockets.lang.Substring;
-import net.sf.sprockets.time.DayOfWeek;
-
 import org.immutables.value.Value.Default;
 import org.immutables.value.Value.Immutable;
 import org.immutables.value.Value.Modifiable;
@@ -54,6 +48,12 @@ import org.immutables.value.Value.Style;
 
 import com.google.common.base.Predicate;
 import com.google.gson.stream.JsonReader;
+
+import net.sf.sprockets.google.Places.Params;
+import net.sf.sprockets.lang.ImmutableSubstring;
+import net.sf.sprockets.lang.Maths;
+import net.sf.sprockets.lang.Substring;
+import net.sf.sprockets.time.DayOfWeek;
 
 /**
  * Google Place returned from a {@link Places} method. The properties which are populated will vary
@@ -69,7 +69,7 @@ public abstract class Place {
 
 	/**
 	 * Build an immutable instance.
-	 * 
+	 *
 	 * @since 3.0.0
 	 */
 	public static ImmutablePlace.Builder builder() {
@@ -79,7 +79,7 @@ public abstract class Place {
 	/**
 	 * Unique identifier that can be used to retrieve {@link Places#details(Params) details} about
 	 * this place.
-	 * 
+	 *
 	 * @since 1.5.0
 	 */
 	@Nullable
@@ -87,7 +87,7 @@ public abstract class Place {
 
 	/**
 	 * Alternative identifiers that have been mapped to {@link #getPlaceId() the main one}.
-	 * 
+	 *
 	 * @since 1.5.0
 	 */
 	public abstract List<Id> getAltIds();
@@ -164,7 +164,7 @@ public abstract class Place {
 
 	/**
 	 * Features describing this place.
-	 * 
+	 *
 	 * @see <a href="https://developers.google.com/places/supported_types" target="_blank">Place
 	 *      Types</a>
 	 */
@@ -189,7 +189,7 @@ public abstract class Place {
 
 	/**
 	 * Number of ratings that have been submitted. Default value: -1.
-	 * 
+	 *
 	 * @since 1.3.0
 	 */
 	@Default
@@ -204,7 +204,7 @@ public abstract class Place {
 
 	/**
 	 * True if this place is currently open.
-	 * 
+	 *
 	 * @return null if unknown
 	 */
 	@Nullable
@@ -216,16 +216,16 @@ public abstract class Place {
 	public abstract List<OpeningHours> getOpeningHours();
 
 	/**
-	 * Opening hours for each day of the week. e.g. ["Monday: 10:00 am – 6:00 pm", ...,
-	 * "Sunday: Closed"]
-	 * 
+	 * Opening hours for each day of the week. e.g. ["Monday: 10:00 am – 6:00 pm", ..., "Sunday:
+	 * Closed"]
+	 *
 	 * @since 2.2.0
 	 */
 	public abstract List<String> getFormattedOpeningHours();
 
 	/**
 	 * True if this place has permanently shut down.
-	 * 
+	 *
 	 * @since 2.2.0
 	 */
 	@Default
@@ -250,7 +250,7 @@ public abstract class Place {
 
 	/**
 	 * Read fields from a result object.
-	 * 
+	 *
 	 * @param fields
 	 *            to read or 0 if all fields should be read
 	 * @param maxResults
@@ -456,7 +456,7 @@ public abstract class Place {
 	/**
 	 * Unique identifier that can be used to retrieve {@link Places#details(Params) details} about a
 	 * place.
-	 * 
+	 *
 	 * @since 1.5.0
 	 */
 	@Immutable
@@ -507,7 +507,7 @@ public abstract class Place {
 
 		/**
 		 * Base class for {@link Predicate}s that filter on place IDs.
-		 * 
+		 *
 		 * @since 3.0.0
 		 */
 		public static abstract class Filter {
@@ -530,7 +530,7 @@ public abstract class Place {
 
 	/**
 	 * Search {@link Params#placeFilter() filter} on place IDs.
-	 * 
+	 *
 	 * @since 3.0.0
 	 */
 	@Modifiable
@@ -553,9 +553,9 @@ public abstract class Place {
 	}
 
 	/**
-	 * All address components in separate properties. Each property has a full name, e.g.
-	 * "New York", and when applicable an abbreviated name, e.g. "NY". Properties will be null when
-	 * the value is not available.
+	 * All address components in separate properties. Each property has a full name, e.g. "New
+	 * York", and when applicable an abbreviated name, e.g. "NY". Properties will be null when the
+	 * value is not available.
 	 */
 	@Immutable
 	public static abstract class Address {
@@ -827,7 +827,7 @@ public abstract class Place {
 
 		/**
 		 * From 1 to 5, the user's overall rating. Default value: 0.
-		 * 
+		 *
 		 * @since 1.2.0
 		 */
 		@Default
@@ -838,7 +838,7 @@ public abstract class Place {
 		/**
 		 * IETF language code (without country code) for the language of the {@link #getText() text}
 		 * .
-		 * 
+		 *
 		 * @since 1.2.0
 		 */
 		@Nullable
@@ -949,7 +949,7 @@ public abstract class Place {
 
 		/**
 		 * 0-2359. Default value: -1.
-		 * 
+		 *
 		 * @since 2.3.0
 		 */
 		@Default
@@ -974,7 +974,7 @@ public abstract class Place {
 
 		/**
 		 * Converted to epoch milliseconds. Default value: -1.
-		 * 
+		 *
 		 * @since 2.3.0
 		 */
 		public int getOpenTimeMillis() {
@@ -987,7 +987,7 @@ public abstract class Place {
 
 		/**
 		 * 0-2359. Default value: -1.
-		 * 
+		 *
 		 * @since 2.3.0
 		 */
 		@Default
@@ -1012,7 +1012,7 @@ public abstract class Place {
 
 		/**
 		 * Converted to epoch milliseconds. Default value: -1.
-		 * 
+		 *
 		 * @since 2.3.0
 		 */
 		public int getCloseTimeMillis() {
@@ -1171,7 +1171,7 @@ public abstract class Place {
 
 		/**
 		 * Name of this place or a query suggestion.
-		 * 
+		 *
 		 * @since 3.0.0
 		 */
 		@Nullable
@@ -1179,7 +1179,7 @@ public abstract class Place {
 
 		/**
 		 * Features describing this place.
-		 * 
+		 *
 		 * @see <a href="https://developers.google.com/places/supported_types" target="_blank">Place
 		 *      Types</a>
 		 */
@@ -1198,7 +1198,7 @@ public abstract class Place {
 
 		/**
 		 * Read fields from a prediction object.
-		 * 
+		 *
 		 * @param fields
 		 *            to read or 0 if all fields should be read
 		 */
@@ -1295,7 +1295,7 @@ public abstract class Place {
 
 		/**
 		 * Autocomplete {@link Params#predictionFilter() filter} on place IDs.
-		 * 
+		 *
 		 * @since 3.0.0
 		 */
 		@Modifiable
