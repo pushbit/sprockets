@@ -3,9 +3,9 @@
 package net.sf.sprockets.util;
 
 /**
- * Unit such as length, mass, volume, currency, etc. Modelled after the class of the same name in <a
- * href="https://ssl.icu-project.org/apiref/icu4j/" target="_blank">ICU4J</a>.
- * 
+ * Unit such as length, mass, volume, currency, etc. Modelled after the class of the same name in
+ * <a href="https://ssl.icu-project.org/apiref/icu4j/" target="_blank">ICU4J</a>.
+ *
  * @since 2.2.0
  */
 public class MeasureUnit {

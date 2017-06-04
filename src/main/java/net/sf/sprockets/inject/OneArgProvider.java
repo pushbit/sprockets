@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 pushbit <pushbit@gmail.com>
+ * Copyright 2016 pushbit <pushbit@gmail.com>
  *
  * This file is part of Sprockets.
  *
@@ -15,30 +15,14 @@
  * not, see <http://www.gnu.org/licenses/>.
  */
 
-package net.sf.sprockets.util.logging;
-
-import java.util.logging.Logger;
+package net.sf.sprockets.inject;
 
 /**
- * Utility methods for working with Loggers.
+ * Like the standard {@code javax.inject.Provider}, but receives an argument when providing an
+ * instance of {@code T}.
  *
- * @since 1.1.0
+ * @since 4.0.0
  */
-public class Loggers {
-	private Loggers() {
-	}
-
-	/**
-	 * Get a logger for the class's package.
-	 */
-	public static Logger get(Class<?> cls) {
-		return get(cls, null);
-	}
-
-	/**
-	 * Get a logger for the class's package that uses the resource bundle for localisation.
-	 */
-	public static Logger get(Class<?> cls, String resourceBundleName) {
-		return Logger.getLogger(cls.getPackage().getName(), resourceBundleName);
-	}
+public interface OneArgProvider<T, A> {
+	T get(A arg);
 }

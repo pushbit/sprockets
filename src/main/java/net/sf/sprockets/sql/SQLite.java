@@ -1,16 +1,16 @@
 /*
- * Copyright 2013-2015 pushbit <pushbit@gmail.com>
- * 
+ * Copyright 2013-2016 pushbit <pushbit@gmail.com>
+ *
  * This file is part of Sprockets.
- * 
+ *
  * Sprockets is free software: you can redistribute it and/or modify it under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * Sprockets is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public License along with Sprockets. If
  * not, see <http://www.gnu.org/licenses/>.
  */
@@ -22,20 +22,22 @@ import static java.util.Locale.US;
 import static net.sf.sprockets.util.Geos.LATITUDE_DEGREE_KM;
 import static net.sf.sprockets.util.Geos.LATITUDE_DEGREE_MI;
 import static net.sf.sprockets.util.MeasureUnit.MILE;
-import static org.apache.commons.lang.time.DateUtils.UTC_TIME_ZONE;
 
 import java.text.Normalizer;
 import java.util.Locale;
+import java.util.TimeZone;
 import java.util.regex.Pattern;
+
+import javax.annotation.Nullable;
+
+import org.apache.commons.lang3.time.FastDateFormat;
 
 import net.sf.sprockets.util.Geos;
 import net.sf.sprockets.util.MeasureUnit;
 
-import org.apache.commons.lang.time.FastDateFormat;
-
 /**
  * Utility methods for working with SQLite.
- * 
+ *
  * @since 2.2.0
  */
 public class SQLite {
@@ -87,7 +89,7 @@ public class SQLite {
 
 	/**
 	 * Get an {@link #aliased(String) aliased} count(column).
-	 * 
+	 *
 	 * @since 2.4.0
 	 */
 	public static String count(String column) {
@@ -96,7 +98,7 @@ public class SQLite {
 
 	/**
 	 * Get an aliased count(column).
-	 * 
+	 *
 	 * @since 2.6.0
 	 */
 	public static String count(String column, String alias) {
@@ -105,7 +107,7 @@ public class SQLite {
 
 	/**
 	 * Get an {@link #aliased(String) aliased} min(column).
-	 * 
+	 *
 	 * @since 2.4.0
 	 */
 	public static String min(String column) {
@@ -114,7 +116,7 @@ public class SQLite {
 
 	/**
 	 * Get an aliased min(column).
-	 * 
+	 *
 	 * @since 2.6.0
 	 */
 	public static String min(String column, String alias) {
@@ -123,7 +125,7 @@ public class SQLite {
 
 	/**
 	 * Get an {@link #aliased(String) aliased} max(column).
-	 * 
+	 *
 	 * @since 2.4.0
 	 */
 	public static String max(String column) {
@@ -132,7 +134,7 @@ public class SQLite {
 
 	/**
 	 * Get an aliased max(column).
-	 * 
+	 *
 	 * @since 2.6.0
 	 */
 	public static String max(String column, String alias) {
@@ -141,7 +143,7 @@ public class SQLite {
 
 	/**
 	 * Get an {@link #aliased(String) aliased} avg(column).
-	 * 
+	 *
 	 * @since 2.4.0
 	 */
 	public static String avg(String column) {
@@ -150,7 +152,7 @@ public class SQLite {
 
 	/**
 	 * Get an aliased avg(column).
-	 * 
+	 *
 	 * @since 2.6.0
 	 */
 	public static String avg(String column, String alias) {
@@ -159,7 +161,7 @@ public class SQLite {
 
 	/**
 	 * Get an {@link #aliased(String) aliased} sum(column).
-	 * 
+	 *
 	 * @since 2.4.0
 	 */
 	public static String sum(String column) {
@@ -168,7 +170,7 @@ public class SQLite {
 
 	/**
 	 * Get an aliased sum(column).
-	 * 
+	 *
 	 * @since 2.6.0
 	 */
 	public static String sum(String column, String alias) {
@@ -177,7 +179,7 @@ public class SQLite {
 
 	/**
 	 * Get an {@link #aliased(String) aliased} total(column).
-	 * 
+	 *
 	 * @since 2.4.0
 	 */
 	public static String total(String column) {
@@ -186,7 +188,7 @@ public class SQLite {
 
 	/**
 	 * Get an aliased total(column).
-	 * 
+	 *
 	 * @since 2.6.0
 	 */
 	public static String total(String column, String alias) {
@@ -195,7 +197,7 @@ public class SQLite {
 
 	/**
 	 * Get an {@link #aliased(String) aliased} group_concat(column) with a comma separator.
-	 * 
+	 *
 	 * @since 2.4.0
 	 */
 	public static String groupConcat(String column) {
@@ -204,7 +206,7 @@ public class SQLite {
 
 	/**
 	 * Get an {@link #aliased(String) aliased} group_concat(column) with the separator.
-	 * 
+	 *
 	 * @since 2.4.0
 	 */
 	public static String groupConcat(String column, String separator) {
@@ -213,7 +215,7 @@ public class SQLite {
 
 	/**
 	 * Get an aliased group_concat(column) with the separator.
-	 * 
+	 *
 	 * @since 2.6.0
 	 */
 	public static String groupConcat(String column, String separator, String alias) {
@@ -222,11 +224,11 @@ public class SQLite {
 
 	/**
 	 * Get an aliased func(column).
-	 * 
+	 *
 	 * @param alias
 	 *            may be null for a default alias
 	 */
-	private static String func(String func, String column, String alias) {
+	private static String func(String func, String column, @Nullable String alias) {
 		if (alias == null) {
 			alias = aliased(column);
 		}
@@ -244,7 +246,7 @@ public class SQLite {
 	/**
 	 * Get an {@link #aliased(String) aliased} result column that applies the aggregate function to
 	 * the datetime column and converts the result to epoch milliseconds.
-	 * 
+	 *
 	 * @since 2.4.0
 	 */
 	public static String millis(String function, String column) {
@@ -254,12 +256,12 @@ public class SQLite {
 	/**
 	 * Get an aliased result column that applies the aggregate function to the datetime column and
 	 * converts the result to epoch milliseconds.
-	 * 
+	 *
 	 * @param function
-	 *            can be null to not apply a function
+	 *            may be null to not apply a function
 	 * @since 3.0.0
 	 */
-	public static String millis(String function, String column, String alias) {
+	public static String millis(@Nullable String function, String column, String alias) {
 		StringBuilder s = new StringBuilder(96).append("strftime('%s', ");
 		if (function != null) {
 			s.append(function).append('(').append(column).append(')');
@@ -284,7 +286,8 @@ public class SQLite {
 	 */
 	public static String datetime(long millis) {
 		if (sFormat == null) {
-			sFormat = FastDateFormat.getInstance("yyyy-MM-dd HH:mm:ss", UTC_TIME_ZONE, US);
+			sFormat = FastDateFormat.getInstance("yyyy-MM-dd HH:mm:ss", TimeZone.getTimeZone("UTC"),
+					US);
 		}
 		return sFormat.format(millis);
 	}
@@ -313,7 +316,7 @@ public class SQLite {
 	 * Get a result column for the squared distance from the row coordinates to the supplied
 	 * coordinates. SQLite doesn't have a square root core function, so this must be applied in Java
 	 * when reading the result column value.
-	 * 
+	 *
 	 * @param latitudeCosineColumn
 	 *            see {@link Geos#cos(double)}
 	 * @param unit
@@ -332,7 +335,7 @@ public class SQLite {
 
 	/**
 	 * Get an {@code IN} operator for the column and values.
-	 * 
+	 *
 	 * @return column IN (values[0],...,values[n])
 	 * @since 2.6.0
 	 */
@@ -342,7 +345,7 @@ public class SQLite {
 
 	/**
 	 * Append an {@code IN} operator for the column and values.
-	 * 
+	 *
 	 * @return column IN (values[0],...,values[n])
 	 * @since 2.6.0
 	 */
@@ -353,7 +356,7 @@ public class SQLite {
 	/**
 	 * Get an {@code IN} operator for the column and values. The values will be escaped if
 	 * necessary.
-	 * 
+	 *
 	 * @return column IN (values[0],...,values[n])
 	 * @since 2.6.0
 	 */
@@ -364,7 +367,7 @@ public class SQLite {
 	/**
 	 * Append an {@code IN} operator for the column and values. The values will be escaped if
 	 * necessary.
-	 * 
+	 *
 	 * @return column IN (values[0],...,values[n])
 	 * @since 2.6.0
 	 */

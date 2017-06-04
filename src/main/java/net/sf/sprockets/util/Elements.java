@@ -1,16 +1,16 @@
 /*
- * Copyright 2013-2015 pushbit <pushbit@gmail.com>
- * 
+ * Copyright 2013-2017 pushbit <pushbit@gmail.com>
+ *
  * This file is part of Sprockets.
- * 
+ *
  * Sprockets is free software: you can redistribute it and/or modify it under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * Sprockets is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public License along with Sprockets. If
  * not, see <http://www.gnu.org/licenses/>.
  */
@@ -20,13 +20,15 @@ package net.sf.sprockets.util;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import org.apache.commons.collections.primitives.LongCollection;
 
 import com.google.common.collect.ObjectArrays;
 
 /**
  * Utility methods for working with array and collection elements.
- * 
+ *
  * @since 1.1.0
  */
 public class Elements {
@@ -35,13 +37,13 @@ public class Elements {
 
 	/**
 	 * Add all elements in the array to the collection.
-	 * 
+	 *
 	 * @return true if the collection was changed
 	 * @since 2.6.0
 	 */
-	public static boolean addAll(LongCollection collection, long[] elements) {
+	public static boolean addAll(LongCollection collection, long[] array) {
 		boolean changed = false;
-		for (long element : elements) {
+		for (long element : array) {
 			changed |= collection.add(element);
 		}
 		return changed;
@@ -49,25 +51,27 @@ public class Elements {
 
 	/**
 	 * Get the element at the index in the array.
-	 * 
+	 *
 	 * @return null if the array is null or the index is out of bounds
 	 */
+	@Nullable
 	public static <T> T get(T[] array, int index) {
 		return array != null && index >= 0 && index < array.length ? array[index] : null;
 	}
 
 	/**
 	 * Get the element at the index in the list.
-	 * 
+	 *
 	 * @return null if the list is null or the index is out of bounds
 	 */
+	@Nullable
 	public static <T> T get(List<T> list, int index) {
 		return list != null && index >= 0 && index < list.size() ? list.get(index) : null;
 	}
 
 	/**
 	 * Get the elements in the array that are at the indexes.
-	 * 
+	 *
 	 * @since 1.4.0
 	 */
 	public static <T> T[] slice(T[] array, int... indexes) {
@@ -81,7 +85,7 @@ public class Elements {
 
 	/**
 	 * Get the elements in the list that are at the indexes.
-	 * 
+	 *
 	 * @since 1.4.0
 	 */
 	public static <T> List<T> slice(List<T> list, int... indexes) {
@@ -93,8 +97,34 @@ public class Elements {
 	}
 
 	/**
+	 * Get the sum of the elements in the array.
+	 *
+	 * @since 4.0.0
+	 */
+	public static int sum(int[] array) {
+		int sum = 0;
+		for (int element : array) {
+			sum += element;
+		}
+		return sum;
+	}
+
+	/**
+	 * Get the sum of the elements in the array.
+	 *
+	 * @since 4.0.0
+	 */
+	public static long sum(long[] array) {
+		long sum = 0;
+		for (long element : array) {
+			sum += element;
+		}
+		return sum;
+	}
+
+	/**
 	 * Convert the Strings to an array of ints.
-	 * 
+	 *
 	 * @since 3.0.0
 	 */
 	public static int[] toInts(String... values) {
@@ -103,7 +133,7 @@ public class Elements {
 
 	/**
 	 * Convert the Strings to an array of longs.
-	 * 
+	 *
 	 * @since 2.6.0
 	 */
 	public static long[] toLongs(String... values) {
@@ -126,7 +156,7 @@ public class Elements {
 
 	/**
 	 * Convert the ints to an array of Strings.
-	 * 
+	 *
 	 * @since 2.6.0
 	 */
 	public static String[] toStrings(int... values) {
@@ -135,7 +165,7 @@ public class Elements {
 
 	/**
 	 * Convert the longs to an array of Strings.
-	 * 
+	 *
 	 * @since 2.6.0
 	 */
 	public static String[] toStrings(long... values) {

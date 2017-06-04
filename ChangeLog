@@ -1,3 +1,13 @@
+2017-06-04  4.0.0
+
+	* removed Google Places API client, use official Java client instead:
+		  https://github.com/googlemaps/google-maps-services-java
+	* redesigned google.StreetView for injection, added support for metadata and signature
+	* google.StreetView.Params.{width,height} defaults increased to 640
+	* added google.InstanceId and related classes
+	* moved net.HttpClient to okhttp.OkHttp and redesigned for injection
+	* renamed immutables.value.ClearableBuilder to MinimiseAllocations
+
 2016-03-19  3.1.0
 
 	* added google.Places.Params.type

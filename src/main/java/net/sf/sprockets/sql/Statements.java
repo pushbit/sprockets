@@ -1,16 +1,16 @@
 /*
- * Copyright 2013-2015 pushbit <pushbit@gmail.com>
- * 
+ * Copyright 2013-2016 pushbit <pushbit@gmail.com>
+ *
  * This file is part of Sprockets.
- * 
+ *
  * Sprockets is free software: you can redistribute it and/or modify it under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * Sprockets is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public License along with Sprockets. If
  * not, see <http://www.gnu.org/licenses/>.
  */
@@ -18,8 +18,8 @@
 package net.sf.sprockets.sql;
 
 import static java.util.Collections.EMPTY_LIST;
-import static org.apache.commons.lang.ArrayUtils.EMPTY_INT_ARRAY;
-import static org.apache.commons.lang.ArrayUtils.EMPTY_LONG_ARRAY;
+import static org.apache.commons.lang3.ArrayUtils.EMPTY_INT_ARRAY;
+import static org.apache.commons.lang3.ArrayUtils.EMPTY_LONG_ARRAY;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -28,12 +28,14 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import org.apache.commons.collections.primitives.ArrayIntList;
 import org.apache.commons.collections.primitives.ArrayLongList;
 
 /**
  * Utility methods for working with Statements.
- * 
+ *
  * @since 1.1.0
  */
 public class Statements {
@@ -42,7 +44,7 @@ public class Statements {
 
 	/**
 	 * Set the statement parameters, starting at 1, in the order of the params.
-	 * 
+	 *
 	 * @since 3.0.0
 	 */
 	public static PreparedStatement setInts(PreparedStatement stmt, int... params)
@@ -52,7 +54,7 @@ public class Statements {
 
 	/**
 	 * Set the statement parameters, starting at the index, in the order of the params.
-	 * 
+	 *
 	 * @since 3.0.0
 	 */
 	public static PreparedStatement setInts(int index, PreparedStatement stmt, int... params)
@@ -62,7 +64,7 @@ public class Statements {
 
 	/**
 	 * Set the statement parameters, starting at 1, in the order of the params.
-	 * 
+	 *
 	 * @since 3.0.0
 	 */
 	public static PreparedStatement setLongs(PreparedStatement stmt, long... params)
@@ -72,7 +74,7 @@ public class Statements {
 
 	/**
 	 * Set the statement parameters, starting at the index, in the order of the params.
-	 * 
+	 *
 	 * @since 3.0.0
 	 */
 	public static PreparedStatement setLongs(int index, PreparedStatement stmt, long... params)
@@ -82,7 +84,7 @@ public class Statements {
 
 	/**
 	 * Set the statement parameters, starting at 1, in the order of the params.
-	 * 
+	 *
 	 * @since 3.0.0
 	 */
 	public static PreparedStatement setStrings(PreparedStatement stmt, String... params)
@@ -92,7 +94,7 @@ public class Statements {
 
 	/**
 	 * Set the statement parameters, starting at the index, in the order of the params.
-	 * 
+	 *
 	 * @since 3.0.0
 	 */
 	public static PreparedStatement setStrings(int index, PreparedStatement stmt, String... params)
@@ -100,8 +102,8 @@ public class Statements {
 		return set(index, stmt, null, null, params);
 	}
 
-	private static PreparedStatement set(int index, PreparedStatement stmt,
-			int[] ints, long[] longs, String[] strings) throws SQLException {
+	private static PreparedStatement set(int index, PreparedStatement stmt, int[] ints,
+			long[] longs, String[] strings) throws SQLException {
 		int length = ints != null ? ints.length : longs != null ? longs.length : strings.length;
 		for (int i = 0; i < length; i++) {
 			if (ints != null) {
@@ -118,7 +120,7 @@ public class Statements {
 	/**
 	 * Execute the query, get the int value in the first row and column of the result set, and close
 	 * the statement.
-	 * 
+	 *
 	 * @param stmt
 	 *            must already have parameters set
 	 * @return {@link Integer#MIN_VALUE} if the result set is empty
@@ -133,7 +135,7 @@ public class Statements {
 	/**
 	 * Execute the query, get the long value in the first row and column of the result set, and
 	 * close the statement.
-	 * 
+	 *
 	 * @param stmt
 	 *            must already have parameters set
 	 * @return {@link Long#MIN_VALUE} if the result set is empty
@@ -148,12 +150,13 @@ public class Statements {
 	/**
 	 * Execute the query, get the String value in the first row and column of the result set, and
 	 * close the statement.
-	 * 
+	 *
 	 * @param stmt
 	 *            must already have parameters set
 	 * @return null if the result set is empty
 	 * @since 3.0.0
 	 */
+	@Nullable
 	public static String firstString(PreparedStatement stmt) throws SQLException {
 		ResultSet rs = stmt.executeQuery();
 		String s = rs.next() ? rs.getString(1) : null;
@@ -164,7 +167,7 @@ public class Statements {
 	/**
 	 * Execute the query, get the int values in the first row of the result set, and close the
 	 * statement.
-	 * 
+	 *
 	 * @param stmt
 	 *            must already have parameters set
 	 * @since 3.0.0
@@ -176,7 +179,7 @@ public class Statements {
 	/**
 	 * Execute the query, get the long values in the first row of the result set, and close the
 	 * statement.
-	 * 
+	 *
 	 * @param stmt
 	 *            must already have parameters set
 	 * @since 1.4.0
@@ -188,7 +191,7 @@ public class Statements {
 	/**
 	 * Execute the query, get the String values in the first row of the result set, and close the
 	 * statement.
-	 * 
+	 *
 	 * @param stmt
 	 *            must already have parameters set
 	 * @since 3.0.0
@@ -227,7 +230,7 @@ public class Statements {
 	/**
 	 * Execute the query, get the int values in the first column of the result set, and close the
 	 * statement.
-	 * 
+	 *
 	 * @param stmt
 	 *            must already have parameters set
 	 * @since 3.0.0
@@ -239,7 +242,7 @@ public class Statements {
 	/**
 	 * Execute the query, get the long values in the first column of the result set, and close the
 	 * statement.
-	 * 
+	 *
 	 * @param stmt
 	 *            must already have parameters set
 	 * @since 1.4.0
@@ -251,7 +254,7 @@ public class Statements {
 	/**
 	 * Execute the query, get the String values in the first column of the result set, and close the
 	 * statement.
-	 * 
+	 *
 	 * @param stmt
 	 *            must already have parameters set
 	 * @since 1.5.0
@@ -288,7 +291,7 @@ public class Statements {
 
 	/**
 	 * Execute the insert statement, get the first generated key as an int, and close the statement.
-	 * 
+	 *
 	 * @param stmt
 	 *            must have been created with {@link Statement#RETURN_GENERATED_KEYS} and already
 	 *            have parameters set
@@ -305,7 +308,7 @@ public class Statements {
 
 	/**
 	 * Execute the insert statement, get the first generated key as a long, and close the statement.
-	 * 
+	 *
 	 * @param stmt
 	 *            must have been created with {@link Statement#RETURN_GENERATED_KEYS} and already
 	 *            have parameters set
@@ -322,7 +325,7 @@ public class Statements {
 	/**
 	 * Execute the insert, update, or delete statement, get the number of rows affected, and close
 	 * the statement.
-	 * 
+	 *
 	 * @param stmt
 	 *            must already have parameters set
 	 * @since 1.4.0
@@ -336,12 +339,12 @@ public class Statements {
 	/**
 	 * Execute the {@link PreparedStatement#addBatch() batches}, get the number of rows affected in
 	 * each batch, and close the statement.
-	 * 
+	 *
 	 * @param stmt
 	 *            must already have batches added
 	 * @since 1.4.0
 	 */
-	public static int[] batch(PreparedStatement stmt) throws SQLException {
+	public static int[] batch(@Nullable PreparedStatement stmt) throws SQLException {
 		int[] rows = EMPTY_INT_ARRAY;
 		if (stmt != null) {
 			rows = stmt.executeBatch();

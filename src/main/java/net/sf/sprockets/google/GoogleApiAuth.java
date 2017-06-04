@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 pushbit <pushbit@gmail.com>
+ * Copyright 2017 pushbit <pushbit@gmail.com>
  *
  * This file is part of Sprockets.
  *
@@ -15,30 +15,27 @@
  * not, see <http://www.gnu.org/licenses/>.
  */
 
-package net.sf.sprockets.util.logging;
+package net.sf.sprockets.google;
 
-import java.util.logging.Logger;
+import javax.annotation.Nullable;
+
+import org.immutables.value.Value.Immutable;
 
 /**
- * Utility methods for working with Loggers.
+ * Application-specific values used to authenticate with Google APIs.
  *
- * @since 1.1.0
+ * @since 4.0.0
  */
-public class Loggers {
-	private Loggers() {
+@Immutable
+public abstract class GoogleApiAuth {
+	public static ImmutableGoogleApiAuth.Builder builder() {
+		return ImmutableGoogleApiAuth.builder();
 	}
 
-	/**
-	 * Get a logger for the class's package.
-	 */
-	public static Logger get(Class<?> cls) {
-		return get(cls, null);
-	}
+	public abstract String browserKey();
 
-	/**
-	 * Get a logger for the class's package that uses the resource bundle for localisation.
-	 */
-	public static Logger get(Class<?> cls, String resourceBundleName) {
-		return Logger.getLogger(cls.getPackage().getName(), resourceBundleName);
-	}
+	public abstract String serverKey();
+
+	@Nullable
+	public abstract String urlSigningSecret();
 }

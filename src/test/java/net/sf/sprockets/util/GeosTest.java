@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 pushbit <pushbit@gmail.com>
+ * Copyright 2017 pushbit <pushbit@gmail.com>
  *
  * This file is part of Sprockets.
  *
@@ -15,30 +15,15 @@
  * not, see <http://www.gnu.org/licenses/>.
  */
 
-package net.sf.sprockets.util.logging;
+package net.sf.sprockets.util;
 
-import java.util.logging.Logger;
+import static org.junit.Assert.assertEquals;
 
-/**
- * Utility methods for working with Loggers.
- *
- * @since 1.1.0
- */
-public class Loggers {
-	private Loggers() {
-	}
+import org.junit.Test;
 
-	/**
-	 * Get a logger for the class's package.
-	 */
-	public static Logger get(Class<?> cls) {
-		return get(cls, null);
-	}
-
-	/**
-	 * Get a logger for the class's package that uses the resource bundle for localisation.
-	 */
-	public static Logger get(Class<?> cls, String resourceBundleName) {
-		return Logger.getLogger(cls.getPackage().getName(), resourceBundleName);
+public class GeosTest {
+	@Test
+	public void testCos() {
+		assertEquals(0.9763588514046458, Geos.cos(12.483353), 0.0);
 	}
 }

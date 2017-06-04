@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 pushbit <pushbit@gmail.com>
+ * Copyright 2017 pushbit <pushbit@gmail.com>
  *
  * This file is part of Sprockets.
  *
@@ -17,28 +17,13 @@
 
 package net.sf.sprockets.util.logging;
 
-import java.util.logging.Logger;
+import static org.junit.Assert.assertEquals;
 
-/**
- * Utility methods for working with Loggers.
- *
- * @since 1.1.0
- */
-public class Loggers {
-	private Loggers() {
-	}
+import org.junit.Test;
 
-	/**
-	 * Get a logger for the class's package.
-	 */
-	public static Logger get(Class<?> cls) {
-		return get(cls, null);
-	}
-
-	/**
-	 * Get a logger for the class's package that uses the resource bundle for localisation.
-	 */
-	public static Logger get(Class<?> cls, String resourceBundleName) {
-		return Logger.getLogger(cls.getPackage().getName(), resourceBundleName);
+public class LoggersTest {
+	@Test
+	public void testGet() {
+		assertEquals(getClass().getPackage().getName(), Loggers.get(getClass()).getName());
 	}
 }

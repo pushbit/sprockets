@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 pushbit <pushbit@gmail.com>
+ * Copyright 2017 pushbit <pushbit@gmail.com>
  *
  * This file is part of Sprockets.
  *
@@ -15,30 +15,33 @@
  * not, see <http://www.gnu.org/licenses/>.
  */
 
-package net.sf.sprockets.util.logging;
+package net.sf.sprockets.lang;
 
-import java.util.logging.Logger;
+import static org.junit.Assert.assertEquals;
 
-/**
- * Utility methods for working with Loggers.
- *
- * @since 1.1.0
- */
-public class Loggers {
-	private Loggers() {
+import org.junit.Test;
+
+public class SubstringTest {
+	private final Substring mSubstring
+			= Substring.builder().value("string").superstring("SubstringTest").build();
+
+	@Test
+	public void testOffset() {
+		assertEquals(3, mSubstring.getOffset());
 	}
 
-	/**
-	 * Get a logger for the class's package.
-	 */
-	public static Logger get(Class<?> cls) {
-		return get(cls, null);
+	@Test
+	public void testLength() {
+		assertEquals(6, mSubstring.getLength());
 	}
 
-	/**
-	 * Get a logger for the class's package that uses the resource bundle for localisation.
-	 */
-	public static Logger get(Class<?> cls, String resourceBundleName) {
-		return Logger.getLogger(cls.getPackage().getName(), resourceBundleName);
+	@Test
+	public void testValue() {
+		assertEquals("string", mSubstring.getValue());
+	}
+
+	@Test
+	public void testSuperstring() {
+		assertEquals("SubstringTest", mSubstring.getSuperstring());
 	}
 }

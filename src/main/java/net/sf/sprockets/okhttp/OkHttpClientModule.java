@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2017 pushbit <pushbit@gmail.com>
+ * Copyright 2017 pushbit <pushbit@gmail.com>
  *
  * This file is part of Sprockets.
  *
@@ -15,30 +15,26 @@
  * not, see <http://www.gnu.org/licenses/>.
  */
 
-package net.sf.sprockets.util.logging;
+package net.sf.sprockets.okhttp;
 
-import java.util.logging.Logger;
+import javax.inject.Singleton;
+
+import dagger.Module;
+import dagger.Provides;
+import okhttp3.Call;
+import okhttp3.Call.Factory;
+import okhttp3.OkHttpClient;
 
 /**
- * Utility methods for working with Loggers.
+ * Provides a Singleton {@link OkHttpClient} instance for {@link Factory} dependencies.
  *
- * @since 1.1.0
+ * @since 4.0.0
  */
-public class Loggers {
-	private Loggers() {
-	}
-
-	/**
-	 * Get a logger for the class's package.
-	 */
-	public static Logger get(Class<?> cls) {
-		return get(cls, null);
-	}
-
-	/**
-	 * Get a logger for the class's package that uses the resource bundle for localisation.
-	 */
-	public static Logger get(Class<?> cls, String resourceBundleName) {
-		return Logger.getLogger(cls.getPackage().getName(), resourceBundleName);
+@Module
+public class OkHttpClientModule {
+	@Provides
+	@Singleton
+	static Call.Factory callFactory() {
+		return new OkHttpClient();
 	}
 }

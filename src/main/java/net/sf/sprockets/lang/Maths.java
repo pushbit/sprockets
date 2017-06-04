@@ -1,16 +1,16 @@
 /*
- * Copyright 2013-2015 pushbit <pushbit@gmail.com>
- * 
+ * Copyright 2013-2016 pushbit <pushbit@gmail.com>
+ *
  * This file is part of Sprockets.
- * 
+ *
  * Sprockets is free software: you can redistribute it and/or modify it under the terms of the GNU
  * Lesser General Public License as published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
- * 
+ *
  * Sprockets is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public License along with Sprockets. If
  * not, see <http://www.gnu.org/licenses/>.
  */
@@ -19,7 +19,7 @@ package net.sf.sprockets.lang;
 
 /**
  * Utility methods for working with mathematical operations.
- * 
+ *
  * @since 1.2.0
  */
 public class Maths {
@@ -59,13 +59,16 @@ public class Maths {
 	}
 
 	/**
+	 * <p>
 	 * Get the value if it is between min and max or a value that is rolled over into min and max.
-	 * 
-	 * <pre><code> rollover(4, 5, 10)  // 10
+	 * </p>
+	 * <pre>{@code
+	 * rollover(4, 5, 10)  // 10
 	 * rollover(3, 5, 10)  // 9
 	 * rollover(11, 5, 10) // 5
-	 * rollover(12, 5, 10) // 6</code></pre>
-	 * 
+	 * rollover(12, 5, 10) // 6
+	 * }</pre>
+	 *
 	 * @since 2.3.0
 	 */
 	public static int rollover(int value, int min, int max) {
